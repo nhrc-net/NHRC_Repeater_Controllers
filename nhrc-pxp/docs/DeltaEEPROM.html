@@ -1,0 +1,676 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+  <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"><title>GE Delta EEPROM Format</title>
+  
+  <meta name="author" content="Dave Karr"></head>
+
+<body>
+<div style="text-align: center;"><span style="font-family: courier new,courier,monospace;"> <big><span style="font-weight: bold;">GE Delta / Delta-SX&nbsp; EEPROM
+documentation</span></big></span><br style="font-family: courier new,courier,monospace;">
+</div>
+<br style="font-family: courier new,courier,monospace;">
+<div style="text-align: center;"><span style="font-family: courier new,courier,monospace;">By Dave Karr,
+KA9FUR</span><br style="font-family: courier new,courier,monospace;">
+</div>
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">03/02/97 -
+Initial version, still missing CG information</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">11/29/00 -
+Added information on how to calculate CG tones.</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">01/02/01 -
+Added information on the reference divider bits as well as </span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;
+&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; the notations on the CCT bits.</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">01/03/01 -
+Added information on the Delta S firmware with respect to its</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp; &nbsp;
+&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; apparant differences to the SX.&nbsp;
+Some investigation remains.</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">06/17/02 -
+Corrected error regarding bit 0.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">06/07/04 -
+Added information regarding older Delta-S memory format<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp; - Clarified some information
+regarding DCG<br style="font-family: courier new,courier,monospace;">
+</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">-----------------------&nbsp;&nbsp;
+Delta-SX Firmware ----------------------------</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Based on a
+CPU which identifies as 0x11 0x01</span><br style="font-family: courier new,courier,monospace;">
+<br>
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Memory
+organisation:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">MSB is equal
+to the binary channel data compliment. Therefore channel</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">1A resides at
+memory location Ex, channel 2A resides at memory location</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Dx, and so on.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">The LSB of
+the memory location on a per channel basis is:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Receive data</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">0 -
+&nbsp;&nbsp; 0.3&nbsp;&nbsp; 0=CG/1=DCG</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; 0.2&nbsp;&nbsp; Band control bit W/X*</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; 0.1&nbsp;&nbsp; Band control bit Z/Y*</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; 0.0&nbsp;&nbsp; CG Bit x</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">1 -
+&nbsp;&nbsp; 1.3&nbsp;&nbsp; N.9</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; 1.2&nbsp;&nbsp; R.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; 1.1&nbsp;&nbsp; R.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp; 1.0&nbsp;&nbsp; R.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">2
+-&nbsp;&nbsp;&nbsp; 2.3&nbsp;&nbsp; N.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2.2&nbsp;&nbsp; N.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;
+&nbsp; &nbsp; 2.1&nbsp;&nbsp; N.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2.0&nbsp;&nbsp; N.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">3
+-&nbsp;&nbsp;&nbsp; 3.3&nbsp;&nbsp; N.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;
+&nbsp; &nbsp; 3.2&nbsp;&nbsp; N.7</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+3.1&nbsp;&nbsp; N.6</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+3.0&nbsp;&nbsp; N.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">4
+-&nbsp;&nbsp;&nbsp; 4.3&nbsp;&nbsp; A.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+4.2&nbsp;&nbsp; A.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+4.1&nbsp;&nbsp; A.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+4.0&nbsp;&nbsp; A.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">5
+-&nbsp;&nbsp;&nbsp; 5.3&nbsp;&nbsp; N.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;
+&nbsp; &nbsp; 5.2&nbsp;&nbsp; 1 = No Squelch Tail Eliminator, 0 = STE</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+5.1&nbsp;&nbsp; A.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+5.0&nbsp;&nbsp; A.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">6
+-&nbsp;&nbsp;&nbsp; LSN of CG/DCG</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">7
+-&nbsp;&nbsp;&nbsp; MSN of CG/DCG</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">6.3, 6.2,
+6.1, 6.0, 5.2&nbsp; CPU cycles</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">0.0, 7.3,
+7.2, 7.1, 7.0&nbsp; Timer load value</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Transmit data</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">8
+-&nbsp;&nbsp;&nbsp; 8.3&nbsp;&nbsp; 0=CG / 1=DCG</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8.2&nbsp;&nbsp; Band control bit W/X*</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8.1&nbsp;&nbsp; Band control bit Z/Y*</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+8.0&nbsp;&nbsp; CG Bit x</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">9
+-&nbsp;&nbsp;&nbsp; 9.3&nbsp;&nbsp; N.9</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+9.2&nbsp;&nbsp; CCT, if set timer value +=2min</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+9.1&nbsp;&nbsp; CCT, if set timer value +=1min</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+9.0&nbsp;&nbsp; CCT, if set timer value +=30sec</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">A
+-&nbsp;&nbsp;&nbsp; A.3&nbsp;&nbsp; N.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A.2&nbsp;&nbsp; N.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A.1&nbsp;&nbsp; N.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A.0&nbsp;&nbsp; N.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">B
+-&nbsp;&nbsp;&nbsp; B.3&nbsp;&nbsp; N.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;
+&nbsp; &nbsp; B.2&nbsp;&nbsp; N.7</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+B.1&nbsp;&nbsp; N.6</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+B.0&nbsp;&nbsp; N.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">C
+-&nbsp;&nbsp;&nbsp; C.3&nbsp;&nbsp; A.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+C.2&nbsp;&nbsp; A.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+C.1&nbsp;&nbsp; A.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+C.0&nbsp;&nbsp; A.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">D
+-&nbsp;&nbsp;&nbsp; D.3&nbsp;&nbsp; N.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+D.2&nbsp;&nbsp; CG lsbit x</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+D.1&nbsp;&nbsp; A.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+D.0&nbsp;&nbsp; A.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">E
+-&nbsp;&nbsp;&nbsp; LSN of CG/DCG</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">F
+-&nbsp;&nbsp;&nbsp; MSN of CG/DCG</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">--- Frequency
+determination ---</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Synth&nbsp;
+Freq. =&nbsp; X * N + A&nbsp;&nbsp; Where X=5000 for 5KHz channel
+spacing.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">For the
+transmit frequency the calculation is straight forward.&nbsp; Take the</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">desired
+transmit frequency divided by 'X'.&nbsp; This result is the total
+channel</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">divisor.&nbsp;
+Next take this result divided by 64.&nbsp; The integer portion of the</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">result is
+'N'.&nbsp; Multiplying the fractional result times 64 gives the 'A'</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">value.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Example:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Desired
+frequency:&nbsp;&nbsp; 146.34MHz .&nbsp; Channel divisor is 29268,
+N=457, A=20</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Next convert
+the decimal numbers to binary and store the bits as indicated</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">in the table
+above.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">N =
+0111001001&nbsp;&nbsp;&nbsp; A = 010100</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">This would be
+stored in channel memory as:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">x8&nbsp;
+x9&nbsp; xA&nbsp; xB&nbsp; xC&nbsp; xD</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+0&nbsp;&nbsp; 4&nbsp;&nbsp; E&nbsp;&nbsp; 4&nbsp;&nbsp; 9&nbsp;&nbsp;
+(This example ignores bits not related to 'N' or 'A')</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">The receive
+frequency is computed in exactly the same manner with the</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">exception
+that you need to calculate the 1st LO injection frequency instead</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">of the
+desired channel frequency.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Example:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">For high side
+injection with a 57.5MHz 1st IF:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Desired
+frequency:&nbsp; 146.94MHz.&nbsp; 146.94MHz + 57.5MHz = 204.44MHz.</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Channel
+divisor is 40888, N=638 (1001111110), A=56 (111000).</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">--- Digital
+Channel Guard ---</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Most of the 9
+bit DCG codes can be reduced to an equivilant code which has<br>
+the MS bit clear, thus reducing it to an 8 bit value.<br>
+<br>
+When the GE software stores values in the EEPROM, the code is generally<br>
+reduced to the lowest numeric value, even if the native code value could<br>
+have been natively represented as an 8 bit value.<br>
+<br>
+In looking for a pattern as to how GE reduced the codes, I was unable
+to <br>
+come up with hard fast rules.&nbsp; Given that if a valid code is
+stored in <br>
+the EEPROM in a way that GE's programming software didn't reduce it,
+their<br>
+software is unable to recognize the valid alternative code, even if it
+is<br>
+a natively stored value, and properly present it to the user.&nbsp;
+Based on these<br>
+observations, I concluded that they must have simply used a lookup table<br>
+rather than a programatic approach.<br>
+<br>
+There are a few valid codes which cannot be reduced to an 8 bit value
+and<br>
+those exceptions are handled by way of a lookup table.&nbsp; The
+following<br>
+lists the relation between stored value, and these eight exceptions:<br>
+<br>
+&nbsp;&nbsp;&nbsp; Stored Value&nbsp;&nbsp; DCG Code<br>
+&nbsp;&nbsp;&nbsp; ------------&nbsp;&nbsp; --------<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 3&nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; 446<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 4&nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; 447<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 5&nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; 452<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 6&nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; 454<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 7&nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; 455<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 8&nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; 462<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; 9&nbsp;&nbsp; &nbsp;&nbsp;
+&nbsp;&nbsp; 523<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp; &nbsp; 10&nbsp; &nbsp; &nbsp;&nbsp;
+&nbsp; 526<br>
+</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">For all other
+codes convert the desired code to its code equivilant using</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">the tables in
+LBI31705 or other published lists.&nbsp; Example:&nbsp; Code 703 can be</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">converted to
+150.&nbsp; Load the 8 bit code as:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">(octal
+code)&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; 5&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp; 2&nbsp;&nbsp; 3&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;
+3&nbsp;&nbsp; 7&nbsp;&nbsp; 1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">(binary
+code)&nbsp;&nbsp; 001 101
+000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 000 010
+011&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 011 111 001</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">(hex
+code)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+6&nbsp;&nbsp;&nbsp;
+8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1&nbsp;&nbsp;&nbsp;
+3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+F&nbsp;&nbsp;&nbsp; 9</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Store the MSN
+in location xF and the LSN in xE, where 'x' is the MSN of</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">the address
+and is dependant on the channel number.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Bits 8.0 and
+D.2 are not used in DCG mode.</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;"><br>
+<br>
+Also note that for some radios, an inverted DCG code is stored in the
+EEPROM<br>
+even though there is no indication to the user that this is occurring.
+For <br>
+radios that require this, the Niles software will incorrectly read and
+store<br>
+values in the EEPROM.<br>
+<br>
+&nbsp;&nbsp; </span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">--- Channel
+Guard ---</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Transmit CG
+tone:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Take the
+desired tone period divided by 8 (because of the 4 step sine) to</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">determine the
+desired clock period.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Example
+127.3Hz = 981.932us.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">This gets
+calculated in 2 halves.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">0.0 7.3 7.2
+7.1 7.0&nbsp;&nbsp;&nbsp; - This is the hardware timer load value.</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+1&nbsp;&nbsp; 1&nbsp;&nbsp; 0&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; (12
+decimal)</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">The hardware
+timer runs at 12.5kHz (80us).&nbsp; The timer is an up counter and </span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">triggers on
+an 8 bit rollover.&nbsp; The value here gets added to 233d and loaded</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">into the
+hardware timer.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">6.3 6.2 6.1
+6.0 5.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+1&nbsp;&nbsp; 1&nbsp;&nbsp; 0&nbsp;&nbsp; 1&nbsp;&nbsp; (13 decimal)</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">This value is
+the delay in CPU machine cycles (2.5us) that is additionally</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">padded to the
+overall time value.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Lastly an
+overhead of 70us is added in the ISR.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Therefore in
+our example here:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;(23 -
+12) * 80uS&nbsp; + 13 * 2.5us + 70us = 982.5us which yields 127.226Hz</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Note:&nbsp;&nbsp;
+If 0.0 (or 8.0) is set to zero OR if nibbles 6&amp;7 (or E&amp;F) are
+both</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+zero, then CG is disabled.&nbsp; 0.3 (or 8.3) also needs to be cleared.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">------------------------------------</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Reference
+bits R.2, R.1, R.0</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">R.2 R.1 R.0</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+0&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; Tx = 4.1666kHz, Rx = 6.25kHz</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+0&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 4.166kHz&nbsp;&nbsp; Ref/3168</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+1&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; 5.000kHz&nbsp;&nbsp; Ref/2640</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+1&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 6.250kHz&nbsp;&nbsp; Ref/2112</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;1&nbsp;&nbsp;
+0&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; 3.985kHz&nbsp;&nbsp; Ref/3312</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;1&nbsp;&nbsp;
+0&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 4.7826kHz&nbsp; Ref/2760</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;1&nbsp;&nbsp;
+1&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; 5.97826kHz Ref/2208</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;1&nbsp;&nbsp;
+1&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; Disables Channel completely</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">---------------------</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">If CCT bits
+(9.2, 9.1, 9.0) are all set to 1's then the transmitter</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">is disabled
+for that channel.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">-----------------------&nbsp;&nbsp;
+Delta-S Firmware ----------------------------</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">06/07/04 -
+This section created based on CPU: 19A703241G7, copyright 1983</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; This CPU identifies itself as 0x10 0x02</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Memory
+organisation:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">MSB is equal
+to the binary channel data compliment. Therefore channel</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">1A resides at
+memory location Ex, channel 2A resides at memory location</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Dx, and so on.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">The LSB of
+the memory location on a per channel basis is:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Receive data</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">0&nbsp;&nbsp;&nbsp;
+0.3&nbsp;&nbsp;&nbsp; 1 = Receiver DCG&nbsp;&nbsp;&nbsp; / 0 = Receiver
+CG</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+0.2&nbsp;&nbsp;&nbsp; 1 = Transmitter DCG / 0 = Transmitter CG</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+0.1 &nbsp;&nbsp; 1 = STE disabled&nbsp;&nbsp;&nbsp; / 0 = STE enabled</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+0.0&nbsp;&nbsp;&nbsp; </span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">1 -&nbsp;
+1.3&nbsp;&nbsp; N.9</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+1.2&nbsp;&nbsp; R.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+1.1&nbsp;&nbsp; R.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+1.0&nbsp;&nbsp; R.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">2 -&nbsp;
+2.3&nbsp;&nbsp; N.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+2.2&nbsp;&nbsp; N.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+2.1&nbsp;&nbsp; N.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+2.0&nbsp;&nbsp; N.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">3 -&nbsp;
+3.3&nbsp;&nbsp; N.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+3.2&nbsp;&nbsp; N.7</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+3.1&nbsp;&nbsp; N.6</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+3.0&nbsp;&nbsp; N.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">4 -&nbsp;
+4.3&nbsp;&nbsp; A.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+4.2&nbsp;&nbsp; A.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+4.1&nbsp;&nbsp; A.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+4.0&nbsp;&nbsp; A.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">5 -&nbsp;
+5.3&nbsp;&nbsp; N.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+5.2&nbsp;&nbsp; A.6</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+5.1&nbsp;&nbsp; A.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;
+5.0&nbsp;&nbsp; A.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">6 -&nbsp; LSN
+of CG/DCG</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">7 -&nbsp; MSN
+of CG/DCG</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Nibble 8:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;Bit
+&nbsp;&nbsp;&nbsp; 3 2 1 0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+-------</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1 0 1 1&nbsp;&nbsp;&nbsp; &nbsp;CCT = 3 minutes</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 1 1 1&nbsp;&nbsp;&nbsp; &nbsp;CCT = 2 minutes</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 0 1 1&nbsp;&nbsp;&nbsp; &nbsp;CCT = 1 minute</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 0 0 0 &nbsp; &nbsp; CCT is disabled</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Transmit data</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">8 -
+8.3&nbsp;&nbsp; CCT 15 += 120 seconds </span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+8.2&nbsp;&nbsp; CCT 15 += 60&nbsp; seconds</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+8.1&nbsp;&nbsp; CCT 15 += 30&nbsp; seconds</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+8.0&nbsp;&nbsp; CCT 15 += 15&nbsp; seconds</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">9 -
+9.3&nbsp;&nbsp; N.9</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+9.2&nbsp;&nbsp; </span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+9.1&nbsp;&nbsp; </span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+9.0&nbsp;&nbsp; </span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">A -
+A.3&nbsp;&nbsp; N.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+A.2&nbsp;&nbsp; N.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+A.1&nbsp;&nbsp; N.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+A.0&nbsp;&nbsp; N.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">B -
+B.3&nbsp;&nbsp; N.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+B.2&nbsp;&nbsp; N.7</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+B.1&nbsp;&nbsp; N.6</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+B.0&nbsp;&nbsp; N.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">C -
+C.3&nbsp;&nbsp; A.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+C.2&nbsp;&nbsp; A.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+C.1&nbsp;&nbsp; A.1</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+C.0&nbsp;&nbsp; A.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">D -
+D.3&nbsp;&nbsp; N.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+D.2&nbsp;&nbsp; A.6</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+D.1&nbsp;&nbsp; A.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+D.0&nbsp;&nbsp; A.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">E - LSN of
+CG/DCG</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">F - MSN of
+CG/DCG</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">------------------------------------</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Reference
+bits R.2, R.1, R.0</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">R.2 R.1 R.0</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+0&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; Disables Channel</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+0&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 4.166kHz&nbsp;&nbsp; Ref/3168</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+1&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; 5.000kHz&nbsp;&nbsp; Ref/2640</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;0&nbsp;&nbsp;
+1&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 6.250kHz&nbsp;&nbsp; Ref/2112</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;1&nbsp;&nbsp;
+0&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; 3.985kHz&nbsp;&nbsp; Ref/3312</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;1&nbsp;&nbsp;
+0&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 4.7826kHz&nbsp; Ref/2760</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;1&nbsp;&nbsp;
+1&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp; 5.97826kHz Ref/2208</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;1&nbsp;&nbsp;
+1&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 3.125kHz&nbsp;&nbsp; Ref/4224</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">------------------------------------</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Nibbles
+6&amp;7, and E&amp;F are CG/DCG information as in the SX firmware except</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">that the CG
+tones are based on a lookup table rather than representing</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">timing
+values.&nbsp; The nibble order is still Nibble 7 (and 0xf) representing</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">the upper
+nibble.</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">The DCG
+method is the same as the SX firmware</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">The table of
+tones noted for CG is:</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">Nibble
+&nbsp;&nbsp;&nbsp; 7 6</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+---</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 0&nbsp;&nbsp;&nbsp; CSQ</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 1&nbsp;&nbsp;&nbsp; 67.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 2&nbsp;&nbsp;&nbsp; 71.9</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 3&nbsp;&nbsp;&nbsp; 74.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 4&nbsp;&nbsp;&nbsp; 77.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 5&nbsp;&nbsp;&nbsp; 79.7</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 6&nbsp;&nbsp;&nbsp; 82.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 7&nbsp;&nbsp;&nbsp; 85.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 8&nbsp;&nbsp;&nbsp; 88.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 9&nbsp;&nbsp;&nbsp; 91.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 A&nbsp;&nbsp;&nbsp; 94.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 B&nbsp;&nbsp;&nbsp; 100.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 C&nbsp;&nbsp;&nbsp; 103.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 D&nbsp;&nbsp;&nbsp; 107.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 E&nbsp;&nbsp;&nbsp; 110.9</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+0 F&nbsp;&nbsp;&nbsp; 114.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 0&nbsp;&nbsp;&nbsp; 118.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 1&nbsp;&nbsp;&nbsp; 123.0</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 2&nbsp;&nbsp;&nbsp; 127.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 3&nbsp;&nbsp;&nbsp; 131.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 4&nbsp;&nbsp;&nbsp; 136.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 5&nbsp;&nbsp;&nbsp; 141.3</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 6&nbsp;&nbsp;&nbsp; 146.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 7&nbsp;&nbsp;&nbsp; 151.4</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 8&nbsp;&nbsp;&nbsp; 156.7</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 9&nbsp;&nbsp;&nbsp; 162.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 A&nbsp;&nbsp;&nbsp; 167.9</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 B&nbsp;&nbsp;&nbsp; 173.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 C&nbsp;&nbsp;&nbsp; 179.9</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 D&nbsp;&nbsp;&nbsp; 186.2</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 E&nbsp;&nbsp;&nbsp; 192.8</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+1 F&nbsp;&nbsp;&nbsp; 203.5</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+2 0&nbsp;&nbsp;&nbsp; 210.7</span><br style="font-family: courier new,courier,monospace;">
+<span style="font-family: courier new,courier,monospace;">&nbsp;&nbsp;&nbsp;
+2 1&nbsp;&nbsp;&nbsp; 97.4</span><br style="font-family: courier new,courier,monospace;">
+<br style="font-family: courier new,courier,monospace;">
+</body></html>

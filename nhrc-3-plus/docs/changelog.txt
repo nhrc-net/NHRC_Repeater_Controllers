@@ -1,0 +1,44 @@
+NHRC-3 Plus Repeater Controller
+Software Revision History
+
+0.01  2000/05/27  initial blink running
+0.02  2000/06/21  beep gen, initialize, EEPROM read/write, DTMF decode,
+                  command interpreter.
+0.03  2000/06/27  ISD running, etc.
+
+0.05  2000/09/17  software implementation complete
+                  * A L P H A * T E S T * R E L E A S E *
+
+0.06  2000/09/18  fixed simplex mode bugs.
+                  * 2 N D * A L P H A * T E S T * R E L E A S E *
+
+0.07  2000/11/19  fixed hang timer of 0 tx lock on.
+		  fixed broken voice timeout message.
+		  fixed simplex mode kerchunk long playback.
+
+0.09  2001/04/26  implemented security bits.
+
+01.0  2001/07/06  initialize to disabled so simplex repeaters can work.
+
+01.1  2003/09/09  change digital output ports to be numbered 1-4.
+		  make pulsed digital outputs actually work.
+
+01.2  2004/07/27  added support for 1750 tone burst.
+
+1.03  2004/10/17  European ID mode
+
+1.04  2004/11/16  record messages with repeater disabled...
+
+1.05  2004/11/27  extra ID message bug when in Euro mode...
+
+1.06  2004/12/02  extend COR drop debounce timer to 250 ms in simplex mode.
+                  add option to play courtesy tone in simplex mode.
+                  fix timeout COR valid problem with 1750 mode.
+                  add switch for Euro ID mode tail end ID to be either Normal or CWID.
+
+1.07  2005/01/01  changed startup message to NHRC 3 PLUS (was NHRC 1 PLUS)
+
+1.08  2005/03/08  added NO ID bit.  will never send an ID when set.
+
+1.10  2005/09/26  added cw speed and pitch control
+

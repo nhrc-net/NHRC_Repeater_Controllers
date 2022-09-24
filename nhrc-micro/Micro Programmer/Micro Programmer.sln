@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Programmer", "Programmer\Programmer.vcproj", "{08EBC7B5-B1C3-4495-A0BB-FA0E1D1EA21E}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "NHRC Micro", "Setup\Setup.vdproj", "{6B27D944-C88D-41BF-8CCE-E1F91FDF1759}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{08EBC7B5-B1C3-4495-A0BB-FA0E1D1EA21E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{08EBC7B5-B1C3-4495-A0BB-FA0E1D1EA21E}.Debug|Win32.Build.0 = Debug|Win32
+		{08EBC7B5-B1C3-4495-A0BB-FA0E1D1EA21E}.Release|Win32.ActiveCfg = Release|Win32
+		{08EBC7B5-B1C3-4495-A0BB-FA0E1D1EA21E}.Release|Win32.Build.0 = Release|Win32
+		{6B27D944-C88D-41BF-8CCE-E1F91FDF1759}.Debug|Win32.ActiveCfg = Debug
+		{6B27D944-C88D-41BF-8CCE-E1F91FDF1759}.Release|Win32.ActiveCfg = Release
+		{6B27D944-C88D-41BF-8CCE-E1F91FDF1759}.Release|Win32.Build.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

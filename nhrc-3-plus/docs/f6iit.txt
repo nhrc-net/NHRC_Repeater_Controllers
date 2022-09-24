@@ -1,0 +1,78 @@
+F6IIT, Patrick Vermote's repeater configuration...
+
+Poitiers repeater configuration
+
+CTSEL1 = 1
+CTSEL2 = 1
+Unlock repeater code : 04
+Lock repeater code : #
+
+Command prefix by number : as factory
+Timers : as factory
+
+CW ID : *70 33 05 90 23 52 (F5ZCK)
+Courtesy tone : as factory
+Voice tracks: our parameters (all voices are ok)
+
+Timer
+
+Hang Timer long = *300100 (this is as factory)
+Hang Timer short = as factory (I didn't change the value)
+ID Timer = *30236
+DTMF Timer = as factory (I didn't change the value)
+Time-out timer long = *304180
+Time-out timer short = as factory (I didn't change the value)
+Fan Time = as factory (I Didn't change the value)
+Tail message counter = as factory (I didn't change the value)
+
+Group 0
+
+0 - Repeater enable : *0001
+1 - Repeater CTCSS required : *0011 or *0010 for test without 1750 Hz (it's necessary to turn off to record the voice track)
+2 - Keyup Delay : (*0020)
+3 - Hang Timer enable : (*0031)
+4 - Hang Time short or long : *0041
+5 - DTMF access : (*0050)
+6 - Courtesy tone : (*0061)
+7 - Control Op CTCSS : (*0070)
+
+Group 1
+
+0 - Repeater TO Time enable : (*0101)
+1 - Time out long or short : (*0111)
+2 - Enable dual squelch : *0121 (if the state is set to 0 the repeater doesn't repeat a user even the European setting are ON)
+3 - Enable DTMF muting : (*0131)
+4 - Reserved
+5 - Reserved
+6 - Simplex repeater mode : (*0160)
+7 - Simplexe repeater voice ID : (*0170)
+
+Group 2
+
+0 - Enable voice ID : (*0201)
+1 - Enable voice normal ID : *0210
+2 - Allow ID Stomp : (*0221)
+3 - Enable voice time-out message : (*0231)
+4 - Digital output or Fan control : (*0240)
+5 - Digital output control : (*0241)
+6 - Delay present on repeater port : (*0260)
+7 - Reserved
+
+Group3 : 
+
+0 - European compatible ID mode : (*0301)
+1 - reserved
+2 - reserved
+3 - reserved
+4 - reserved
+5 - reserved
+6 - reserved
+7 - reserved
+
+Group4 : as factory
+
+Group5 : as factory
+
+group6 : as factory
+
+group7 : as factory

@@ -1,0 +1,2050 @@
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001         ;; NHRC-PXP Phoenix X22C12 Programmer.
+                      00002         ;; Copyright 2000, 2001 NHRC LLC,
+                      00003         ;; as an unpublished proprietary work.
+                      00004         ;; All rights reserved.
+                      00005         ;; No part of this document may be used or reproduced by any means,
+                      00006         ;; for any purpose, without the expressed written consent of NHRC LLC.
+                      00007 
+                      00008         ;; pxp-004 25 December 2000
+                      00009 
+                      00010         ERRORLEVEL 0, -302,-306 ; suppress Argument out of range errors
+                      00011 
+                      00012         include "p16f876.inc"
+                      00001         LIST
+                      00002 ; P16F876.INC  Standard Header File, Version 1.00    Microchip Technology, Inc.
+                      00359         LIST
+                      00013 
+2007   0D46           00014          __FUSES _PWRTE_ON & _HS_OSC & _LVP_OFF & _WRT_ENABLE_OFF & _CP_ALL
+                      00015         
+                      00016 ; *******************
+                      00017 ; ** PAGING MACROS **
+                      00018 ; *******************
+                      00019 
+                      00020 PAGE0   macro                   ; select page 0
+                      00021         bcf     PCLATH,3
+                      00022         bcf     PCLATH,4
+                      00023         endm
+                      00024 
+                      00025 PAGE1   macro                   ; select page 1
+                      00026         bsf     PCLATH,3
+                      00027         bcf     PCLATH,4
+                      00028         endm
+                      00029 
+                      00030 PAGE2   macro                   ; select page 2
+                      00031         bcf     PCLATH,3
+                      00032         bsf     PCLATH,4
+                      00033         endm
+                      00034 
+                      00035 PAGE3   macro                   ; select page 3
+                      00036         bsf     PCLATH,3
+                      00037         bsf     PCLATH,4
+                      00038         endm
+                      00039 
+                      00040 ; *************************
+                      00041 ; ** IO Port Assignments **
+                      00042 ; *************************
+                      00043 
+                      00044 ; PORTA
+  00000000            00045 X22CS   equ     0               ; output, X22C12 CS\
+  00000001            00046 X22WE   equ     1               ; output, X22C12 WE\
+  00000002            00047 X22STR  equ     2               ; output, X22C12 STORE\
+  00000003            00048 X22RCL  equ     3               ; output, X22C12 RECALL\
+  00000004            00049 X22VCC  equ     4               ; output, X22C12 POWER\
+  00000005            00050 LED     equ     5               ; output, status LED
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00051 
+                      00052 ; PORTB -- usually addressed as an entire byte.
+  00000000            00053 X22A0   equ     0               ; output, X22C12 A0
+  00000001            00054 X22A1   equ     1               ; output, X22C12 A1
+  00000002            00055 X22A2   equ     2               ; output, X22C12 A2
+  00000003            00056 X22A3   equ     3               ; output, X22C12 A3
+  00000004            00057 X22A4   equ     4               ; output, X22C12 A4
+  00000005            00058 X22A5   equ     5               ; output, X22C12 A5
+  00000006            00059 X22A6   equ     6               ; output, X22C12 A6
+  00000007            00060 X22A7   equ     7               ; output, X22C12 A7
+                      00061 
+                      00062 ; PORTC
+  00000000            00063 X22IO1  equ     0               ; input/output, XC22C12 IO1
+  00000001            00064 X22IO2  equ     1               ; input/output, XC22C12 IO2
+  00000002            00065 X22IO3  equ     2               ; input/output, XC22C12 IO3
+  00000003            00066 X22IO4  equ     3               ; input/output, XC22C12 IO4
+  00000004            00067 PBWRITE equ     4               ; input, WRITE button.
+  00000005            00068 PBREAD  equ     5               ; input, READ button.
+  00000006            00069 RS232TX equ     6               ; output, RS232 transmit.
+  00000007            00070 RS232RX equ     7               ; input,  RS232 receive.
+                      00071 
+                      00072 ; *********************
+                      00073 ; ** OTHER CONSTANTS **
+                      00074 ; *********************
+                      00075 
+                      00076 ;tFlags                         ; timer flags        
+  00000000            00077 TICK    equ     0               ; TICK indicator
+  00000001            00078 ONEMS   equ     1               ; 1 ms tick flag
+  00000002            00079 TENMS   equ     2               ; 10 ms tick flag
+  00000003            00080 HUNDMS  equ     3               ; 100 ms tick flag
+  00000004            00081 ONESEC  equ     4               ; 1 second tick flag
+  00000005            00082 TENSEC  equ     5               ; 10 second flag...
+                      00083 ; niy   equ     6               ; NIY
+  00000007            00084 NEWCHAR equ     7               ; received a new char.
+                      00085 
+                      00086 ;bFlags                         ; buttonFlags
+  00000000            00087 WLAST   equ     0               ; write last
+  00000001            00088 RLAST   equ     1               ; read last
+  00000002            00089 WNOW    equ     2               ; write NOW.
+  00000003            00090 RNOW    equ     3               ; read NOW.
+                      00091 
+  00000005            00092 BDBC    equ     d'5'            ; 50 ms button debounce.
+  00000032            00093 RXTMOT  equ     d'50'           ; 50 * 100 ms = 5.0 seconds, receive timeout.
+                      00094 
+                      00095 ; message numbers
+  00000000            00096 M_NONE  equ     0               ; no message
+  00000001            00097 M_INIT  equ     1               ; init message
+  00000002            00098 M_MENU  equ     2               ; menu message
+  00000003            00099 M_BCKSM equ     3               ; bad checksum
+  00000004            00100 M_TOERR equ     4               ; error
+  00000005            00101 M_OK    equ     5               ; ok
+  00000006            00102 M_TXPR  equ     6               ; transmit program
+  00000007            00103 M_CKSM  equ     7               ; checksum message
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00104 
+                      00105 ; receive state -- what to do with received characters
+                      00106 
+  00000000            00107 RXS_CMD equ     0               ; receive command state.
+  00000001            00108 RXS_PGM equ     1               ; receive program data state.
+  00000002            00109 RXS_CHK equ     2               ; receive checksum data state.
+                      00110         
+                      00111         IFDEF DEBUG
+                      00112 TEN     equ     D'4'            ; decade counter.
+                      00113         ELSE
+  0000000A            00114 TEN     equ     D'10'           ; decade counter.
+                      00115         ENDIF
+                      00116 
+  00000007            00117 T0PRE   equ     D'7'            ; timer 0 preset for overflow in 250 counts.
+                      00118         
+                      00119 ; ***************
+                      00120 ; ** VARIABLES **
+                      00121 ; ***************
+                      00122         cblock  h'20'           ; 1st block of RAM at 20h-7fh (96 bytes here)
+                      00123         ;; interrupt pseudo-stack to save context during interrupt processing.
+  00000020            00124         s_copy                  ; saved STATUS
+  00000021            00125         p_copy                  ; saved PCLATH
+  00000022            00126         f_copy                  ; saved FSR
+                      00127         ;; internal timing generation.
+  00000023            00128         tFlags                  ; Timer Flags
+  00000024            00129         oneMsC                  ; one millisecond counter
+  00000025            00130         tenMsC                  ; ten milliseconds counter
+  00000026            00131         hundMsC                 ; hundred milliseconds counter
+  00000027            00132         thouMsC                 ; 1 second counter.
+  00000028            00133         bFlags                  ; buttons flag
+                      00134         ;; working storage, if you will.
+  00000029            00135         temp                    ; working storage. don't use in int handler.
+  0000002A            00136         temp2                   ; more working storage
+  0000002B            00137         temp3                   ; more working storage
+  0000002C            00138         temp4                   ; more working storage
+  0000002D            00139         txChar                  ; character to transmit.
+  0000002E            00140         chksum                  ; checksum.
+  0000002F            00141         rxTmo                   ; receive timeout.
+  00000030            00142         rxChar                  ; received char.
+  00000031            00143         rxState                 ; receive state.
+  00000032            00144         rxCsBc                  ; receive checksum byte counter.
+  00000033            00145         rxCksum                 ; receive checksum.
+  00000034            00146         dbRead                  ; read button debounce counter.
+  00000035            00147         dbWrite                 ; write button debounce counter.
+                      00148         endc                    ; end of mem block.
+                      00149 
+                      00150         cblock  h'70'           ; 16 bytes common in all banks
+  00000070            00151         pgmaddr                 ; 70 address of program data
+  00000071            00152         pgmdata                 ; 71 program data
+  00000072            00153         w_copy                  ; 72 saved W register for interrupt handler
+  00000073            00154         eeAddr                  ; 73 eeprom address
+  00000074            00155         msgNum                  ; 74 message number
+  00000075            00156         msgCnt                  ; 75 message counter
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00157         endc
+                      00158 
+                      00159         cblock  h'120'          ; 80 bytes 120h-16fh
+  00000120            00160         prgbuf1:64              ; 120-15f 64 bytes of program data buffer
+                      00161         endc
+                      00162 
+                      00163         cblock  h'1a0'          ; 80 bytes 1a0h-1efh
+  000001A0            00164         prgbuf2:64              ; 1a0-1df 64 bytes of program data buffer
+                      00165         endc
+                      00166 
+                      00167         
+                      00168 ; ********************
+                      00169 ; ** STARTUP VECTOR **
+                      00170 ; ********************
+0000                  00171         org     0               ; startup vector
+0000   018A           00172         clrf    PCLATH          ; stay in bank 0
+0001   2A00           00173         goto    Start
+                      00174 
+                      00175 ; ***********************
+                      00176 ; ** INTERRUPT HANDLER **
+                      00177 ; ***********************
+0002                  00178 IntHndlr
+0004                  00179         org     4               ; interrupt vector
+                      00180         ; preserve registers...
+0004   00F2           00181         movwf   w_copy          ; save w register
+0005   0E03           00182         swapf   STATUS,w        ; get STATUS
+0006   0183           00183         clrf    STATUS          ; force bank 0
+0007   00A0           00184         movwf   s_copy          ; save STATUS
+0008   080A           00185         movf    PCLATH,w        ; get PCLATH
+0009   00A1           00186         movwf   p_copy          ; save PCLATH
+000A   018A           00187         clrf    PCLATH          ; force page 0
+000B   1783           00188         bsf     STATUS,IRP      ; select RAM bank 1
+000C   0804           00189         movf    FSR,w           ; get FSR
+000D   00A2           00190         movwf   f_copy          ; save FSR
+                      00191         
+000E   190B           00192         btfsc   INTCON,T0IF     ; is it a timer interrupt?
+000F   2815           00193         goto    TimrInt         ; yes...
+0010   1A8C           00194         btfsc   PIR1,RCIF       ; is it a USART Receive interrupt?
+0011   281A           00195         goto    URInt           ; yes.
+0012   1A0C           00196         btfsc   PIR1,TXIF       ; is it a USART transmit interrupt?
+0013   281E           00197         goto    UTInt           ; yes.
+0014   2829           00198         goto    IntExit         ; no...
+                      00199 
+0015                  00200 TimrInt
+0015   3007           00201         movlw   T0PRE           ; get timer 0 preset value
+0016   0081           00202         movwf   TMR0            ; preset timer 0
+0017   1423           00203         bsf     tFlags,TICK     ; set tick indicator flag
+                      00204 
+0018                  00205 TimrDone                        
+0018   110B           00206         bcf     INTCON,T0IF     ; clear RTCC int mask
+0019   2829           00207         goto    IntExit         ; done here.
+                      00208 
+001A                  00209 URInt                           ; USART receiver interrupt.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+001A   081A           00210         movf    RCREG,w         ; get received char.
+001B   00B0           00211         movwf   rxChar          ; save received char.
+001C   17A3           00212         bsf     tFlags,NEWCHAR  ; got a new char.
+001D   2829           00213         goto    IntExit         ; done here.
+                      00214 
+001E                  00215 UTInt                           ; USART transmitter interrupt.
+001E   2032           00216         call    GetMsgC         ; get a message character.
+001F   082D           00217         movf    txChar,w        ; get the character selected.
+0020   1903           00218         btfsc   STATUS,Z        ; is it zero?
+0021   2824           00219         goto    UTIntD          ; yes. buffer is empty.
+0022   0099           00220         movwf   TXREG           ; send char.
+0023   2829           00221         goto    IntExit         ; done here.
+                      00222         
+0024                  00223 UTIntD                          ; no more chars to transmit.
+                      00224         ;; turn off the transmitter interrupt.
+0024   1683           00225         bsf     STATUS,RP0      ; select bank 1
+0025   120C           00226         bcf     PIE1,TXIE       ; turn off the transmitter interrupt.
+0026   1283           00227         bcf     STATUS,RP0      ; select bank 1
+0027   01F5           00228         clrf    msgCnt          ; clear message count.
+0028   1285           00229         bcf     PORTA,LED       ; turn off busy LED
+                      00230         ;; goto IntExit         ; done here.
+                      00231         
+0029                  00232 IntExit
+0029   0821           00233         movf    p_copy,w        ; get PCLATH preserved value
+002A   008A           00234         movwf   PCLATH          ; restore PCLATH
+002B   0822           00235         movf    f_copy,w        ; get FSR preserved value
+002C   0084           00236         movwf   FSR             ; restore FSR
+002D   0E20           00237         swapf   s_copy,w        ; get STATUS preserved value
+002E   0083           00238         movwf   STATUS          ; restore STATUS
+002F   0EF2           00239         swapf   w_copy,f        ; swap W
+0030   0E72           00240         swapf   w_copy,w        ; restore W
+0031   0009           00241         retfie
+                      00242 
+                      00243 ; *************
+                      00244 ; ** GetMsgC **
+                      00245 ; *************
+                      00246         ;; get a message character.
+0032                  00247 GetMsgC
+0032   3000           00248         movlw   high MsgTbl     ; set page 
+0033   008A           00249         movwf   PCLATH          ; select page
+0034   0874           00250         movf    msgNum,w        ; get message number
+0035   3907           00251         andlw   h'07'           ; there are only 8 valid states.
+0036   0782           00252         addwf   PCL,f           ; add w to PCL
+0037                  00253 MsgTbl
+0037   283F           00254         goto    Msg0            ; message 0 - no message
+0038   2840           00255         goto    Msg1            ; message 1 - init
+0039   2846           00256         goto    Msg2            ; message 2 - menu
+003A   284C           00257         goto    Msg3            ; message 3 - bad checksum
+003B   2852           00258         goto    Msg4            ; message 4 - error
+003C   2858           00259         goto    Msg5            ; message 5 - ok
+003D   285E           00260         goto    Msg6            ; message 6 - send program
+003E   286D           00261         goto    Msg7            ; message 7 - send checksum
+                      00262 
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+003F                  00263 Msg0                            ; no message here. sanity check.
+003F   3400           00264         retlw   h'0'            ; return 0, no message here, stop tx.
+                      00265         
+0040                  00266 Msg1                            ; init message.
+                      00267         PAGE3                   ; select code page 3
+0040   158A               M         bsf     PCLATH,3
+0041   160A               M         bsf     PCLATH,4
+0042   2000           00268         call    InitMsg         ; get a byte from the init message.
+                      00269         PAGE0                   ; select code page 0
+0043   118A               M         bcf     PCLATH,3
+0044   120A               M         bcf     PCLATH,4
+0045   287D           00270         goto    RetChar         ; return the character
+                      00271         
+0046                  00272 Msg2                            ; menu.
+                      00273         PAGE3                   ; select code page 3
+0046   158A               M         bsf     PCLATH,3
+0047   160A               M         bsf     PCLATH,4
+0048   201A           00274         call    MenuMsg         ; get a byte from the init message.
+                      00275         PAGE0                   ; select code page 0
+0049   118A               M         bcf     PCLATH,3
+004A   120A               M         bcf     PCLATH,4
+004B   287D           00276         goto    RetChar         ; return the character
+                      00277 
+004C                  00278 Msg3                            ; checksum error message.
+                      00279         PAGE3                   ; select code page 3
+004C   158A               M         bsf     PCLATH,3
+004D   160A               M         bsf     PCLATH,4
+004E   20C4           00280         call    BadCMsg         ; get a byte from the init message.
+                      00281         PAGE0                   ; select code page 0
+004F   118A               M         bcf     PCLATH,3
+0050   120A               M         bcf     PCLATH,4
+0051   287D           00282         goto    RetChar         ; return the character
+                      00283         
+0052                  00284 Msg4                            ; error message.
+                      00285         PAGE3                   ; select code page 3
+0052   158A               M         bsf     PCLATH,3
+0053   160A               M         bsf     PCLATH,4
+0054   20DB           00286         call    ErrMsg          ; get a byte from the init message.
+                      00287         PAGE0                   ; select code page 0
+0055   118A               M         bcf     PCLATH,3
+0056   120A               M         bcf     PCLATH,4
+0057   287D           00288         goto    RetChar         ; return the character
+                      00289 
+0058                  00290 Msg5                            ; ok message.
+                      00291         PAGE3                   ; select code page 3
+0058   158A               M         bsf     PCLATH,3
+0059   160A               M         bsf     PCLATH,4
+005A   2100           00292         call    OkMsg           ; get a byte from the init message.
+                      00293         PAGE0                   ; select code page 0
+005B   118A               M         bcf     PCLATH,3
+005C   120A               M         bcf     PCLATH,4
+005D   287D           00294         goto    RetChar         ; return the character
+                      00295 
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+005E                  00296 Msg6                            ; send program.
+005E   0875           00297         movf    msgCnt,w        ; get message count.
+005F   00F0           00298         movwf   pgmaddr         ; save program address.
+                      00299         PAGE2                   ; select code page 2.
+0060   118A               M         bcf     PCLATH,3
+0061   160A               M         bsf     PCLATH,4
+0062   2085           00300         call    GetNib          ; get the nibble from the RAM buffer
+                      00301         PAGE0                   ; select code page 0.
+0063   118A               M         bcf     PCLATH,3
+0064   120A               M         bcf     PCLATH,4
+0065   07AE           00302         addwf   chksum,f        ; add to checksum
+0066   2331           00303         call    b2a             ; convert binary nibble to hex digit.
+0067   00AD           00304         movwf   txChar          ; save transmit character
+0068   0FF5           00305         incfsz  msgCnt,f        ; increment message counter
+0069   0008           00306         return                  ; done here.
+006A   3007           00307         movlw   M_CKSM          ; get checksum message number
+006B   00F4           00308         movwf   msgNum          ; save message number
+006C   0008           00309         return                  ; done here.
+                      00310         
+006D                  00311 Msg7                            ; send checksum.
+006D   1875           00312         btfsc   msgCnt,0        ; is this byte 1?
+006E   2875           00313         goto    Msg7_1          ; yes.
+006F   0E2E           00314         swapf   chksum,w        ; get checksum, swapped.
+0070   390F           00315         andlw   h'0f'           ; mask to get low nibble.
+0071   2331           00316         call    b2a             ; convert binary nibble to hex digit.
+0072   00AD           00317         movwf   txChar          ; save transmit character
+0073   0AF5           00318         incf    msgCnt,f        ; increment message counter.
+0074   0008           00319         return
+0075                  00320 Msg7_1                          ; send 2nd byte (low nibble)
+0075   082E           00321         movf    chksum,w        ; get checksum, swapped.
+0076   390F           00322         andlw   h'0f'           ; mask to get low nibble.
+0077   2331           00323         call    b2a             ; convert binary nibble to hex digit.
+0078   00AD           00324         movwf   txChar          ; save transmit character
+0079   01F5           00325         clrf    msgCnt          ; clear message count
+007A   3005           00326         movlw   M_OK            ; get OK message number
+007B   00F4           00327         movwf   msgNum          ; save message number
+007C   0008           00328         return                  ; done here.
+                      00329         
+007D                  00330 RetChar                         ; return the character
+007D   00AD           00331         movwf   txChar          ; save transmit character
+007E   0AF5           00332         incf    msgCnt,f        ; increment message counter
+007F   0008           00333         return                  ; return the fetched char.
+                      00334 
+0080                  00335 XmitMsg
+0080   00F4           00336         movwf   msgNum          ; save message number
+0081   01F5           00337         clrf    msgCnt          ; reset message counter
+0082                  00338 XmitM1                          ; 
+0082   138B           00339         bcf     INTCON,GIE      ; disable interrupts
+0083   1B8B           00340         btfsc   INTCON,GIE      ; test interrupts still enabled?
+0084   2882           00341         goto    XmitM1          ; still enabled, retry disable.
+0085   1683           00342         bsf     STATUS,RP0      ; select bank 1
+0086   160C           00343         bsf     PIE1,TXIE       ; turn on the transmitter interrupt.
+0087   1283           00344         bcf     STATUS,RP0      ; select bank 0
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00345         ;; last, turn interrupts back on so character gets sent.
+0088   178B           00346         bsf     INTCON,GIE      ; turn interrupts on.
+0089   0008           00347         return  
+                      00348                         
+                      00349 ; *********************
+                      00350 ; ** PROGRAM STARTUP **
+                      00351 ; *********************
+0200                  00352         org     0200
+0200                  00353 Start
+                      00354         ;bsf    STATUS,IRP      ; select FSR is in 100-1ff range
+0200   1683           00355         bsf     STATUS,RP0      ; select bank 1
+                      00356 
+0201   3000           00357         movlw   b'00000000'
+0202   009F           00358         movwf   ADCON0
+0203   3007           00359         movlw   b'00000111'
+0204   009F           00360         movwf   ADCON1
+                      00361         
+0205   30C0           00362         movlw   B'11000000'     ; na/na/out/out/out/out/out/out
+0206   0085           00363         movwf   TRISA           ; set port A data direction
+                      00364 
+0207   3000           00365         movlw   B'00000000'     ; out/out/out/out/out/out/out/out
+0208   0086           00366         movwf   TRISB           ; set port B data direction
+                      00367 
+0209   30BF           00368         movlw   B'10111111'     ; SCI/SCI/in/in/in/in/in/in
+                      00369                                 ; in  out in  in  in  in  in  in 
+020A   0087           00370         movwf   TRISC           ; set port C data direction
+                      00371 
+020B   3083           00372         movlw   b'10000011'     ; RBPU\ no pull up, 
+                      00373                                 ; INTEDG INT on falling edge
+                      00374                                 ; T0CS   TMR0 uses instruction clock
+                      00375                                 ; T0SE  n/a
+                      00376                                 ; PSA TMR0 gets the prescaler 
+                      00377                                 ; PS2 \
+                      00378                                 ; PS1  > prescaler 16
+                      00379                                 ; PS0 /
+020C   0081           00380         movwf   OPTION_REG      ; set options
+                      00381         
+020D   3067           00382         movlw   d'103'          ; 9600 baud at 16.0 MHz clock.
+020E   0099           00383         movwf   SPBRG           ; set baud rate generator.
+020F   3024           00384         movlw   b'00100100'     ; transmit enabled, hi speed async.
+0210   0098           00385         movwf   TXSTA           ; set transmit status and control register.
+0211   3020           00386         movlw   b'00100000'     ; USART rx interrupt enabled.
+0212   008C           00387         movwf   PIE1            ; set peripheral interrupts enable register.
+0213   1283           00388         bcf     STATUS,RP0      ; select bank 0
+0214   3090           00389         movlw   b'10010000'     ; serial enabled, etc.
+0215   0098           00390         movwf   RCSTA           ; set receive status and control register.
+                      00391 
+0216   301F           00392         movlw   b'00011111'     ; preset PORT 
+0217   0085           00393         movwf   PORTA           ; preset PORT A
+0218   0186           00394         clrf    PORTB           ; clear address.
+                      00395 
+0219   1E03           00396         btfss   STATUS,NOT_TO   ; did WDT time out?
+021A   1685           00397         bsf     PORTA,LED       ; yes, light warning lamp.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00398 
+021B   0064           00399         clrwdt                  ; give me more time to get up and running.
+                      00400         ;bcf    STATUS,IRP      ; select FSR is in 00-ff range
+021C   3020           00401         movlw   h'20'           ; first address of RAM.
+021D   0084           00402         movwf   FSR             ; set pointer.
+021E                  00403 ClrMem
+021E   0180           00404         clrf    INDF            ; clear ram byte.
+021F   0A84           00405         incf    FSR,f           ; increment FSR.
+0220   1F84           00406         btfss   FSR,7           ; cheap test for address 80 and above.
+0221   2A1E           00407         goto    ClrMem          ; loop some more.
+                      00408         
+0222   1783           00409         bsf     STATUS,IRP      ; select FSR is in 100-1ff range
+                      00410         
+0223   300A           00411         movlw   TEN             ; get timebase presets
+0224   00A4           00412         movwf   oneMsC
+0225   00A5           00413         movwf   tenMsC
+0226   00A6           00414         movwf   hundMsC
+0227   01A3           00415         clrf    tFlags
+                      00416         
+                      00417         ;; enable interrupts.
+0228   30E0           00418         movlw   b'11100000'     ; enable global + peripheral, timer
+0229   008B           00419         movwf   INTCON
+                      00420 
+                      00421 ; ********************************
+                      00422 ; ** Ready to really start now. **
+                      00423 ; ********************************
+                      00424         PAGE2                   ; select code page 2
+022A   118A               M         bcf     PCLATH,3
+022B   160A               M         bsf     PCLATH,4
+022C   2053           00425         call    Load            ; load RAM buffer from EEPROM
+                      00426         PAGE0                   ; select code page 0
+022D   118A               M         bcf     PCLATH,3
+022E   120A               M         bcf     PCLATH,4
+                      00427         ;; say hello!
+022F   3001           00428         movlw   M_INIT          ; get message number
+0230   00F4           00429         movwf   msgNum          ; save message number
+0231   2080           00430         call    XmitMsg         ; send message
+                      00431         
+                      00432 ; **************************************************************************
+                      00433 ; ******************************* MAIN LOOP ********************************
+                      00434 ; **************************************************************************
+                      00435                 
+0232                  00436 Loop0
+0232   1AA3           00437         btfsc   tFlags,TENSEC   ; is ten second flag set?
+0233   12A3           00438         bcf     tFlags,TENSEC   ; reset it if it is...
+                      00439 
+0234                  00440 Chek1000        
+0234   1E23           00441         btfss   tFlags,ONESEC   ; is the 1000 mS flag set?
+0235   2A3C           00442         goto    Check100        ; nope...
+0236   1223           00443         bcf     tFlags,ONESEC   ; clear 1000 mS flag.
+0237   0BA7           00444         decfsz  thouMsC,f       ; decrement hundred millisecond counter.
+0238   2A3C           00445         goto    Check100        ; not zero.
+0239   300A           00446         movlw   TEN             ; get preset.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+023A   00A7           00447         movwf   thouMsC         ; reset down counter.
+023B   16A3           00448         bsf     tFlags,TENSEC   ; set ONESEC indicator.
+                      00449 
+023C                  00450 Check100        
+023C   1DA3           00451         btfss   tFlags,HUNDMS   ; is the 100 mS flag set?
+023D   2A44           00452         goto    Check10         ; nope...
+023E   11A3           00453         bcf     tFlags,HUNDMS   ; clear 100 mS flag.
+023F   0BA6           00454         decfsz  hundMsC,f       ; decrement hundred millisecond counter.
+0240   2A44           00455         goto    Check10         ; not zero.
+0241   300A           00456         movlw   TEN             ; get preset.
+0242   00A6           00457         movwf   hundMsC         ; reset down counter.
+0243   1623           00458         bsf     tFlags,ONESEC   ; set ONESEC indicator.
+                      00459 
+0244                  00460 Check10
+0244   1D23           00461         btfss   tFlags,TENMS    ; is the 10 mS flag set?
+0245   2A4C           00462         goto    Check1          ; nope...
+0246   1123           00463         bcf     tFlags,TENMS    ; clear 10 mS flag.
+0247   0BA5           00464         decfsz  tenMsC,f        ; decrement ten millisecond counter.
+0248   2A4C           00465         goto    Check1          ; not zero.
+0249   300A           00466         movlw   TEN             ; get preset.
+024A   00A5           00467         movwf   tenMsC          ; reset down counter.
+024B   15A3           00468         bsf     tFlags,HUNDMS   ; set HUNDMS indicator.
+                      00469 
+024C                  00470 Check1
+024C   1CA3           00471         btfss   tFlags,ONEMS    ; is the 1 mS flag set?
+024D   2A54           00472         goto    CheckTic        ; nope...
+024E   10A3           00473         bcf     tFlags,ONEMS    ; clear 1 mS flag.
+024F   0BA4           00474         decfsz  oneMsC,f        ; decrement one millisecond counter.
+0250   2A54           00475         goto    CheckTic        ; not zero.
+0251   300A           00476         movlw   TEN             ; get preset.
+0252   00A4           00477         movwf   oneMsC          ; reset down counter.
+0253   1523           00478         bsf     tFlags,TENMS    ; set TENMS indicator.
+                      00479 
+0254                  00480 CheckTic
+0254   1C23           00481         btfss   tFlags,TICK     ; did a tick occur?
+0255   2A59           00482         goto    Loop1           ; nope.
+0256   1023           00483         bcf     tFlags,TICK     ; reset TICK indicator.
+0257   14A3           00484         bsf     tFlags,ONEMS    ; set ONEMS indicator.
+0258   0064           00485         CLRWDT
+                      00486 
+0259                  00487 Loop1
+                      00488         ;; LED BLINKER!!!  I'M ALIVE!!!  I'M ALIVE!!!  WOOHOO!!!
+                      00489         ;btfss  tFlags,HUNDMS
+                      00490         ;goto   LEDEnd
+                      00491         ;btfss  PORTA,LED
+                      00492         ;goto   LEDoff
+                      00493         ;bcf    PORTA,LED
+                      00494         ;goto   LedEnd
+0259                  00495 LEDoff 
+                      00496         ;bsf    PORTA,LED
+0259                  00497 LEDEnd
+0259   1DA3           00498         btfss   tFlags,HUNDMS
+025A   2A65           00499         goto    Ck10Ms          ; no 100 ms event checks.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00500 
+025B   08AF           00501         movf    rxTmo,f         ; get receive timeout.
+025C   1903           00502         btfsc   STATUS,Z        ; check for zero.
+025D   2A65           00503         goto    Ck10Ms          ; zero.
+025E   0BAF           00504         decfsz  rxTmo,f         ; decrement
+025F   2A65           00505         goto    Ck10Ms          ; not zero.
+                      00506         ;; receive (upload to pod) timeout
+                      00507         ;; set receive command mode
+0260   3000           00508         movlw   RXS_CMD         ; get receive command state.
+0261   00B1           00509         movwf   rxState         ; set receive state.
+                      00510         ;; send ERROR message.
+0262   3004           00511         movlw   M_TOERR         ; get message number for ERROR message.
+0263   00F4           00512         movwf   msgNum          ; save message number
+0264   2080           00513         call    XmitMsg         ; send message
+                      00514                 
+0265                  00515 Ck10Ms                          ; check Ten Millisecond timer events.
+0265   1D23           00516         btfss   tFlags,TENMS
+0266   2A89           00517         goto    CBDone          ; no button press check.
+                      00518 
+0267                  00519 CkWrite                         ; check and debounce the write button.
+0267   1A07           00520         btfsc   PORTC,PBWRITE   ; is write button pressed. (LOW)
+0268   2A76           00521         goto    WR0             ; no.
+                      00522         ;; write button is being pressed right now.
+0269   1C28           00523         btfss   bFlags,WLAST    ; was write button pressed last time.
+026A   2A72           00524         goto    WR01            ; no, off->on transition.
+026B   08B5           00525         movf    dbWrite,f       ; check this for zero.
+026C   1903           00526         btfsc   STATUS,Z        ; skip if non-zero.
+026D   2A78           00527         goto    CkRead          ; done with write button for now.
+026E   0BB5           00528         decfsz  dbWrite,f       ; decrement write button debounce counter.
+026F   2A78           00529         goto    CkRead          ; done with write button for now.
+0270   1528           00530         bsf     bFlags,WNOW     ; set WRITE NOW flag.
+0271   2A78           00531         goto    CkRead          ; done with write button for now.
+0272                  00532 WR01                            ; write button off->on transition.
+0272   1428           00533         bsf     bFlags,WLAST    ; set last state flag.
+0273   3005           00534         movlw   BDBC            ; get button debounce preset.
+0274   00B5           00535         movwf   dbWrite         ; save write button debounce timer.
+0275   2A78           00536         goto    CkRead          ; done with write button for now.
+                      00537 
+0276                  00538 WR0                             ; write button is not pressed.
+0276   01B5           00539         clrf    dbWrite         ; clear write button debounce timer
+0277   1028           00540         bcf     bFlags,WLAST    ; clear last state flag.
+                      00541 
+0278                  00542 CkRead                          ; check and debounce the read button.
+0278   1A87           00543         btfsc   PORTC,PBREAD    ; is read button pressed. (LOW)
+0279   2A87           00544         goto    RD0             ; no.
+                      00545         ;; read button is being pressed right now.
+027A   1CA8           00546         btfss   bFlags,RLAST    ; was read button pressed last time.
+027B   2A83           00547         goto    RD01            ; no, off->on transition.
+027C   08B4           00548         movf    dbRead,f        ; check this for zero.
+027D   1903           00549         btfsc   STATUS,Z        ; skip if non-zero.
+027E   2A89           00550         goto    CBDone          ; done with read button for now.
+027F   0BB4           00551         decfsz  dbRead,f        ; decrement read button debounce counter.
+0280   2A89           00552         goto    CBDone          ; done with read button for now.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0281   15A8           00553         bsf     bFlags,RNOW     ; set READ NOW flag.
+0282   2A89           00554         goto    CBDone          ; done with read button for now.
+0283                  00555 RD01                            ; read button off->on transition.
+0283   14A8           00556         bsf     bFlags,RLAST    ; set last state flag.
+0284   3005           00557         movlw   BDBC            ; get button debounce preset.
+0285   00B4           00558         movwf   dbRead          ; save read button debounce timer.
+0286   2A89           00559         goto    CBDone          ; done with read button for now.
+                      00560 
+0287                  00561 RD0                             ; read button is not pressed.
+0287   01B4           00562         clrf    dbRead          ; clear read button debounce timer
+0288   10A8           00563         bcf     bFlags,RLAST    ; clear last state flag.
+                      00564         
+0289                  00565 CBDone                          ; done checking buttons
+                      00566         
+0289                  00567 CkWNow                          ; check for debounced write button.
+0289   1D28           00568         btfss   bFlags,WNOW     ; is there a valid write button press?
+028A   2A93           00569         goto    CkRNow          ; no.
+028B   1685           00570         bsf     PORTA,LED       ; turn on busy LED
+                      00571         PAGE2                   ; select code page 2
+028C   118A               M         bcf     PCLATH,3
+028D   160A               M         bsf     PCLATH,4
+028E   2021           00572         call    WriteX          ; write X22C12
+                      00573         PAGE0                   ; select code page 0
+028F   118A               M         bcf     PCLATH,3
+0290   120A               M         bcf     PCLATH,4
+0291   1285           00574         bcf     PORTA,LED       ; turn off busy LED
+0292   1128           00575         bcf     bFlags,WNOW     ; clear debounced write button flag.
+                      00576 
+0293                  00577 CkRNow                          ; check for debounced read button.
+0293   1DA8           00578         btfss   bFlags,RNOW     ; is there a valid read button press?
+0294   2A9E           00579         goto    CkRChar         ; no.
+0295   1685           00580         bsf     PORTA,LED       ; turn on busy LED
+                      00581         PAGE2                   ; select code page 2
+0296   118A               M         bcf     PCLATH,3
+0297   160A               M         bsf     PCLATH,4
+0298   2000           00582         call    ReadX           ; read X22C12
+0299   204C           00583         call    Save            ; save data
+                      00584         PAGE0                   ; select code page 0
+029A   118A               M         bcf     PCLATH,3
+029B   120A               M         bcf     PCLATH,4
+029C   1285           00585         bcf     PORTA,LED       ; turn off busy LED
+029D   11A8           00586         bcf     bFlags,RNOW     ; clear debounced write button flag.
+                      00587 
+029E                  00588 CkRChar                         ; check for received character.
+029E   1FA3           00589         btfss   tFlags,NEWCHAR  ; has a char been received?
+029F   2A32           00590         goto    Loop0           ; no.
+02A0   13A3           00591         bcf     tFlags,NEWCHAR  ; clear new character flag.
+02A1   3002           00592         movlw   high rxsTbl     ; set page 
+02A2   008A           00593         movwf   PCLATH          ; select page
+02A3   0831           00594         movf    rxState,w       ; get receive state
+02A4   3903           00595         andlw   h'03'           ; restrict...
+02A5   0782           00596         addwf   PCL,f           ; add w to PCL
+02A6                  00597 rxsTbl
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+02A6   2AAA           00598         goto    RxCmd           ; received command
+02A7   2B01           00599         goto    RxProg          ; received program nibble
+02A8   2B11           00600         goto    RxChk           ; received checksum byte.
+02A9   2AAA           00601         goto    RxCmd           ; fallthru!
+                      00602 
+02AA                  00603 RxCmd                           ; received command (valid: DURW)
+02AA   0830           00604         movf    rxChar,w        ; get char
+02AB   3A44           00605         xorlw   h'44'           ; 'D'
+02AC   1903           00606         btfsc   STATUS,Z        ; will be zero if D
+02AD   2AD7           00607         goto    RxCmdD          ; it is D.
+                      00608         
+02AE   0830           00609         movf    rxChar,w        ; get char
+02AF   3A64           00610         xorlw   h'64'           ; 'd'
+02B0   1903           00611         btfsc   STATUS,Z        ; will be zero if d
+02B1   2AD7           00612         goto    RxCmdD          ; it is d.
+                      00613 
+02B2   0830           00614         movf    rxChar,w        ; get char
+02B3   3A52           00615         xorlw   h'52'           ; 'R'
+02B4   1903           00616         btfsc   STATUS,Z        ; will be zero if R
+02B5   2ADF           00617         goto    RxCmdR          ; it is R.
+                      00618         
+02B6   0830           00619         movf    rxChar,w        ; get char
+02B7   3A72           00620         xorlw   h'72'           ; 'r'
+02B8   1903           00621         btfsc   STATUS,Z        ; will be zero if r
+02B9   2ADF           00622         goto    RxCmdR          ; it is r.
+                      00623         
+02BA   0830           00624         movf    rxChar,w        ; get char
+02BB   3A55           00625         xorlw   h'55'           ; 'U'
+02BC   1903           00626         btfsc   STATUS,Z        ; will be zero if U
+02BD   2AEA           00627         goto    RxCmdU          ; it is U.
+                      00628         
+02BE   0830           00629         movf    rxChar,w        ; get char
+02BF   3A75           00630         xorlw   h'75'           ; 'u'
+02C0   1903           00631         btfsc   STATUS,Z        ; will be zero if u
+02C1   2AEA           00632         goto    RxCmdU          ; it is u.
+                      00633 
+02C2   0830           00634         movf    rxChar,w        ; get char
+02C3   3A56           00635         xorlw   h'56'           ; 'V'
+02C4   1903           00636         btfsc   STATUS,Z        ; will be zero if V
+02C5   2AF2           00637         goto    RxCmdV          ; it is V.
+                      00638         
+02C6   0830           00639         movf    rxChar,w        ; get char
+02C7   3A76           00640         xorlw   h'76'           ; 'v'
+02C8   1903           00641         btfsc   STATUS,Z        ; will be zero if v
+02C9   2AF2           00642         goto    RxCmdV          ; it is v.
+                      00643 
+02CA   0830           00644         movf    rxChar,w        ; get char
+02CB   3A57           00645         xorlw   h'57'           ; 'W'
+02CC   1903           00646         btfsc   STATUS,Z        ; will be zero if W
+02CD   2AF7           00647         goto    RxCmdW          ; it is W.
+                      00648         
+02CE   0830           00649         movf    rxChar,w        ; get char
+02CF   3A77           00650         xorlw   h'77'           ; 'w'
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+02D0   1903           00651         btfsc   STATUS,Z        ; will be zero if w
+02D1   2AF7           00652         goto    RxCmdW          ; it is w.
+                      00653 
+                      00654         ;; none of the above.
+02D2   1685           00655         bsf     PORTA,LED       ; turn on busy LED
+02D3   3002           00656         movlw   M_MENU          ; get message number
+02D4   00F4           00657         movwf   msgNum          ; save message number
+02D5   2080           00658         call    XmitMsg         ; send message
+02D6   2A32           00659         goto    Loop0
+                      00660 
+02D7                  00661 RxCmdD                          ; download to pod
+02D7   1685           00662         bsf     PORTA,LED       ; turn on busy LED
+02D8   3032           00663         movlw   RXTMOT          ; get timeout preset.
+02D9   00AF           00664         movwf   rxTmo           ; set timeout counter.
+02DA   01AE           00665         clrf    chksum          ; clear chksum
+02DB   01F0           00666         clrf    pgmaddr         ; reset program address.
+02DC   3001           00667         movlw   RXS_PGM         ; get receive program state.
+02DD   00B1           00668         movwf   rxState         ; set receive state.
+02DE   2A32           00669         goto    Loop0
+                      00670         
+02DF                  00671 RxCmdR                          ; read EEPROM to pod
+02DF   1685           00672         bsf     PORTA,LED       ; turn on busy LED
+                      00673         PAGE2                   ; select code page 2
+02E0   118A               M         bcf     PCLATH,3
+02E1   160A               M         bsf     PCLATH,4
+02E2   2000           00674         call    ReadX           ; read X22C12
+02E3   204C           00675         call    Save            ; save data
+                      00676         PAGE0                   ; select code page 0
+02E4   118A               M         bcf     PCLATH,3
+02E5   120A               M         bcf     PCLATH,4
+02E6   3005           00677         movlw   M_OK            ; get message number
+02E7   00F4           00678         movwf   msgNum          ; save message number
+02E8   2080           00679         call    XmitMsg         ; send message
+02E9   2A32           00680         goto    Loop0
+                      00681         
+02EA                  00682 RxCmdU                          ; upload from pod
+02EA   1685           00683         bsf     PORTA,LED       ; turn on busy LED
+02EB   01AE           00684         clrf    chksum          ; clear chksum
+02EC   01F0           00685         clrf    pgmaddr         ; reset program address.
+02ED   3006           00686         movlw   M_TXPR          ; send program message
+02EE   00F4           00687         movwf   msgNum          ; set message number
+02EF   01F5           00688         clrf    msgCnt          ; clear message counter
+02F0   2080           00689         call    XmitMsg         ; start sending message.
+02F1   2A32           00690         goto    Loop0           ; done here.
+                      00691 
+02F2                  00692 RxCmdV                          ; show version.
+02F2   1685           00693         bsf     PORTA,LED       ; turn on busy LED
+02F3   3001           00694         movlw   M_INIT          ; get message number
+02F4   00F4           00695         movwf   msgNum          ; save message number
+02F5   2080           00696         call    XmitMsg         ; send message
+02F6   2A32           00697         goto    Loop0
+                      00698         
+02F7                  00699 RxCmdW                          ; write EEPROM from pod
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+02F7   1685           00700         bsf     PORTA,LED       ; turn on busy LED
+                      00701         PAGE2                   ; select code page 2
+02F8   118A               M         bcf     PCLATH,3
+02F9   160A               M         bsf     PCLATH,4
+02FA   2021           00702         call    WriteX          ; write X22C12
+                      00703         PAGE0                   ; select code page 0
+02FB   118A               M         bcf     PCLATH,3
+02FC   120A               M         bcf     PCLATH,4
+02FD   3005           00704         movlw   M_OK            ; get message number
+02FE   00F4           00705         movwf   msgNum          ; save message number
+02FF   2080           00706         call    XmitMsg         ; send message
+0300   2A32           00707         goto    Loop0
+                      00708 
+0301                  00709 RxProg
+0301   0830           00710         movf    rxChar,w        ; get rxChar
+0302   233C           00711         call    a2b             ; convert char to hex digit
+0303   07AE           00712         addwf   chksum,f        ; add to checksum
+0304   00F1           00713         movwf   pgmdata         ; save to data temp reg.
+                      00714         PAGE2                   ; select code page 2
+0305   118A               M         bcf     PCLATH,3
+0306   160A               M         bsf     PCLATH,4
+0307   2099           00715         call    PutNib          ; store nibble to ram buffer
+                      00716         PAGE0                   ; select code page 0
+0308   118A               M         bcf     PCLATH,3
+0309   120A               M         bcf     PCLATH,4
+030A   0FF0           00717         incfsz  pgmaddr,f       ; increment prgram address
+030B   2A32           00718         goto    Loop0           ; do more data bytes.
+030C   3002           00719         movlw   RXS_CHK         ; get receive checksum state.
+030D   00B1           00720         movwf   rxState         ; set receive state.
+030E   01B2           00721         clrf    rxCsBc          ; clear receive checksum byte count.
+030F   01B3           00722         clrf    rxCksum         ; clear receive checksum.
+0310   2A32           00723         goto    Loop0
+                      00724         
+0311                  00725 RxChk                           ; get checksum bytes
+0311   1832           00726         btfsc   rxCsBc,0        ; is receive checksum byte count 1?
+0312   2B19           00727         goto    RxChk1          ; yes
+0313   0830           00728         movf    rxChar,w        ; get rxChar
+0314   233C           00729         call    a2b             ; convert char to hex digit
+0315   00B3           00730         movwf   rxCksum         ; save into receive checksum.
+0316   0EB3           00731         swapf   rxCksum,f       ; move it to the high nibble
+0317   0AB2           00732         incf    rxCsBc,f        ; increment byte counter.
+0318   2A32           00733         goto    Loop0           ; wait for next char.
+                      00734         
+0319                  00735 RxChk1                          ; get 2nd checksum byte.
+0319   0830           00736         movf    rxChar,w        ; get rxChar
+031A   233C           00737         call    a2b             ; convert char to hex digit
+031B   07B3           00738         addwf   rxCksum,f       ; add to other nibble.
+                      00739         ;; set receive command mode
+031C   3000           00740         movlw   RXS_CMD         ; get receive command state.
+031D   00B1           00741         movwf   rxState         ; set receive state.
+                      00742         ;; now have checksum.  do something with it.
+031E   082E           00743         movf    chksum,w        ; get checksum.
+031F   0233           00744         subwf   rxCksum,w       ; subtract received checksum.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0320   1D03           00745         btfss   STATUS,Z        ; skip if result is 0, checksum matches.
+0321   2B2C           00746         goto    RxChkNG         ; bad checksum
+                      00747         ;; save to EEPROM.
+                      00748         PAGE2                   ; select code page 2
+0322   118A               M         bcf     PCLATH,3
+0323   160A               M         bsf     PCLATH,4
+0324   204C           00749         call    Save            ; save data
+                      00750         PAGE0                   ; select code page 0
+0325   118A               M         bcf     PCLATH,3
+0326   120A               M         bcf     PCLATH,4
+                      00751         ;; send the OK message.
+0327   01AF           00752         clrf    rxTmo           ; clear timeout counter.
+0328   3005           00753         movlw   M_OK            ; get message number
+0329   00F4           00754         movwf   msgNum          ; save message number
+032A   2080           00755         call    XmitMsg         ; send message
+032B   2A32           00756         goto    Loop0
+032C                  00757 RxChkNG                         ; bad checksum
+                      00758         ;; send the bad checksum message.
+032C   01AF           00759         clrf    rxTmo           ; clear timeout counter.
+032D   3003           00760         movlw   M_BCKSM         ; get message number
+032E   00F4           00761         movwf   msgNum          ; save message number
+032F   2080           00762         call    XmitMsg         ; send message
+0330   2A32           00763         goto    Loop0
+                      00764 
+                      00765 ; *********
+                      00766 ; ** b2a **
+                      00767 ; *********
+                      00768         ;; convert binary to ascii.
+                      00769         ;; only works on low nibble.
+                      00770         ;; receives input and returns output in w.
+0331                  00771 b2a
+0331   390F           00772         andlw   h'0f'           ; mask to reasonable.
+0332   00AB           00773         movwf   temp3           ; save data
+0333   3C09           00774         sublw   d'9'            ; w = 9 - w
+0334   1C03           00775         btfss   STATUS,C        ; is result non-negative.
+0335   2B39           00776         goto    b2aLet          ; no.
+0336   082B           00777         movf    temp3,w         ; get data back.
+0337   3E30           00778         addlw   d'48'           ; add value of character 0.
+0338   0008           00779         return                  ; done.
+0339                  00780 b2aLet                          ; result is A-F.
+0339   082B           00781         movf    temp3,w         ; get data back.
+033A   3E37           00782         addlw   d'55'           ; add value of character 'A' - 10.
+033B   0008           00783         return                  ; done.
+                      00784         
+                      00785 ; *********
+                      00786 ; ** a2b **
+                      00787 ; *********
+                      00788         ;; convert ascii hex digit to binary representation.
+                      00789         ;; only works for 0-F
+                      00790         ;; receives input and returns output in w.
+033C                  00791 a2b
+033C   00AB           00792         movwf   temp3           ; save data.
+033D   1BAB           00793         btfsc   temp3,7         ; this bit must be clear.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+033E   2B4F           00794         goto    a2bJunk         ; bad data.
+033F   1B2B           00795         btfsc   temp3,6         ; is it a letter?
+0340   2B48           00796         goto    a2bLet          ; yes.
+0341   1EAB           00797         btfss   temp3,5         ; this bit must be set for number
+0342   2B4F           00798         goto    a2bJunk         ; bad data.
+0343   1E2B           00799         btfss   temp3,4         ; this bit must be set for number
+0344   2B4F           00800         goto    a2bJunk         ; bad data.
+0345   300F           00801         movlw   h'0f'           ; mask.
+0346   052B           00802         andwf   temp3,w         ; get number.
+0347   0008           00803         return                  ; 0-9 
+0348                  00804 a2bLet                          ; it could be a letter...
+0348   19AB           00805         btfsc   temp3,3         ; this bit must be clear for valid letter.
+0349   2B4F           00806         goto    a2bJunk         ; bad data.
+034A   3007           00807         movlw   h'07'           ; mask.
+034B   052B           00808         andwf   temp3,w         ; get number.
+034C   3E09           00809         addlw   h'09'           ; move to valid.
+034D   390F           00810         andlw   h'0f'           ; force 16 to 0.
+034E   0008           00811         return                  ; a-f
+034F                  00812 a2bJunk
+034F   3400           00813         retlw   h'00'           ; return with 0 in W
+                      00814                 
+                      00815 ; ************************************************************************
+                      00816 ; ****************************** ROM PAGE 1 ******************************
+                      00817 ; ************************************************************************
+0800                  00818         org     0800            ; page 1
+                      00819 
+                      00820         
+                      00821 ; ************************************************************************
+                      00822 ; ****************************** ROM PAGE 2 ******************************
+                      00823 ; ************************************************************************
+1000                  00824         org     1000            ; page 2
+                      00825         
+                      00826 ; ***********
+                      00827 ; ** ReadX **
+                      00828 ; ***********
+                      00829         ;; read X22C12 into RAM buffer.
+1000                  00830 ReadX
+                      00831         ;; put the X22C12 into a known state.
+1000   01F0           00832         clrf    pgmaddr         ; reset X22C12 address.
+1001   0186           00833         clrf    PORTB           ; reset address lines.
+1002   1405           00834         bsf     PORTA,X22CS     ; deselect X22C12 CS\.
+1003   1485           00835         bsf     PORTA,X22WE     ; deselect X22C12 WE\.
+1004   1505           00836         bsf     PORTA,X22STR    ; deselect X22C12 STR\.
+1005   1585           00837         bsf     PORTA,X22RCL    ; deselect X22C12 RCL\.
+                      00838         
+                      00839         ;; set up the IO direction.
+1006   1683           00840         bsf     STATUS,RP0      ; select bank 1.
+1007   30BF           00841         movlw   B'10111111'     ; SCI/SCI/in/in/in/in/in/in
+                      00842                                 ; in  out in  in  in  in  in  in 
+1008   0087           00843         movwf   TRISC           ; set port C data direction
+1009   1283           00844         bcf     STATUS,RP0      ; select bank 0.
+100A   20DF           00845         call    Dly150          ; delay 150 ns to allow X22C12 to stabilize.
+                      00846 
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00847         ;; read the data out of the device.
+100B   1205           00848         bcf     PORTA,X22VCC    ; power up the X22C12.
+100C   20DF           00849         call    Dly150          ; delay 150 ns to allow X22C12 to power up.
+100D                  00850 RXLoop                          ; read X22C12 loop
+100D   0064           00851         clrwdt                  ; clear watchdog.
+100E   0870           00852         movf    pgmaddr,w       ; get address.
+100F   0086           00853         movwf   PORTB           ; set X22C12 address lines.
+1010   1005           00854         bcf     PORTA,X22CS     ; select X22C12 CS\
+1011   20DF           00855         call    Dly150          ; delay 150 ns.
+1012   0807           00856         movf    PORTC,w         ; get data nibble from X22C12
+1013   390F           00857         andlw   h'0f'           ; mask out invalid bits.
+1014   00F1           00858         movwf   pgmdata         ; save program data.
+1015   1405           00859         bsf     PORTA,X22CS     ; deselect X22C12 CS\.
+1016   2099           00860         call    PutNib          ; save nibble to RAM buffer.
+1017   0FF0           00861         incfsz  pgmaddr,f       ; increment program address
+1018   280D           00862         goto    RXLoop          ; read another nibble.
+                      00863         ;; read all the data.  power down the device.
+1019   0186           00864         clrf    PORTB           ; reset all addresses to 0.
+101A   1605           00865         bsf     PORTA,X22VCC    ; power down the X22C12.
+                      00866 
+101B   20DF           00867         call    Dly150          ; wait a bit for the X22C12 to stabilize.
+                      00868         ;; turn off all the other pins to the programmer socket
+101C   1005           00869         bcf     PORTA,X22CS     ; select X22C12 CS\.
+101D   1085           00870         bcf     PORTA,X22WE     ; select X22C12 WE\.
+101E   1105           00871         bcf     PORTA,X22STR    ; select X22C12 STR\.
+101F   1185           00872         bcf     PORTA,X22RCL    ; select X22C12 RCL\.
+1020   0008           00873         return
+                      00874 
+                      00875 ; ************
+                      00876 ; ** WriteX **
+                      00877 ; ************
+                      00878         ;; Write X22C12 from RAM buffer.
+1021                  00879 WriteX
+                      00880         ;; put the X22C12 into a known state.
+1021   01F0           00881         clrf    pgmaddr         ; reset X22C12 address.
+1022   0186           00882         clrf    PORTB           ; reset address lines.
+1023   1405           00883         bsf     PORTA,X22CS     ; deselect X22C12 CS\.
+1024   1485           00884         bsf     PORTA,X22WE     ; deselect X22C12 WE\.
+1025   1505           00885         bsf     PORTA,X22STR    ; deselect X22C12 STR\.
+1026   1585           00886         bsf     PORTA,X22RCL    ; deselect X22C12 RCL\.
+1027   20DF           00887         call    Dly150          ; delay 150 ns to allow X22C12 to stabilize.
+                      00888         
+                      00889         ;; set up the IO direction.
+1028   1683           00890         bsf     STATUS,RP0      ; select bank 1.
+1029   30B0           00891         movlw   B'10110000'     ; SCI/SCI/in/in/out/out/out/out
+                      00892                                 ; in  out in  in  out out out out
+102A   0087           00893         movwf   TRISC           ; set port C data direction
+102B   1283           00894         bcf     STATUS,RP0      ; select bank 0.
+                      00895 
+                      00896         ;; write the data into the device.
+102C   1205           00897         bcf     PORTA,X22VCC    ; power up the X22C12.
+102D   20D5           00898         call    Dly5ms          ; delay 5 ms so device will power up ready.
+102E                  00899 WXLoop                          ; write X22C12 loop
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 19
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+102E   0064           00900         clrwdt                  ; clear watchdog.
+102F   0870           00901         movf    pgmaddr,w       ; get address.
+1030   0086           00902         movwf   PORTB           ; set X22C12 address lines.
+1031   30F0           00903         movlw   h'f0'           ; mask.
+1032   0587           00904         andwf   PORTC,f         ; clear low nibble (data bits) on portc
+1033   2085           00905         call    GetNib          ; get the nibble.
+1034   0487           00906         iorwf   PORTC,f         ; set program bits 
+1035   1085           00907         bcf     PORTA,X22WE     ; select X22C12 WE\
+1036   1005           00908         bcf     PORTA,X22CS     ; select X22C12 CS\
+1037   20DF           00909         call    Dly150          ; delay 150 ns.
+1038   1405           00910         bsf     PORTA,X22CS     ; deselect X22C12 CS\
+1039   1485           00911         bsf     PORTA,X22WE     ; deselect X22C12 WE\
+103A   0FF0           00912         incfsz  pgmaddr,f       ; increment program address
+103B   282E           00913         goto    WXLoop          ; read another nibble.
+                      00914         ;; wrote all the data. 
+103C   0186           00915         clrf    PORTB           ; reset all addresses to 0.
+103D   1105           00916         bcf     PORTA,X22STR    ; select X22C12 STORE\
+103E   20DF           00917         call    Dly150          ; delay 150 ns.
+103F   1505           00918         bsf     PORTA,X22STR    ; deselect X22C12 STORE\
+                      00919         ;; wait for device to save it's program...
+1040   20D5           00920         call    Dly5ms          ; wait 5 ms so X22C12 can complete the store.
+                      00921         ;; power down the device.
+1041   1605           00922         bsf     PORTA,X22VCC    ; power down the X22C12.
+                      00923         ;; reset the IO direction.
+1042   1683           00924         bsf     STATUS,RP0      ; select bank 1.
+1043   30BF           00925         movlw   B'10111111'     ; SCI/SCI/in/in/in/in/in/in
+                      00926                                 ; in  out in  in  in  in  in  in 
+1044   0087           00927         movwf   TRISC           ; set port C data direction
+1045   1283           00928         bcf     STATUS,RP0      ; select bank 0.
+                      00929 
+1046   20DF           00930         call    Dly150          ; wait a bit for the X22C12 to stabilize.
+                      00931         ;; turn off all the other pins to the programmer socket
+1047   1005           00932         bcf     PORTA,X22CS     ; select X22C12 CS\.
+1048   1085           00933         bcf     PORTA,X22WE     ; select X22C12 WE\.
+1049   1105           00934         bcf     PORTA,X22STR    ; select X22C12 STR\.
+104A   1185           00935         bcf     PORTA,X22RCL    ; select X22C12 RCL\.
+104B   0008           00936         return
+                      00937 
+                      00938 ; **********
+                      00939 ; ** Save **
+                      00940 ; **********
+                      00941         ;; save RAM buffer to EEPROM.
+104C                  00942 Save
+104C   01F3           00943         clrf    eeAddr          ; reset EEPROM address
+104D                  00944 SLoop
+104D   20B7           00945         call    GetByte         ; get data buffer byte.
+104E   2069           00946         call    WriteEE         ; save to EEPROM
+104F   0AF3           00947         incf    eeAddr,f        ; increment address.
+1050   1FF3           00948         btfss   eeAddr,7        ; this bit will get set at address 128
+1051   284D           00949         goto    SLoop           ; save another byte.
+1052   0008           00950         return                  ; done.
+                      00951         
+                      00952 ; **********
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 20
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00953 ; ** Load **
+                      00954 ; **********
+                      00955         ;; load RAM buffer from EEPROM.
+1053                  00956 Load
+1053   01F3           00957         clrf    eeAddr          ; reset EEPROM address.
+1054                  00958 LLoop                           ; load loop
+1054   205A           00959         call    ReadEE          ; read EEPROM
+1055   20C5           00960         call    PutByte         ; save byte into RAM buffer.
+1056   0AF3           00961         incf    eeAddr,f        ; increment address.
+1057   1FF3           00962         btfss   eeAddr,7        ; this bit will get set at address 128
+1058   2854           00963         goto    LLoop           ; load another byte.
+1059   0008           00964         return                  ; done.
+                      00965         
+                      00966 ; ************
+                      00967 ; ** ReadEE **
+                      00968 ; ************
+                      00969         ;; read 1 bytes from the EEPROM 
+                      00970         ;; from location in eeAddr into W
+105A                  00971 ReadEE                          ; read EEPROM.
+105A   138B           00972         bcf     INTCON,GIE      ; disable interrupts
+105B   1B8B           00973         btfsc   INTCON,GIE      ; interrupts successfully disabled?
+105C   285A           00974         goto    ReadEE          ; no,  try again.
+105D   0873           00975         movf    eeAddr,w        ; get eeprom address.
+105E   1703           00976         bsf     STATUS,RP1      ; select register page.
+105F   1283           00977         bcf     STATUS,RP0      ; select register page.
+1060   008D           00978         movwf   EEADR           ; write EEADR.
+1061   1683           00979         bsf     STATUS,RP0      ; select register page.
+1062   138C           00980         bcf     EECON1,EEPGD    ; select DATA memory.
+1063   140C           00981         bsf     EECON1,RD       ; read EEPROM.
+1064   1283           00982         bcf     STATUS,RP0      ; select register page.
+1065   080C           00983         movf    EEDATA,w        ; get EEPROM data.
+1066   1303           00984         bcf     STATUS,RP1      ; select register page.
+1067   178B           00985         bsf     INTCON,GIE      ; enable interrupts
+1068   0008           00986         return                  ; read the requested bytes, return
+                      00987 
+                      00988 ; *************
+                      00989 ; ** WriteEE **
+                      00990 ; *************
+                      00991         ;; write 1 byte from w into the EEPROM 
+                      00992         ;; at location in eeAddr
+                      00993         ;; stomps on temp3.
+1069                  00994 WriteEE                         ; write EEPROM.
+1069   00AB           00995         movwf   temp3           ; save the value to write.
+106A                  00996 WritEd
+106A   138B           00997         bcf     INTCON,GIE      ; disable interrupts
+106B   1B8B           00998         btfsc   INTCON,GIE      ; interrupts successfully disabled?
+106C   286A           00999         goto    WritEd          ; nope.  Try again.
+106D   0873           01000         movf    eeAddr,w        ; get address.
+106E   1703           01001         bsf     STATUS,RP1      ; select register page.
+106F   1283           01002         bcf     STATUS,RP0      ; select register page.
+1070   008D           01003         movwf   EEADR           ; set address.
+1071   1303           01004         bcf     STATUS,RP1      ; select register page.
+1072   082B           01005         movf    temp3,w         ; get data.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 21
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+1073   1703           01006         bsf     STATUS,RP1      ; select register page.
+1074   008C           01007         movwf   EEDATA          ; set data.
+1075   1683           01008         bsf     STATUS,RP0      ; select register page.
+1076   138C           01009         bcf     EECON1,EEPGD    ; select data EEPROM.
+1077   150C           01010         bsf     EECON1,WREN     ; enable writes.
+1078   3055           01011         movlw   h'55'           ; magic value.
+1079   008D           01012         movwf   EECON2          ; write magic value.
+107A   30AA           01013         movlw   h'AA'           ; magic value.
+107B   008D           01014         movwf   EECON2          ; write magic value.
+107C   148C           01015         bsf     EECON1,WR       ; start write cycle.
+107D   0064           01016         clrwdt                  ; clear watchdog.
+107E   150C           01017         bsf     EECON1,WREN     ; disable writes.
+107F                  01018 WriteEl                         ; loop until EEPROM written.
+107F   188C           01019         btfsc   EECON1,WR       ; done writing?
+1080   287F           01020         goto    WriteEl         ; nope. keep waiting.
+1081   1283           01021         bcf     STATUS,RP0      ; select register page.
+1082   1303           01022         bcf     STATUS,RP1      ; select register page.
+1083   178B           01023         bsf     INTCON,GIE      ; enable interrupts
+1084   0008           01024         return                  ; wrote the requested bytes, done, so return
+                      01025 
+                      01026 ; ************
+                      01027 ; ** GetNib **
+                      01028 ; ************
+                      01029         ;; get a NIBBLE of the program data specified by address pgmaddr
+                      01030         ;; from the RAM bufferin pgmaddr.  return the nibble in pgmdata and in W.
+1085                  01031 GetNib  
+1085   1783           01032         bsf     STATUS,IRP      ; all the program data is in 100-1ff
+1086   0870           01033         movf    pgmaddr,w       ; get pgmaddr
+1087   00AA           01034         movwf   temp2           ; save to temp 2.
+1088   0CAA           01035         rrf     temp2,f         ; divide by 2.
+1089   13AA           01036         bcf     temp2,7         ; make sure bit 7 is clear.
+108A   132A           01037         bcf     temp2,6         ; also clear bit 6.
+108B   3020           01038         movlw   low prgbuf1     ; get the address of the program buffer
+108C   07AA           01039         addwf   temp2,f         ; add the offset of the program buffer
+108D   1BF0           01040         btfsc   pgmaddr,7       ; is this address in 80-ff?
+108E   17AA           01041         bsf     temp2,7         ; select the upper half of the buffer.
+108F   082A           01042         movf    temp2,w         ; get the address back.
+1090   0084           01043         movwf   FSR             ; set indirect address.
+1091   0800           01044         movf    INDF,w          ; get byte at that address.
+1092   1C70           01045         btfss   pgmaddr,0       ; is this the high nibble?
+1093   2895           01046         goto    GetNibL         ; no, it's the low nibble.
+1094                  01047 GetNibH                         ; return the high nibble
+1094   0E00           01048         swapf   INDF,w          ; swap the nibbles into W.
+1095                  01049 GetNibL                         ; mask and return the low nibble.
+1095   390F           01050         andlw   h'0f'           ; mask.
+1096   00F1           01051         movwf   pgmdata         ; save data
+1097   1383           01052         bcf     STATUS,IRP      ; set indirect to 00-ff range.
+1098   0008           01053         return                  ; return with the result in w.
+                      01054         
+                      01055 ; ************
+                      01056 ; ** PutNib **
+                      01057 ; ************
+                      01058         ;; save the NIBBLE pgmdata at address pgmaddr into the RAM buffer.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 22
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+1099                  01059 PutNib
+1099   1783           01060         bsf     STATUS,IRP      ; all the program data is in 100-1ff
+109A   0870           01061         movf    pgmaddr,w       ; get pgmaddr
+109B   00AA           01062         movwf   temp2           ; save to temp 2.
+109C   0CAA           01063         rrf     temp2,f         ; divide by 2.
+109D   13AA           01064         bcf     temp2,7         ; make sure bit 7 is clear.
+109E   132A           01065         bcf     temp2,6         ; also clear bit 6.
+109F   3020           01066         movlw   low prgbuf1     ; get the address of the program buffer
+10A0   07AA           01067         addwf   temp2,f         ; add the offset of the program buffer
+10A1   1BF0           01068         btfsc   pgmaddr,7       ; is this address in 80-ff?
+10A2   17AA           01069         bsf     temp2,7         ; select the upper half of the buffer.
+10A3   082A           01070         movf    temp2,w         ; get the address back.
+10A4   0084           01071         movwf   FSR             ; set indirect address.
+10A5   0871           01072         movf    pgmdata,w       ; get the program data.
+10A6   00AB           01073         movwf   temp3           ; save it.
+10A7   1C70           01074         btfss   pgmaddr,0       ; is this the high nibble?
+10A8   28B0           01075         goto    PutNibL         ; no, it's the low nibble.
+10A9                  01076 PutNibH                         ; save the high nibble into the RAM buffer.
+10A9   300F           01077         movlw   h'0f'           ; mask to preserve the low nibble.
+10AA   0580           01078         andwf   INDF,f          ; clear the high nibble in the RAM buffer.
+10AB   0E71           01079         swapf   pgmdata,w       ; swap the data to the high nibble.
+10AC   39F0           01080         andlw   h'f0'           ; sanity mask so only high nibble remains.
+10AD   0480           01081         iorwf   INDF,f          ; IOR the high nibble into the RAM buffer.
+10AE   1383           01082         bcf     STATUS,IRP      ; set indirect to 00-ff range.
+10AF   0008           01083         return                  ; done.
+10B0                  01084 PutNibL                         ; save the low nibble into the RAM buffer.
+10B0   30F0           01085         movlw   h'f0'           ; mask to preserve the high nibble.
+10B1   0580           01086         andwf   INDF,f          ; clear the low nibble in the RAM buffer.
+10B2   0871           01087         movf    pgmdata,w       ; get the program data.
+10B3   390F           01088         andlw   h'0f'           ; sanity mask so only low nibble remains.
+10B4   0480           01089         iorwf   INDF,f          ; IOR the high nibble into the RAM buffer.
+10B5   1383           01090         bcf     STATUS,IRP      ; set indirect to 00-ff range.
+10B6   0008           01091         return                  ; done.
+                      01092 
+                      01093 ; *************
+                      01094 ; ** GetByte **
+                      01095 ; *************
+                      01096         ;; get a BYTE of the program data specified by address eeAddr
+                      01097         ;; from the RAM buffer.  return the BYTE in W
+10B7                  01098 GetByte
+10B7   1783           01099         bsf     STATUS,IRP      ; all the program data is in 100-1ff
+10B8   0873           01100         movf    eeAddr,w        ; get eeAddr
+10B9   00AA           01101         movwf   temp2           ; save to temp 2.
+10BA   13AA           01102         bcf     temp2,7         ; make sure bit 7 is clear.
+10BB   132A           01103         bcf     temp2,6         ; make sure bit 6 is clear.
+10BC   3020           01104         movlw   low prgbuf1     ; get the address of the program buffer
+10BD   07AA           01105         addwf   temp2,f         ; add the offset of the program buffer
+10BE   1B73           01106         btfsc   eeAddr,6        ; is this address in 40-7f?
+10BF   17AA           01107         bsf     temp2,7         ; select the upper half of the buffer.
+10C0   082A           01108         movf    temp2,w         ; get the address back.
+10C1   0084           01109         movwf   FSR             ; set indirect address.
+10C2   0800           01110         movf    INDF,w          ; get byte at that address.
+10C3   1383           01111         bcf     STATUS,IRP      ; set indirect to 00-ff range.
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 23
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+10C4   0008           01112         return                  ; return with the result in w.
+                      01113         
+                      01114 ; *************
+                      01115 ; ** PutByte **
+                      01116 ; *************
+                      01117         ;; save the BYTE in W at byte address eeAddr into the RAM buffer.
+10C5                  01118 PutByte
+10C5   00AB           01119         movwf   temp3           ; save data.
+10C6   1783           01120         bsf     STATUS,IRP      ; all the program data is in 100-1ff
+10C7   0873           01121         movf    eeAddr,w        ; get eeAddr
+10C8   00AA           01122         movwf   temp2           ; save to temp 2.
+10C9   13AA           01123         bcf     temp2,7         ; make sure bit 7 is clear.
+10CA   132A           01124         bcf     temp2,6         ; make sure bit 6 is clear.
+10CB   3020           01125         movlw   low prgbuf1     ; get the address of the program buffer
+10CC   07AA           01126         addwf   temp2,f         ; add the offset of the program buffer
+10CD   1B73           01127         btfsc   eeAddr,6        ; is this address in 40-7f?
+10CE   17AA           01128         bsf     temp2,7         ; select the upper half of the buffer.
+10CF   082A           01129         movf    temp2,w         ; get the address back.
+10D0   0084           01130         movwf   FSR             ; set indirect address.
+10D1   082B           01131         movf    temp3,w         ; get the saved data byte back.
+10D2   0080           01132         movwf   INDF            ; save the byte in the RAM buffer.
+10D3   1383           01133         bcf     STATUS,IRP      ; set indirect to 00-ff range.
+10D4   0008           01134         return                  ; done.
+                      01135 
+                      01136 ; ************
+                      01137 ; ** Dly5ms **
+                      01138 ; ************
+10D5                  01139 Dly5ms                          ; delay 5 milliseconds.
+10D5   3014           01140         movlw   d'20'           ; 20 loops using 250 ns delay.
+10D6   00AC           01141         movwf   temp4           ; loop counter, 1 instruction cycle
+10D7                  01142 D5L                             ; loop start
+10D7   20E3           01143         call    Dly250          ; 250 ns delay.
+10D8   0BAC           01144         decfsz  temp4,f         ; decrement temp4
+10D9   28D7           01145         goto    D5L             ; loop some more.
+10DA   0008           01146         return                  ; done here.
+                      01147 
+                      01148         
+                      01149 ; ***********
+                      01150 ; ** Dly50 **
+                      01151 ; ***********
+                      01152         ;; delay 50 ns.
+10DB                  01153 Dly50
+                      01154         ;; use 50 loops.  each loop iteration takes 1 nanosecond.
+                      01155         ;; the rest of the routine uses another 1 nanosecond.
+                      01156         ;; the net result is that this will take about 51 nanoseconds.
+10DB   0064           01157         clrwdt                  ; clear watchdog.
+10DC   3032           01158         movlw   d'50'           ; 50 loops, 1 instruction cycle
+10DD   00AB           01159         movwf   temp3           ; loop counter, 1 instruction cycle
+10DE   28E7           01160         goto    DLoop           ; start delay.
+                      01161         
+                      01162 ; ************
+                      01163 ; ** Dly150 **
+                      01164 ; ************
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 24
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01165         ;; delay 150 ns.
+10DF                  01166 Dly150
+                      01167         ;; use 150 loops.  each loop iteration takes 1 nanosecond.
+                      01168         ;; the rest of the routine uses another 1 nanosecond.
+                      01169         ;; the net result is that this will take about 151 nanoseconds.
+10DF   0064           01170         clrwdt                  ; clear watchdog.
+10E0   3096           01171         movlw   d'150'          ; 150 loops, 1 instruction cycle
+10E1   00AB           01172         movwf   temp3           ; loop counter, 1 instruction cycle
+10E2   28E7           01173         goto    DLoop           ; start delay.
+                      01174 
+                      01175 ; ************
+                      01176 ; ** Dly250 **
+                      01177 ; ************
+                      01178         ;; delay 250 ns.
+10E3                  01179 Dly250
+                      01180         ;; use 250 loops.  each loop iteration takes 1 nanosecond.
+                      01181         ;; the rest of the routine uses another 1 nanosecond.
+                      01182         ;; the net result is that this will take about 251 nanoseconds.
+10E3   0064           01183         clrwdt                  ; clear watchdog.
+10E4   30FA           01184         movlw   d'250'          ; 250 loops, 1 instruction cycle
+10E5   00AB           01185         movwf   temp3           ; loop counter, 1 instruction cycle
+10E6   28E7           01186         goto    DLoop           ; start delay.
+                      01187 
+10E7                  01188 DLoop                           ; each pass thru the loop takes 1 nanosecond.
+10E7   0000           01189         nop                     ; waste time, 1 instruction cycle
+10E8   0BAB           01190         decfsz  temp3,f         ; decrement temp3, 1 cycle
+10E9   28E7           01191         goto    DLoop           ; keep going, 2 instruction cycles.
+                      01192         ;; the skip causes the decfsz to use a 2nd instruction cycle.
+10EA   0008           01193         return                  ; done. 2 instruction cycles
+                      01194                 
+                      01195 ; ************************************************************************
+                      01196 ; ****************************** ROM PAGE 3 ******************************
+                      01197 ; ************************************************************************
+1800                  01198         org     1800            ; page 3
+                      01199 
+                      01200 ; *************
+                      01201 ; ** InitMsg **
+                      01202 ; *************
+                      01203         ;; get the init message.
+1800                  01204 InitMsg                         ; get message from table
+1800   3018           01205         movlw   high InitTbl    ; set page 
+1801   008A           01206         movwf   PCLATH          ; select page
+1802   0875           01207         movf    msgCnt,w        ; get message counter
+1803   0782           01208         addwf   PCL,f           ; add w to PCL
+1804                  01209 InitTbl
+1804   340D 340A 340A 01210         dt      0d,0a,0a,"NHRC-PXP V 0.04",0d,0a,">",00
+       344E 3448 3452 
+       3443 342D 3450 
+       3458 3450 3420 
+       3456 3420 3430 
+       342E 3430 3434 
+       340D 340A 343E 
+       3400 
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 25
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      01211         
+                      01212 ; *************
+                      01213 ; ** MenuMsg **
+                      01214 ; *************
+                      01215         ;; get the menu message.
+181A                  01216 MenuMsg                         ; get message from table
+181A   3018           01217         movlw   high MenuTbl    ; set page 
+181B   008A           01218         movwf   PCLATH          ; select page
+181C   0875           01219         movf    msgCnt,w        ; get message counter
+181D   0782           01220         addwf   PCL,f           ; add w to PCL
+181E                  01221 MenuTbl
+181E   340D 340A 340A 01222         dt      0d,0a,0a
+1821   3456 3420 342D 01223         dt      "V - Show Version Number.",0d,0a
+       3420 3453 3468 
+       346F 3477 3420 
+       3456 3465 3472 
+       3473 3469 346F 
+       346E 3420 344E 
+       3475 346D 3462 
+       3465 3472 342E 
+       340D 340A 
+183B   3444 3420 342D 01224         dt      "D - Download program TO pod.",0d,0a
+       3420 3444 346F 
+       3477 346E 346C 
+       346F 3461 3464 
+       3420 3470 3472 
+       346F 3467 3472 
+       3461 346D 3420 
+       3454 344F 3420 
+       3470 346F 3464 
+       342E 340D 340A 
+1859   3455 3420 342D 01225         dt      "U - Upload program FROM pod.",0d,0a
+       3420 3455 3470 
+       346C 346F 3461 
+       3464 3420 3470 
+       3472 346F 3467 
+       3472 3461 346D 
+       3420 3446 3452 
+       344F 344D 3420 
+       3470 346F 3464 
+       342E 340D 340A 
+1877   3452 3420 342D 01226         dt      "R - READ program EEPROM INTO POD.",0d,0a
+       3420 3452 3445 
+       3441 3444 3420 
+       3470 3472 346F 
+       3467 3472 3461 
+       346D 3420 3445 
+       3445 3450 3452 
+       344F 344D 3420 
+       3449 344E 3454 
+       344F 3420 3450 
+       344F 3444 342E 
+       340D 340A 
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 26
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+189A   3457 3420 342D 01227         dt      "W - WRITE program from pod TO EEPROM.",0d,0a,0a,">",00
+       3420 3457 3452 
+       3449 3454 3445 
+       3420 3470 3472 
+       346F 3467 3472 
+       3461 346D 3420 
+       3466 3472 346F 
+       346D 3420 3470 
+       346F 3464 3420 
+       3454 344F 3420 
+       3445 3445 3450 
+       3452 344F 344D 
+       342E 340D 340A 
+       340A 343E 3400 
+                      01228         
+                      01229 ; **************************
+                      01230 ; ** Bad Checksum Message **
+                      01231 ; **************************
+                      01232         ;; get the bad checksum message.
+18C4                  01233 BadCMsg                         ; get message from table
+18C4   3018           01234         movlw   high bcksTbl    ; set page 
+18C5   008A           01235         movwf   PCLATH          ; select page
+18C6   0875           01236         movf    msgCnt,w        ; get message counter
+18C7   0782           01237         addwf   PCL,f           ; add w to PCL
+18C8                  01238 bcksTbl
+18C8   340D 340A 340A 01239         dt      0d,0a,0a,"Bad Checksum",0d,0a,">",00
+       3442 3461 3464 
+       3420 3443 3468 
+       3465 3463 346B 
+       3473 3475 346D 
+       340D 340A 343E 
+       3400 
+                      01240         
+                      01241 ; **************************************
+                      01242 ; ** Download Timed Out Error Message **
+                      01243 ; **************************************
+                      01244         ;; get the timeout error message.
+18DB                  01245 ErrMsg                          ; get message from table
+18DB   3018           01246         movlw   high errmTbl    ; set page 
+18DC   008A           01247         movwf   PCLATH          ; select page
+18DD   0875           01248         movf    msgCnt,w        ; get message counter
+18DE   0782           01249         addwf   PCL,f           ; add w to PCL
+18DF                  01250 errmTbl
+18DF   340D 340A 340A 01251         dt      0d,0a,0a,"Download Timed Out",0d,0a,">",00
+       3444 346F 3477 
+       346E 346C 346F 
+       3461 3464 3420 
+       3454 3469 346D 
+       3465 3464 3420 
+       344F 3475 3474 
+       340D 340A 343E 
+       3400 
+                      01252 
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 27
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+1900                  01253         org     1900            ; page 3; break so computed goto stays in range
+                      01254                 
+                      01255 ; ****************
+                      01256 ; ** OK Message **
+                      01257 ; ****************
+                      01258         ;; get the ok message.
+1900                  01259 OkMsg                           ; get message from table
+1900   3019           01260         movlw   high okmTbl     ; set page 
+1901   008A           01261         movwf   PCLATH          ; select page
+1902   0875           01262         movf    msgCnt,w        ; get message counter
+1903   0782           01263         addwf   PCL,f           ; add w to PCL
+1904                  01264 okmTbl
+1904   340D 340A 340A 01265         dt      0d,0a,0a,"Ok",0d,0a,">",00
+       344F 346B 340D 
+       340A 343E 3400 
+                      01266         
+                      01267         end
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 28
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+BCLIE                             00000003
+BCLIF                             00000003
+BDBC                              00000005
+BF                                00000000
+BRGH                              00000002
+BadCMsg                           000018C4
+C                                 00000000
+CBDone                            00000289
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000003
+CHS1                              00000004
+CHS2                              00000005
+CKE                               00000006
+CKP                               00000004
+CREN                              00000004
+CSRC                              00000007
+Check1                            0000024C
+Check10                           00000244
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 29
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+Check100                          0000023C
+CheckTic                          00000254
+Chek1000                          00000234
+Ck10Ms                            00000265
+CkRChar                           0000029E
+CkRNow                            00000293
+CkRead                            00000278
+CkWNow                            00000289
+CkWrite                           00000267
+ClrMem                            0000021E
+D                                 00000005
+D5L                               000010D7
+DATA_ADDRESS                      00000005
+DC                                00000001
+DLoop                             000010E7
+D_A                               00000005
+Dly150                            000010DF
+Dly250                            000010E3
+Dly50                             000010DB
+Dly5ms                            000010D5
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+ErrMsg                            000018DB
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+GCEN                              00000007
+GIE                               00000007
+GO                                00000002
+GO_DONE                           00000002
+GetByte                           000010B7
+GetMsgC                           00000032
+GetNib                            00001085
+GetNibH                           00001094
+GetNibL                           00001095
+HUNDMS                            00000003
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 30
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+InitMsg                           00001800
+InitTbl                           00001804
+IntExit                           00000029
+IntHndlr                          00000002
+LED                               00000005
+LEDEnd                            00000259
+LEDoff                            00000259
+LLoop                             00001054
+Load                              00001053
+Loop0                             00000232
+Loop1                             00000259
+M_BCKSM                           00000003
+M_CKSM                            00000007
+M_INIT                            00000001
+M_MENU                            00000002
+M_NONE                            00000000
+M_OK                              00000005
+M_TOERR                           00000004
+M_TXPR                            00000006
+MenuMsg                           0000181A
+MenuTbl                           0000181E
+Msg0                              0000003F
+Msg1                              00000040
+Msg2                              00000046
+Msg3                              0000004C
+Msg4                              00000052
+Msg5                              00000058
+Msg6                              0000005E
+Msg7                              0000006D
+Msg7_1                            00000075
+MsgTbl                            00000037
+NEWCHAR                           00000007
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000002
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OERR                              00000001
+ONEMS                             00000001
+ONESEC                            00000004
+OPTION_REG                        00000081
+OkMsg                             00001900
+P                                 00000004
+PAGE0                             
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 31
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+PAGE1                             
+PAGE2                             
+PAGE3                             
+PBREAD                            00000005
+PBWRITE                           00000004
+PCFG0                             00000000
+PCFG1                             00000001
+PCFG2                             00000002
+PCFG3                             00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PutByte                           000010C5
+PutNib                            00001099
+PutNibH                           000010A9
+PutNibL                           000010B0
+R                                 00000002
+RBIE                              00000003
+RBIF                              00000000
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000287
+RD01                              00000283
+READ_WRITE                        00000002
+RLAST                             00000001
+RNOW                              00000003
+RP0                               00000005
+RP1                               00000006
+RS232RX                           00000007
+RS232TX                           00000006
+RSEN                              00000001
+RX9                               00000006
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 32
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RX9D                              00000000
+RXLoop                            0000100D
+RXS_CHK                           00000002
+RXS_CMD                           00000000
+RXS_PGM                           00000001
+RXTMOT                            00000032
+R_W                               00000002
+ReadEE                            0000105A
+ReadX                             00001000
+RetChar                           0000007D
+RxChk                             00000311
+RxChk1                            00000319
+RxChkNG                           0000032C
+RxCmd                             000002AA
+RxCmdD                            000002D7
+RxCmdR                            000002DF
+RxCmdU                            000002EA
+RxCmdV                            000002F2
+RxCmdW                            000002F7
+RxProg                            00000301
+S                                 00000003
+SEN                               00000000
+SLoop                             0000104D
+SMP                               00000007
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+SYNC                              00000004
+Save                              0000104C
+Start                             00000200
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0PRE                             00000007
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1INSYNC                          00000002
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 33
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+T1OSCEN                           00000003
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TEN                               0000000A
+TENMS                             00000002
+TENSEC                            00000005
+TICK                              00000000
+TMR0                              00000001
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISB                             00000086
+TRISC                             00000087
+TRMT                              00000001
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+TimrDone                          00000018
+TimrInt                           00000015
+UA                                00000001
+URInt                             0000001A
+UTInt                             0000001E
+UTIntD                            00000024
+W                                 00000000
+WCOL                              00000007
+WLAST                             00000000
+WNOW                              00000002
+WR                                00000001
+WR0                               00000276
+WR01                              00000272
+WREN                              00000002
+WRERR                             00000003
+WXLoop                            0000102E
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 34
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+WritEd                            0000106A
+WriteEE                           00001069
+WriteEl                           0000107F
+WriteX                            00001021
+X22A0                             00000000
+X22A1                             00000001
+X22A2                             00000002
+X22A3                             00000003
+X22A4                             00000004
+X22A5                             00000005
+X22A6                             00000006
+X22A7                             00000007
+X22CS                             00000000
+X22IO1                            00000000
+X22IO2                            00000001
+X22IO3                            00000002
+X22IO4                            00000003
+X22RCL                            00000003
+X22STR                            00000002
+X22VCC                            00000004
+X22WE                             00000001
+XmitM1                            00000082
+XmitMsg                           00000080
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_ALL                           00000FCF
+_CP_HALF                          00001FDF
+_CP_OFF                           00003FFF
+_CP_UPPER_256                     00002FEF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         000037FF
+_HS_OSC                           00003FFE
+_LP_OSC                           00003FFC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC                           00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_WRT_ENABLE_OFF                   00003DFF
+_WRT_ENABLE_ON                    00003FFF
+_XT_OSC                           00003FFD
+__16F876                          00000001
+a2b                               0000033C
+a2bJunk                           0000034F
+a2bLet                            00000348
+b2a                               00000331
+b2aLet                            00000339
+bFlags                            00000028
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 35
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+bcksTbl                           000018C8
+chksum                            0000002E
+dbRead                            00000034
+dbWrite                           00000035
+eeAddr                            00000073
+errmTbl                           000018DF
+f_copy                            00000022
+hundMsC                           00000026
+msgCnt                            00000075
+msgNum                            00000074
+okmTbl                            00001904
+oneMsC                            00000024
+p_copy                            00000021
+pgmaddr                           00000070
+pgmdata                           00000071
+prgbuf1                           00000120
+prgbuf2                           000001A0
+rxChar                            00000030
+rxCksum                           00000033
+rxCsBc                            00000032
+rxState                           00000031
+rxTmo                             0000002F
+rxsTbl                            000002A6
+s_copy                            00000020
+tFlags                            00000023
+temp                              00000029
+temp2                             0000002A
+temp3                             0000002B
+temp4                             0000002C
+tenMsC                            00000025
+thouMsC                           00000027
+txChar                            0000002D
+w_copy                            00000072
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XX--XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXX------ ---------------- ---------------- ----------------
+0200 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0240 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0280 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+02C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0300 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0340 : XXXXXXXXXXXXXXXX ---------------- ---------------- ----------------
+MPASM  5.51                       PXP-004.ASM   3-30-2021  8:28:01         PAGE 36
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+
+1000 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+1040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+1080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+10C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXX----- ----------------
+1800 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+1840 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+1880 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+18C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXX--------
+1900 : XXXXXXXXXXXXX--- ---------------- ---------------- ----------------
+2000 : -------X-------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   968
+Program Memory Words Free:  7224
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,    41 suppressed
+
+

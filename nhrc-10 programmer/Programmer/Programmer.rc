@@ -1,0 +1,783 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_N                   ICON                    "n.ico"
+IDI_A_PROGRAMMER        ICON                    "Programmer.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_PROGRAMMER MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "New",                         ID_FILE_NEW
+        MENUITEM "Open...",                     ID_FILE_OPEN
+        MENUITEM "Save",                        ID_FILE_SAVE
+        MENUITEM "Save As...",                  ID_FILE_SAVE_AS
+        MENUITEM "Read From Controller",        ID_FILE_READ
+        MENUITEM "Write To Controller",         ID_FILE_WRITE
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "Edit"
+    BEGIN
+        MENUITEM "Autodials",                   ID_EDIT_AUTODIALS
+        POPUP "Autopatch"
+        BEGIN
+            MENUITEM "Area Code 00",                ID_AUTOPATCH_AREACODE00
+            MENUITEM "Area Code 01",                ID_AUTOPATCH_AREACODE01
+            MENUITEM "Area Code 02",                ID_AUTOPATCH_AREACODE02
+            MENUITEM "Area Code 03",                ID_AUTOPATCH_AREACODE03
+            MENUITEM "Area Code 04",                ID_AUTOPATCH_AREACODE04
+            MENUITEM "Area Code 05",                ID_AUTOPATCH_AREACODE05
+            MENUITEM "Area Code 06",                ID_AUTOPATCH_AREACODE06
+            MENUITEM "Area Code 07",                ID_AUTOPATCH_AREACODE07
+            MENUITEM "Area Code 08",                ID_AUTOPATCH_AREACODE08
+            MENUITEM "Area Code 09",                ID_AUTOPATCH_AREACODE09
+            MENUITEM "Area Code 10",                ID_AUTOPATCH_AREACODE10
+            MENUITEM "Area Code 11",                ID_AUTOPATCH_AREACODE11
+            MENUITEM "Area Code 12",                ID_AUTOPATCH_AREACODE12
+            MENUITEM "Area Code 13",                ID_AUTOPATCH_AREACODE13
+            MENUITEM "Area Code 14",                ID_AUTOPATCH_AREACODE14
+            MENUITEM "Area Code 15",                ID_AUTOPATCH_AREACODE15
+        END
+        POPUP "Control Operator Switches"
+        BEGIN
+            MENUITEM "Set 0",                       ID_CONTROLOPERATORSWITCHES_SET0
+
+            MENUITEM "Set 1",                       ID_CONTROLOPERATORSWITCHES_SET1
+
+            MENUITEM "Set 2",                       ID_CONTROLOPERATORSWITCHES_SET2
+
+            MENUITEM "Set 3",                       ID_CONTROLOPERATORSWITCHES_SET3
+
+            MENUITEM "Set 4",                       ID_CONTROLOPERATORSWITCHES_SET4
+
+        END
+        MENUITEM "Courtesy Tones",              ID_EDIT_COURTESYTONES
+        MENUITEM "CW ID",                       ID_EDIT_CWID
+        MENUITEM "Emergency Autodials",         ID_EDIT_EMERGENCYAUTODIALS
+        MENUITEM "Prefixes",                    ID_EDIT_PREFIXES
+        MENUITEM "Timers",                      ID_EDIT_TIMERS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About ...",                  IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDC_PROGRAMMER ACCELERATORS 
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 147, 42
+STYLE DS_SETFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "System", 0, 0, 0x0
+BEGIN
+    ICON            IDI_A_PROGRAMMER,IDC_MYICON,6,6,20,20
+    LTEXT           "NHRC-10 Programmer Version 1.00",IDC_STATIC,26,6,115,8
+    LTEXT           "Copyright © 2004, NHRC LLC",IDC_STATIC,25,14,95,8
+    DEFPUSHBUTTON   "OK",IDOK,59,25,30,11,BS_CENTER | WS_GROUP
+END
+
+IDD_TRANSFER DIALOGEX 0, 0, 184, 65
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_CAPTION
+CAPTION "Transferring Data"
+FONT 8, "System", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,67,45,50,14
+    CTEXT           "Please wait while the controller data is transferred.",
+                    IDC_STATIC,6,6,172,8
+    CTEXT           "0000 / 0000",IDC_MESSAGE,6,33,172,8
+    CONTROL         "",IDC_PROGRESSBAR,"msctls_progress32",WS_BORDER,6,25,
+                    172,7
+    CTEXT           "This will take a few minutes...",IDC_STATIC,6,15,172,8
+END
+
+IDD_PREFIXES DIALOGEX 0, 0, 300, 190
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Prefixes"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,71,169,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,182,169,50,14
+    RTEXT           "Control Operator Access",IDC_STATIC,6,10,84,8
+    EDITTEXT        IDC_PFX_EDIT_00,100,6,40,14,ES_AUTOHSCROLL
+    RTEXT           "Autopatch",IDC_STATIC,6,30,84,8
+    EDITTEXT        IDC_PFX_EDIT_01,100,26,40,14,ES_AUTOHSCROLL
+    RTEXT           "Unrestricted Autopatch",IDC_STATIC,6,50,84,8
+    EDITTEXT        IDC_PFX_EDIT_02,100,46,40,14,ES_AUTOHSCROLL
+    RTEXT           "Autodial",IDC_STATIC,6,70,84,8
+    EDITTEXT        IDC_PFX_EDIT_03,100,66,40,14,ES_AUTOHSCROLL
+    RTEXT           "Emergency Autodial",IDC_STATIC,6,90,84,8
+    EDITTEXT        IDC_PFX_EDIT_04,100,86,40,14,ES_AUTOHSCROLL
+    RTEXT           "Patch Hang Up",IDC_STATIC,6,110,84,8
+    EDITTEXT        IDC_PFX_EDIT_05,100,106,40,14,ES_AUTOHSCROLL
+    RTEXT           "DTMF Access",IDC_STATIC,6,130,84,8
+    EDITTEXT        IDC_PFX_EDIT_06,100,126,40,14,ES_AUTOHSCROLL
+    RTEXT           "Resend DTMF",IDC_STATIC,6,150,84,8
+    EDITTEXT        IDC_PFX_EDIT_07,100,146,40,14,ES_AUTOHSCROLL
+    RTEXT           "DTMF Test",IDC_STATIC,161,10,84,8
+    EDITTEXT        IDC_PFX_EDIT_08,254,6,40,14,ES_AUTOHSCROLL
+    RTEXT           "Reverse Patch",IDC_STATIC,161,30,84,8
+    EDITTEXT        IDC_PFX_EDIT_09,254,26,40,14,ES_AUTOHSCROLL
+    RTEXT           "Digital Output Control",IDC_STATIC,161,50,84,8
+    EDITTEXT        IDC_PFX_EDIT_10,254,46,40,14,ES_AUTOHSCROLL
+    RTEXT           "Voice Mailbox",IDC_STATIC,161,70,84,8
+    EDITTEXT        IDC_PFX_EDIT_11,254,66,40,14,ES_AUTOHSCROLL
+    RTEXT           "Remote Base",IDC_STATIC,161,90,84,8
+    EDITTEXT        IDC_PFX_EDIT_12,254,86,40,14,ES_AUTOHSCROLL
+    RTEXT           "LiTZ",IDC_STATIC,161,110,84,8
+    EDITTEXT        IDC_PFX_EDIT_13,254,106,40,14,ES_AUTOHSCROLL
+    RTEXT           "Load Saved Setup",IDC_STATIC,161,130,84,8
+    EDITTEXT        IDC_PFX_EDIT_14,254,126,40,14,ES_AUTOHSCROLL
+    RTEXT           "Unlock Controller",IDC_STATIC,161,150,84,8
+    EDITTEXT        IDC_PFX_EDIT_15,254,146,40,14,ES_AUTOHSCROLL
+END
+
+IDD_TIMERS DIALOGEX 0, 0, 196, 245
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Timers"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,33,225,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,109,225,50,14
+    RTEXT           "Hang Timer Long",IDC_STATIC,6,9,86,8
+    EDITTEXT        IDC_TIMER_EDIT_00,94,6,25,14,ES_NUMBER
+    LTEXT           "x 0.1 Seconds",IDC_STATIC,124,9,66,8
+    RTEXT           "Hang Timer Short",IDC_STATIC,6,24,86,8
+    EDITTEXT        IDC_TIMER_EDIT_01,94,21,25,14,ES_NUMBER
+    LTEXT           "x 0.1 Seconds",IDC_STATIC,124,24,66,8
+    RTEXT           "ID Timer",IDC_STATIC,6,39,86,8
+    EDITTEXT        IDC_TIMER_EDIT_02,94,36,25,14,ES_NUMBER
+    LTEXT           "x 10.0 Seconds",IDC_STATIC,124,39,66,8
+    RTEXT           "Autopatch Timer",IDC_STATIC,6,54,86,8
+    EDITTEXT        IDC_TIMER_EDIT_03,94,51,25,14,ES_NUMBER
+    LTEXT           "x 10.0 Seconds",IDC_STATIC,124,54,66,8
+    RTEXT           "Autodial Timer",IDC_STATIC,6,69,86,8
+    EDITTEXT        IDC_TIMER_EDIT_04,94,66,25,14,ES_NUMBER
+    LTEXT           "x 10.0 Seconds",IDC_STATIC,124,69,66,8
+    RTEXT           "Emergency Autodial Timer",IDC_STATIC,6,84,86,8
+    EDITTEXT        IDC_TIMER_EDIT_05,94,81,25,14,ES_NUMBER
+    LTEXT           "x 10.0 Seconds",IDC_STATIC,124,84,66,8
+    RTEXT           "DTMF Access Timer",IDC_STATIC,6,99,86,8
+    EDITTEXT        IDC_TIMER_EDIT_06,94,96,25,14,ES_NUMBER
+    LTEXT           "x 10.0 Seconds",IDC_STATIC,124,99,66,8
+    RTEXT           "Timeout Timer Long",IDC_STATIC,6,114,86,8
+    EDITTEXT        IDC_TIMER_EDIT_07,94,111,25,14,ES_NUMBER
+    LTEXT           "x 1.0 Seconds",IDC_STATIC,124,114,66,8
+    RTEXT           "Timeout Timer Short",IDC_STATIC,6,129,86,8
+    EDITTEXT        IDC_TIMER_EDIT_08,94,126,25,14,ES_NUMBER
+    LTEXT           "x 1.0 Seconds",IDC_STATIC,124,129,66,8
+    RTEXT           "DTMF Muting Timer",IDC_STATIC,6,144,86,8
+    EDITTEXT        IDC_TIMER_EDIT_09,94,141,25,14,ES_NUMBER
+    LTEXT           "x 0.1 Seconds",IDC_STATIC,124,144,66,8
+    RTEXT           "Fan Timer",IDC_STATIC,6,159,86,8
+    EDITTEXT        IDC_TIMER_EDIT_10,94,156,25,14,ES_NUMBER
+    LTEXT           "x 10.0 Seconds",IDC_STATIC,124,159,66,8
+    RTEXT           "Tail Message Counter",IDC_STATIC,6,174,86,8
+    EDITTEXT        IDC_TIMER_EDIT_11,94,171,25,14,ES_NUMBER
+    LTEXT           "# of tail drops",IDC_STATIC,124,174,66,8
+    RTEXT           "Phone Ring Counter",IDC_STATIC,6,189,86,8
+    EDITTEXT        IDC_TIMER_EDIT_12,94,186,25,14,ES_NUMBER
+    LTEXT           "# of rings",IDC_STATIC,124,189,66,8
+    RTEXT           "Remote Base Auto-Shutoff",IDC_STATIC,6,204,86,8
+    EDITTEXT        IDC_TIMER_EDIT_13,94,201,25,14,ES_NUMBER
+    LTEXT           "x 10.0 Seconds",IDC_STATIC,124,204,66,8
+END
+
+IDD_AUTOPATCH DIALOGEX 0, 0, 193, 191
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Autopatch Configuration"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,33,171,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,106,171,50,14
+    CTEXT           "Configure Settings For Area Code # 99",IDC_HEADING,6,6,
+                    181,9
+    RTEXT           "Area Code",IDC_STATIC,74,19,36,8
+    EDITTEXT        IDC_AREACODE,111,17,23,12
+    CONTROL         "Bank Enabled",IDC_BANK_ENABLED,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,53,35,80,10,WS_EX_RIGHT
+    CONTROL         "Leading 1 Allowed",IDC_LEADING_1_ALLOWED,"Button",
+                    BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,53,50,80,10,
+                    WS_EX_RIGHT
+    CONTROL         "Leading 1 Required",IDC_LEADING_1_REQUIRED,"Button",
+                    BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,53,65,80,10,
+                    WS_EX_RIGHT
+    CONTROL         "Local Area Code",IDC_LOCAL_AREA_CODE,"Button",
+                    BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,53,80,80,10,
+                    WS_EX_RIGHT
+    CONTROL         "Dial Prefix Enabled",IDC_DIAL_PREFIX_ENABLED,"Button",
+                    BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,54,95,80,10,
+                    WS_EX_RIGHT
+    RTEXT           "Dial Prefix",IDC_STATIC,51,112,34,11
+    EDITTEXT        IDC_DIAL_PREFIX,86,110,49,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "Enable All",IDC_ENABLE_ALL_BUTTON,13,143,50,14
+    PUSHBUTTON      "Disable All",IDC_DISABLE_ALL_BUTTON,71,143,50,14
+    PUSHBUTTON      "Edit Each",IDC_EDIT_BUTTON,129,143,50,14
+    GROUPBOX        "Individual Exchange Restrictions",IDC_STATIC,6,129,181,
+                    34
+END
+
+IDD_AUTODIALS DIALOGEX 0, 0, 141, 249
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Autodials"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,47,229,50,14
+    RTEXT           "Autodial 000",IDC_APATCH_LABEL_0,6,30,54,8
+    EDITTEXT        IDC_APATCH_EDIT_0,63,27,72,14
+    RTEXT           "Autodial 001",IDC_APATCH_LABEL_1,6,50,54,8
+    EDITTEXT        IDC_APATCH_EDIT_1,63,47,72,14
+    RTEXT           "Autodial 002",IDC_APATCH_LABEL_2,6,70,54,8
+    EDITTEXT        IDC_APATCH_EDIT_2,63,67,72,14
+    RTEXT           "Autodial 003",IDC_APATCH_LABEL_3,6,90,54,8
+    EDITTEXT        IDC_APATCH_EDIT_3,63,87,72,14
+    RTEXT           "Autodial 004",IDC_APATCH_LABEL_4,6,110,54,8
+    EDITTEXT        IDC_APATCH_EDIT_4,63,107,72,14
+    RTEXT           "Autodial 005",IDC_APATCH_LABEL_5,6,130,54,8
+    EDITTEXT        IDC_APATCH_EDIT_5,63,127,72,14
+    RTEXT           "Autodial 006",IDC_APATCH_LABEL_6,6,150,54,8
+    EDITTEXT        IDC_APATCH_EDIT_6,63,147,72,14
+    RTEXT           "Autodial 007",IDC_APATCH_LABEL_7,6,170,54,8
+    EDITTEXT        IDC_APATCH_EDIT_7,63,167,72,14
+    RTEXT           "Autodial 008",IDC_APATCH_LABEL_8,6,190,54,8
+    EDITTEXT        IDC_APATCH_EDIT_8,63,187,72,14
+    RTEXT           "Autodial 009",IDC_APATCH_LABEL_9,6,210,54,8
+    EDITTEXT        IDC_APATCH_EDIT_9,63,207,72,14
+    COMBOBOX        IDC_RANGE_COMBO,72,6,48,240,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    RTEXT           "Select Range",IDC_STATIC,26,9,43,8
+END
+
+IDD_EMERGENCYAUTODIALS DIALOGEX 0, 0, 159, 228
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Emergency Autodials"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,17,208,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,93,208,50,14
+    RTEXT           "Emergency Autodial 0",IDC_STATIC,6,9,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_0,81,6,72,14
+    RTEXT           "Emergency Autodial 1",IDC_STATIC,6,29,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_1,81,26,72,14
+    RTEXT           "Emergency Autodial 2",IDC_STATIC,6,49,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_2,81,46,72,14
+    RTEXT           "Emergency Autodial 3",IDC_STATIC,6,69,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_3,81,66,72,14
+    RTEXT           "Emergency Autodial 4",IDC_STATIC,6,89,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_4,81,86,72,14
+    RTEXT           "Emergency Autodial 5",IDC_STATIC,6,109,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_5,81,106,72,14
+    RTEXT           "Emergency Autodial 6",IDC_STATIC,6,129,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_6,81,126,72,14
+    RTEXT           "Emergency Autodial 7",IDC_STATIC,6,149,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_7,81,146,72,14
+    RTEXT           "Emergency Autodial 8",IDC_STATIC,6,169,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_8,81,166,72,14
+    RTEXT           "Emergency Autodial 9",IDC_STATIC,6,189,72,8
+    EDITTEXT        IDC_EPATCH_EDIT_9,81,186,72,14
+END
+
+IDD_COURTESYTONES DIALOGEX 0, 0, 431, 118
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Courtesy Tones"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    RTEXT           "Select Courtesy Tone",IDC_STATIC,52,8,69,9
+    COMBOBOX        IDC_TONE_SELECT_COMBO,124,6,241,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Tones",IDC_TONES_RADIO,"Button",BS_AUTORADIOBUTTON,6,24,
+                    35,10
+    CONTROL         "CW Character",IDC_CWCHAR_RADIO,"Button",
+                    BS_AUTORADIOBUTTON,6,78,61,10
+    CTEXT           "Length",IDC_STATIC,20,42,24,9
+    CTEXT           "Pitch/Tone",IDC_STATIC,48,42,64,9
+    CTEXT           "Length",IDC_STATIC,120,42,24,9
+    CTEXT           "Pitch/Tone",IDC_STATIC,148,42,64,9
+    CTEXT           "Length",IDC_STATIC,220,42,24,9
+    CTEXT           "Pitch/Tone",IDC_STATIC,248,42,64,9
+    CTEXT           "Length",IDC_STATIC,320,42,24,9
+    CTEXT           "Pitch/Tone",IDC_STATIC,348,42,64,9
+    EDITTEXT        IDC_SEG_1_LENGTH_EDIT,22,52,20,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SEG_1_PITCH_COMBO,48,52,64,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_SEG_2_LENGTH_EDIT,122,52,20,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    COMBOBOX        IDC_SEG_2_PITCH_COMBO,148,52,64,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_SEG_3_LENGTH_EDIT,222,52,20,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    COMBOBOX        IDC_SEG_3_PITCH_COMBO,248,52,64,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_SEG_4_LENGTH_EDIT,322,52,20,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    COMBOBOX        IDC_SEG_4_PITCH_COMBO,348,52,64,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CWCHAR_COMBO,74,77,31,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,192,98,50,14
+END
+
+IDD_EDIT_EXCHANGES DIALOGEX 0, 0, 203, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Exchanges"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,75,198,50,14
+    RTEXT           "Select Range",IDC_STATIC,40,26,50,8
+    COMBOBOX        IDC_HUNDREDS_COMBO,97,23,50,80,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CTEXT           "0",IDC_STATIC,36,44,9,8
+    CTEXT           "1",IDC_STATIC,50,44,9,8
+    CTEXT           "2",IDC_STATIC,64,44,9,8
+    CTEXT           "3",IDC_STATIC,78,44,9,8
+    CTEXT           "4",IDC_STATIC,92,44,9,8
+    CTEXT           "5",IDC_STATIC,106,44,9,8
+    CTEXT           "6",IDC_STATIC,120,44,9,8
+    CTEXT           "7",IDC_STATIC,134,44,9,8
+    CTEXT           "8",IDC_STATIC,148,44,9,8
+    CTEXT           "9",IDC_STATIC,162,44,9,8
+    RTEXT           "20x",IDC_LABEL_0,18,54,14,8
+    RTEXT           "21x",IDC_LABEL_1,18,68,14,8
+    RTEXT           "22x",IDC_LABEL_2,18,82,14,8
+    RTEXT           "23x",IDC_LABEL_3,18,96,14,8
+    RTEXT           "24x",IDC_LABEL_4,18,110,14,8
+    RTEXT           "25x",IDC_LABEL_5,18,124,14,8
+    RTEXT           "26x",IDC_LABEL_6,18,138,14,8
+    RTEXT           "27x",IDC_LABEL_7,18,152,14,8
+    RTEXT           "28x",IDC_LABEL_8,18,166,14,8
+    RTEXT           "29x",IDC_LABEL_9,18,180,14,8
+    CONTROL         "",IDC_CHECK00,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    54,9,8
+    CONTROL         "",IDC_CHECK01,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    54,9,8
+    CONTROL         "",IDC_CHECK02,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    54,9,8
+    CONTROL         "",IDC_CHECK03,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    54,9,8
+    CONTROL         "",IDC_CHECK04,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    54,9,8
+    CONTROL         "",IDC_CHECK05,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    54,9,8
+    CONTROL         "",IDC_CHECK06,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    54,9,8
+    CONTROL         "",IDC_CHECK07,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    54,9,8
+    CONTROL         "",IDC_CHECK08,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    54,9,8
+    CONTROL         "",IDC_CHECK09,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    54,9,8
+    CONTROL         "",IDC_CHECK10,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    68,9,8
+    CONTROL         "",IDC_CHECK11,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    68,9,8
+    CONTROL         "",IDC_CHECK12,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    68,9,8
+    CONTROL         "",IDC_CHECK13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    68,9,8
+    CONTROL         "",IDC_CHECK14,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    68,9,8
+    CONTROL         "",IDC_CHECK15,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    68,9,8
+    CONTROL         "",IDC_CHECK16,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    68,9,8
+    CONTROL         "",IDC_CHECK17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    68,9,8
+    CONTROL         "",IDC_CHECK18,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    68,9,8
+    CONTROL         "",IDC_CHECK19,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    68,9,8
+    CONTROL         "",IDC_CHECK20,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    82,9,8
+    CONTROL         "",IDC_CHECK21,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    82,9,8
+    CONTROL         "",IDC_CHECK22,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    82,9,8
+    CONTROL         "",IDC_CHECK23,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    82,9,8
+    CONTROL         "",IDC_CHECK24,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    82,9,8
+    CONTROL         "",IDC_CHECK25,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    82,9,8
+    CONTROL         "",IDC_CHECK26,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    82,9,8
+    CONTROL         "",IDC_CHECK27,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    82,9,8
+    CONTROL         "",IDC_CHECK28,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    82,9,8
+    CONTROL         "",IDC_CHECK29,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    82,9,8
+    CONTROL         "",IDC_CHECK30,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    96,9,8
+    CONTROL         "",IDC_CHECK31,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    96,9,8
+    CONTROL         "",IDC_CHECK32,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    96,9,8
+    CONTROL         "",IDC_CHECK33,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    96,9,8
+    CONTROL         "",IDC_CHECK34,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    96,9,8
+    CONTROL         "",IDC_CHECK35,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    96,9,8
+    CONTROL         "",IDC_CHECK36,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    96,9,8
+    CONTROL         "",IDC_CHECK37,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    96,9,8
+    CONTROL         "",IDC_CHECK38,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    96,9,8
+    CONTROL         "",IDC_CHECK39,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    96,9,8
+    CONTROL         "",IDC_CHECK40,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    110,9,8
+    CONTROL         "",IDC_CHECK41,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    110,9,8
+    CONTROL         "",IDC_CHECK42,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    110,9,8
+    CONTROL         "",IDC_CHECK43,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    110,9,8
+    CONTROL         "",IDC_CHECK44,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    110,9,8
+    CONTROL         "",IDC_CHECK45,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    110,9,8
+    CONTROL         "",IDC_CHECK46,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    110,9,8
+    CONTROL         "",IDC_CHECK47,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    110,9,8
+    CONTROL         "",IDC_CHECK48,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    110,9,8
+    CONTROL         "",IDC_CHECK49,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    110,9,8
+    CONTROL         "",IDC_CHECK50,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    124,9,8
+    CONTROL         "",IDC_CHECK51,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    124,9,8
+    CONTROL         "",IDC_CHECK52,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    124,9,8
+    CONTROL         "",IDC_CHECK53,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    124,9,8
+    CONTROL         "",IDC_CHECK54,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    124,9,8
+    CONTROL         "",IDC_CHECK55,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    124,9,8
+    CONTROL         "",IDC_CHECK56,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    124,9,8
+    CONTROL         "",IDC_CHECK57,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    124,9,8
+    CONTROL         "",IDC_CHECK58,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    124,9,8
+    CONTROL         "",IDC_CHECK59,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    124,9,8
+    CONTROL         "",IDC_CHECK60,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    138,9,8
+    CONTROL         "",IDC_CHECK61,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    138,9,8
+    CONTROL         "",IDC_CHECK62,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    138,9,8
+    CONTROL         "",IDC_CHECK63,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    138,9,8
+    CONTROL         "",IDC_CHECK64,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    138,9,8
+    CONTROL         "",IDC_CHECK65,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    138,9,8
+    CONTROL         "",IDC_CHECK66,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    138,9,8
+    CONTROL         "",IDC_CHECK67,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    138,9,8
+    CONTROL         "",IDC_CHECK68,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    138,9,8
+    CONTROL         "",IDC_CHECK69,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    138,9,8
+    CONTROL         "",IDC_CHECK70,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    152,9,8
+    CONTROL         "",IDC_CHECK71,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    152,9,8
+    CONTROL         "",IDC_CHECK72,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    152,9,8
+    CONTROL         "",IDC_CHECK73,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    152,9,8
+    CONTROL         "",IDC_CHECK74,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    152,9,8
+    CONTROL         "",IDC_CHECK75,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    152,9,8
+    CONTROL         "",IDC_CHECK76,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    152,9,8
+    CONTROL         "",IDC_CHECK77,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    152,9,8
+    CONTROL         "",IDC_CHECK78,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    152,9,8
+    CONTROL         "",IDC_CHECK79,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    152,9,8
+    CONTROL         "",IDC_CHECK80,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    166,9,8
+    CONTROL         "",IDC_CHECK81,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    166,9,8
+    CONTROL         "",IDC_CHECK82,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    166,9,8
+    CONTROL         "",IDC_CHECK83,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    166,9,8
+    CONTROL         "",IDC_CHECK84,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    166,9,8
+    CONTROL         "",IDC_CHECK85,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    166,9,8
+    CONTROL         "",IDC_CHECK86,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    166,9,8
+    CONTROL         "",IDC_CHECK87,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    166,9,8
+    CONTROL         "",IDC_CHECK88,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    166,9,8
+    CONTROL         "",IDC_CHECK89,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    166,9,8
+    CONTROL         "",IDC_CHECK90,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,
+                    180,9,8
+    CONTROL         "",IDC_CHECK91,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,50,
+                    180,9,8
+    CONTROL         "",IDC_CHECK92,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,64,
+                    180,9,8
+    CONTROL         "",IDC_CHECK93,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,78,
+                    180,9,8
+    CONTROL         "",IDC_CHECK94,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    180,9,8
+    CONTROL         "",IDC_CHECK95,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,
+                    180,9,8
+    CONTROL         "",IDC_CHECK96,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,
+                    180,9,8
+    CONTROL         "",IDC_CHECK97,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,
+                    180,9,8
+    CONTROL         "",IDC_CHECK98,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,148,
+                    180,9,8
+    CONTROL         "",IDC_CHECK99,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,
+                    180,9,8
+    CTEXT           "Exchange Restrictions for Area Code # 99",IDC_HEADING,6,
+                    6,191,10
+END
+
+IDD_CONTROLOP DIALOGEX 0, 0, 173, 181
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Control Operator Settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,61,161,50,14
+    COMBOBOX        IDC_GROUP_COMBO,6,18,161,120,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Item 0",IDC_CTLOP_CB_0,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,6,38,161,8,WS_EX_RIGHT
+    CONTROL         "Item 1",IDC_CTLOP_CB_1,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,6,53,161,8,WS_EX_RIGHT
+    CONTROL         "Item 2",IDC_CTLOP_CB_2,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,6,68,161,8,WS_EX_RIGHT
+    CONTROL         "Item 3",IDC_CTLOP_CB_3,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,6,83,161,8,WS_EX_RIGHT
+    CONTROL         "Item 4",IDC_CTLOP_CB_4,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,6,99,161,8,WS_EX_RIGHT
+    CONTROL         "Item 5",IDC_CTLOP_CB_5,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,6,113,161,8,WS_EX_RIGHT
+    CONTROL         "Item 6",IDC_CTLOP_CB_6,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,6,128,161,8,WS_EX_RIGHT
+    CONTROL         "Item 7",IDC_CTLOP_CB_7,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | WS_TABSTOP,6,143,161,8,WS_EX_RIGHT
+    CTEXT           "Saved Setup # 0",IDC_SAVEDSETUPMESSAGE,6,6,161,11
+END
+
+IDD_CWID DIALOGEX 0, 0, 123, 45
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit CW ID"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,6,25,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,68,25,50,14
+    RTEXT           "CW ID",IDC_STATIC,6,8,47,8
+    EDITTEXT        IDC_CWIDTEXT,54,6,64,12
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 141
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 36
+    END
+
+    IDD_TRANSFER, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 178
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 59
+    END
+
+    IDD_PREFIXES, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 294
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 183
+    END
+
+    IDD_TIMERS, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 190
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 239
+    END
+
+    IDD_AUTOPATCH, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 187
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 185
+    END
+
+    IDD_AUTODIALS, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 135
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 243
+    END
+
+    IDD_EMERGENCYAUTODIALS, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 153
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 222
+    END
+
+    IDD_COURTESYTONES, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 425
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 112
+    END
+
+    IDD_EDIT_EXCHANGES, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 197
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 212
+    END
+
+    IDD_CONTROLOP, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 167
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 175
+    END
+
+    IDD_CWID, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 118
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 39
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

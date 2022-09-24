@@ -1,0 +1,57 @@
+1. The rules on station identification vary with the various radio services. I presume your 
+system is a Part 90 public safety system.
+
+2. The governing regulation is 47 C.F.R. section 90.425. It is complex enough that you really 
+should get a copy, but I believe it may be simplified thus:
+
+ID must be broadcast:
+
+A. once per transmission or exchange of transmissions, plus
+
+B. once per 30 minutes for any exchange of transmissions that lasts longer than 30 minutes.
+
+3. There is no requirement of Morse ID. ID may be stated by the system operator or any dispatcher. 
+Morse IDers are used to relieve the operators of the necessity of remembering to do this.
+
+Most Morse IDer are programmed thus:
+
+While radio quiet, IDer is quiet.
+
+Once radio keyed, flag ("IDRequiredTrue") is set true.
+
+Once radio unkeys with IDRequiredTrue set, countdown timer ("TailTime") is set for X seconds. 
+(Usually 3 or 5 seconds.)
+
+If, before TailTime expires, radio is keyed again, TailTime is restarted at full value.
+
+IDer IDs if (and as soon as) TailTime timer expires while IDRequiredTrue flag is set.
+
+On ID, a countdown timer ("LastIDTime") is set to 15 minutes (Part 90 commercial) or 30 minutes 
+(Part 90 public safety).
+
+IDer will not ID again unless and until LastIDTime expires, and then once radio is thereafter 
+keyed, above described sequence repeats itself.
+
+If you examine this sequence carefully, you will see that it is not in literal compliance with
+ section 90.425: assume a discrete short set of transmissions; IDer IDs at end; and then before 15 
+(or 30) minute timer expires, there is another discrete short exchange of transmissions. IDer will 
+not ID again; rule appears to require it. As near as I can tell FCC doesn't care about the discrepancy 
+(nor does anyone else).
+
+4. If you do use a Morse IDer, here are a couple of hints on how to keep people from losing 
+their sanity:
+
+A. Most IDers and controllers have an option for IDing during quiet periods, e.g., once per 
+30 minutes even if the radio is quiet. Kill this option.
+
+B. Most IDers have an option of sending the ID without PL. Use this option. This way your 
+users and operational listeners don't have to listen to the ID, which is not for their benefit, but for
+ the benefit of the FCC, any co-channel users, and the like.
+
+C. Section 90.425 has some technical requirements for Morse IDers, i.e., code rate, tone 
+frequency, and use of polite IDs.
+
+5. While I would never counsel anyone to igore the rules, exactly zero of the police departments 
+whose radio operation I have reason to be familiar with broadcasts a station identification complying with 
+section 90.425 more than once per day. This has been the case for over 30 years. I'm unaware of any police 
+department being cited for failure to give proper ID.

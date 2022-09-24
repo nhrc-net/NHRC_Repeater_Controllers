@@ -1,0 +1,165 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "raw.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+ICON0                   ICON                    "NHRC.ico"
+ICON1                   ICON                    "n.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+"PXP-RAW" MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open...",                    FILE_LOAD
+        MENUITEM "O&pen ASCII...",              FILE_LOAD_ASCII
+        MENUITEM "&Save",                       FILE_SAVE
+        MENUITEM "Save &As...",                 FILE_SAVE_AS
+        MENUITEM "&Print...",                   FILE_PRINT
+        MENUITEM "E&xit",                       FILE_EXIT
+    END
+    POPUP "&Pod"
+    BEGIN
+        MENUITEM "&Get Program from Pod",       POD_GET
+        MENUITEM "&Put Program into Pod",       POD_PUT
+        MENUITEM "&Read device in pod",         POD_READ
+        MENUITEM "&Write device in pod",        POD_WRITE
+    END
+    POPUP "&Help", HELP
+    BEGIN
+        MENUITEM "&About...",                   HELP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_MAIN DIALOG  10, 10, 160, 200
+CAPTION "NHRC-PXP Raw Mode Programmer"
+MENU "PXP-Raw"
+CLASS "PXP-Raw"
+FONT 10, "Courier"
+BEGIN
+    LTEXT           "Data  0 1 2 3 4 5 6 7 8 9 A B C D E F",-1,0,0,160,8
+    LTEXT           "                                     ",2000,0,20,160,8
+    LTEXT           "                                     ",2001,0,30,160,8
+    LTEXT           "                                     ",2002,0,40,160,8
+    LTEXT           "                                     ",2003,0,50,160,8
+    LTEXT           "                                     ",2004,0,60,160,8
+    LTEXT           "                                     ",2005,0,70,160,8
+    LTEXT           "                                     ",2006,0,80,160,8
+    LTEXT           "                                     ",2007,0,90,160,8
+    LTEXT           "                                     ",2008,0,100,160,8
+    LTEXT           "                                     ",2009,0,110,160,8
+    LTEXT           "                                     ",2010,0,120,160,8
+    LTEXT           "                                     ",2011,0,130,160,8
+    LTEXT           "                                     ",2012,0,140,160,8
+    LTEXT           "                                     ",2013,0,150,160,8
+    LTEXT           "                                     ",2014,0,160,160,8
+    LTEXT           "                                     ",2015,0,170,160,8
+END
+
+ABOUTDIALOG DIALOGEX 0, 0, 160, 72
+CAPTION "About PXP-Raw"
+FONT 10, "System", 0, 0, 0x0
+BEGIN
+    ICON            "ICON0",-1,5,5,20,20
+    LTEXT           "",ABOUT_TEXT,28,5,129,42
+    DEFPUSHBUTTON   "OK",IDOK,65,52,30,14
+END
+
+PRINTINGDIALOG DIALOG  6, 15, 135, 61
+CAPTION "Printing..."
+FONT 10, "System"
+BEGIN
+    LTEXT           "Printing Radio Data.  Please Wait.",-1,12,8,114,10
+    CTEXT           "",PRINT_DIALOG_STATUS,12,18,114,10
+    PUSHBUTTON      "Cancel",IDCANCEL,40,36,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+1 VERSIONINFO
+ FILEVERSION 1,0,0,32
+ PRODUCTVERSION 1,0,0,32
+ FILEFLAGSMASK 0x0L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "FileVersion", "1.00"
+            VALUE "FileDescription", "PXP-Raw executable"
+            VALUE "LegalCopyright", "Copyright © 2004 NHRC LLC."
+            VALUE "CompanyName", "NHRC LLC"
+            VALUE "InternalName", "PXP-Raw"
+            VALUE "OriginalFilename", "PXP-Raw.exe"
+            VALUE "ProductName", "NHRC-PXP Raw Mode Programming Software"
+            VALUE "ProductVersion", "1.00"
+            VALUE "BuildDate", "1 September 2004"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

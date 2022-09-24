@@ -1,0 +1,28 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Programmer", "Programmer.vcproj", "{243170F4-1F59-466B-B49B-A1457E7B94A2}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "..\Setup\Setup.vdproj", "{AAD83AA0-E90D-4974-A314-2BD86F92F63B}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{243170F4-1F59-466B-B49B-A1457E7B94A2}.Debug.ActiveCfg = Debug|Win32
+		{243170F4-1F59-466B-B49B-A1457E7B94A2}.Debug.Build.0 = Debug|Win32
+		{243170F4-1F59-466B-B49B-A1457E7B94A2}.Release.ActiveCfg = Release|Win32
+		{243170F4-1F59-466B-B49B-A1457E7B94A2}.Release.Build.0 = Release|Win32
+		{AAD83AA0-E90D-4974-A314-2BD86F92F63B}.Debug.ActiveCfg = Debug
+		{AAD83AA0-E90D-4974-A314-2BD86F92F63B}.Release.ActiveCfg = Release
+		{AAD83AA0-E90D-4974-A314-2BD86F92F63B}.Release.Build.0 = Release
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

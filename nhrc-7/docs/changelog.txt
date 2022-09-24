@@ -1,0 +1,38 @@
+NHRC-7 Repeater Controller
+Software Revision History
+
+0.01  2003/06/25  first version
+0.02  2003/07/21  beta test release
+1.00  2003/11/17  first release
+1.01  2003/11/19  bugfix for digital output power up state.
+		  added NHRC test mode.
+1.02  2004/01/19  fixed bug so now all 5 saved states actually work.
+1.03  2004/02/03  fixed bug that reversed ctl op 4.7 and 5.6 ct tone enable
+1.10  2004/02/26  now can set courtesy tone "front porch" delay.
+                  can now have hang timer and/or courtesy tone on non-duplex ports.
+                  can now set CW speed and pitch for both ports, seperately.                  
+1.11  2004/03/08  fix to allow cntl rx confirmation message to play out both ports.
+1.12  2006/01/26  allow front porch timer to be set to zero to prevent tx wedge.
+1.13  2009/01/01  speed up COR debounce action
+1.14  2010/01/08  processor support for PIC 16F887
+1.15  2010/03/28  fix power up ID to say NHRC-7
+
+1.20  2011/01/15  has digital input triggered saved state change, 
+                  saved state as courtesy tone, 
+                  input priority modes.
+
+1.21  2011/04/20  reset power up default saved states to make them 4 common
+                  customer configurations.
+                  fixed digital output state readback, now says OFF or ON instead of ERR.
+
+1.22  2012/01/02  shorten debounce time on saved state select input processing to 3 ms
+                    to eliminate race condition with COR input processing debounce, 
+                    which is 5 ms.
+
+1.23  2012/01/08  fix *71 courtesy tone playback to radio 2, it would always play the
+                    first courtesy tone regardless of the number selected.
+                  fix so RX2 to TX1 courtesy tone plays when it is supposed to.
+                  made factory default saved states 0 & 1 play no courtesy tones.
+
+1.24  2016/01/26  fix unmute problem on port 2
+

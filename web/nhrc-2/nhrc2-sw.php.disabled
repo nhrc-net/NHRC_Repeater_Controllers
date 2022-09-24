@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+               "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+<title>NHRC-2 Repeater Controller Software</title>
+<meta name="description" content="Software download page for the NHRC-2 Repeater Controller software">
+<meta name="keywords" content="NHRC-2">
+</head>
+<body bgcolor=white>
+<center><FONT SIZE=6><b>NHRC-2 Repeater Controller Software</b></FONT></center>
+<HR>
+<center><table border=10 width="80%">
+<tr><td align=center bgcolor="#ff0000"><font color="#ffff00" size=4><b>
+PIC 16C84 Based Repeater Controller.<br>
+Copyright (C) 1996, Jeffrey B. Otterson, N1KDO.<br>
+All rights reserved.<p>
+This software may be freely reproduced for use by amateur
+radio operators in their personally owned or club owned radio
+systems.  All other uses are strictly prohibited without the
+express written consent of the author.<p>
+The author maintains all commercial rights to this software.
+Any sale of this software or derived works is strictly prohibited
+without the express written consent of the author.<p>
+Reasonable terms for commercial use of this software are available.
+Contact the author for details.
+</b></font></td></tr></table></center><p>
+Download the <a href="rptr.asm">Source Code</a>.<br>
+Download the <a href="rptr.hex">Object Code</a>.<br>
+<hr>
+<a href="index.php">NHRC-2 Repeater Controller Page</a>
+<hr>
+<?php
+$copydate="1996-2005";
+$version="1.11";
+include '../barefooter.inc';
+?>

@@ -1,0 +1,17 @@
+[Project]
+Path=C:\NHRC\NHRC3\sw\
+Target=rptr0043
+
+[compiler]
+hex_file=1
+error_file=1
+list_file=1
+xref_file=0
+open_error_file=1
+default_dir=1
+asm_options=
+c_options=
+working_dir=
+
+[Source]
+0=rptr0043.asm

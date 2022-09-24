@@ -1,0 +1,26 @@
+NHRC-6 Repeater Controller
+Software Revision History
+
+0.01  2002/02/17  first beep on NHRC-6, one repeater only.
+0.02  2002/03/26  first beep on 2nd tone generator.
+0.03  2002/03/30  first alpha release.
+0.04  2002/04/02  fixed number of saved states.
+0.05  2002/04/09  fixed init requirement to change unlock code.
+		  fixed broken ID programming (*70x command).
+		  fixed kerchunker delay logic, did not care which tx enabled.
+0.06  2002/05/31  fixed port 2 CTCSS bug. 
+                  fixed initial ID to NHRC-6
+0.07  2002/06/16  changed clock to 16 MHz.
+1.00  2002/07/06  fixed announcement message to be NHRC-6. 
+                  fixed bug that would play CT and hang on port configured
+                    for simplex. 
+1.01  2002/08/15  fixed bug with enabling receiver that already has COR.
+                  (reset receiver state machines)
+1.02  2003/06/24  fixed port 2 tone tables.  Now tones are accurate.
+1.03  2004/01/19  fixed bug so now all 5 saved states actually work.
+1.04  2004/02/03  fixed bug that reversed ctl op 4.7 and 5.6 ct tone enable
+1.10  2004/02/26  now can set courtesy tone "front porch" delay.
+                  can now have hang timer and/or courtesy tone on non-duplex ports.
+                  can now set CW speed and pitch for both ports, seperately. 
+1.11  2004/03/08  bug fix for wrong tx enable on beeps start.
+1.12  2006/11/13  fixed too short front porch time tx lockon bug...                 

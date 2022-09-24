@@ -1,0 +1,229 @@
+(PCB "DSUB-7000"
+ (description
+  (timeStamp "2012 07 10 20 02 49")
+  (program "CAPTURE.EXE" (Version "10.5.0.p001"))
+  (source "Original data from OrCAD/CAPTURE schematic")
+  (title "")
+  (date "Tuesday, July 10, 2012")
+  (document "C:\\TEMP\\DSUB-7000.DSN")
+  (revision "")
+  (organization "")
+  (address1 "")
+  (address2 "")
+  (address3 "")
+  (address4 "")
+  (partvaluecombine "{Value}")
+  (pcbfootprintcombine "{PCB Footprint}"))
+ (structure )
+ (placement
+  (component "test point"
+   (place T8
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 00000191)
+     ("Source Package" "test point")
+     (Value "test point")))
+   (place T9
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 000001A7)
+     ("Source Package" "test point")
+     (Value "test point")))
+   (place T1
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 000000CD)
+     ("Source Package" "test point")
+     (Value "test point")))
+   (place T2
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 0000010D)
+     ("Source Package" "test point")
+     (Value "test point")))
+   (place T3
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 00000123)
+     ("Source Package" "test point")
+     (Value "test point")))
+   (place T4
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 00000139)
+     ("Source Package" "test point")
+     (Value "test point")))
+   (place T5
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 0000014F)
+     ("Source Package" "test point")
+     (Value "test point")))
+   (place T6
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 00000165)
+     ("Source Package" "test point")
+     (Value "test point")))
+   (place T7
+    (property 
+     ("PCB Footprint" MHOLE)
+     (timestamp 0000017B)
+     ("Source Package" "test point")
+     (Value "test point"))))
+  (component "CONNECTOR DB9"
+   (place J1
+    (property 
+     ("PCB Footprint" "D-SUB9-MALE-BACKSHELL")
+     (timestamp 00000040)
+     ("Source Package" "CONNECTOR DB9")
+     (Value "CONNECTOR DB9"))))
+  (component "PNP BCE"
+   (place Q1
+    (property 
+     ("PCB Footprint" "SOT23-Y321")
+     (timestamp 0000007A)
+     ("Source Package" "PNP BCE")
+     (Value "PNP BCE")
+     (DIGIKEY "MMBT3906-FDICT-ND"))))
+  (component "DIODE DUAL COM CATH_1"
+   (place D1
+    (property 
+     ("PCB Footprint" "SOT23-Y231")
+     (timestamp 0000005D)
+     ("Source Package" "DIODE DUAL COM CATH_1")
+     (Value "4148 DUAL COM CATH")
+     (DIGIKEY "MMBD4148CCCT-ND"))))
+  (component R
+   (place R1
+    (property 
+     ("PCB Footprint" 0603)
+     (timestamp 00000093)
+     ("Source Package" R)
+     (Value 10K)))))
+ (library
+  (image "test point"
+   (property 
+    (sourcelib "C:\\CAD LIBRARIES\\ORCAD\\PETE_LIB\\PETE2.OLB"))
+   (pin 999 1
+    (property 
+     (pinname 1)
+     (pintype 4))))
+  (image R
+   (property 
+    (sourcelib "C:\\CAD LIBRARIES\\ORCAD\\OLDLIBS\\PCBDEV.OLB"))
+   (pin 999 1
+    (property 
+     (pinname 1)
+     (pintype 4)))
+   (pin 999 2
+    (property 
+     (pinname 2)
+     (pintype 4))))
+  (image "CONNECTOR DB9"
+   (property 
+    (sourcelib "C:\\CAD LIBRARIES\\ORCAD\\OLDLIBS\\PCBDEV.OLB"))
+   (pin 999 5
+    (property 
+     (pinname 5)
+     (pintype 4)))
+   (pin 999 9
+    (property 
+     (pinname 9)
+     (pintype 4)))
+   (pin 999 4
+    (property 
+     (pinname 4)
+     (pintype 4)))
+   (pin 999 8
+    (property 
+     (pinname 8)
+     (pintype 4)))
+   (pin 999 3
+    (property 
+     (pinname 3)
+     (pintype 4)))
+   (pin 999 7
+    (property 
+     (pinname 7)
+     (pintype 4)))
+   (pin 999 2
+    (property 
+     (pinname 2)
+     (pintype 4)))
+   (pin 999 6
+    (property 
+     (pinname 6)
+     (pintype 4)))
+   (pin 999 1
+    (property 
+     (pinname 1)
+     (pintype 4))))
+  (image "DIODE DUAL COM CATH_1"
+   (property 
+    (sourcelib "C:\\TEMP\\DSUB-7000.DSN"))
+   (pin 999 1
+    (property 
+     (pinname "ANODE RED")
+     (pintype 4)))
+   (pin 999 2
+    (property 
+     (pinname "ANODE GRN")
+     (pintype 4)))
+   (pin 999 3
+    (property 
+     (pinname CATHODE)
+     (pintype 4))))
+  (image "PNP BCE"
+   (property 
+    (sourcelib "C:\\CAD LIBRARIES\\ORCAD\\OLDLIBS\\PCBDEV.OLB"))
+   (pin 999 1
+    (property 
+     (pinname BASE)
+     (pintype 0)))
+   (pin 999 3
+    (property 
+     (pinname EMITTER)
+     (pintype 4)))
+   (pin 999 2
+    (property 
+     (pinname COLLECTOR)
+     (pintype 4)))))
+ (network
+  (net SQLS
+   (pins
+     T2-1 R1-1))
+  (net +8V
+   (pins
+     T1-1 Q1-2))
+  (net N00513
+   (pins
+     R1-2 Q1-1))
+  (net VSEND
+   (pins
+     T4-1 D1-2))
+  (net HSEND
+   (pins
+     T3-1 D1-1))
+  (net RX_AUDIO
+   (pins
+     T5-1 J1-5))
+  (net TX_AUDIO
+   (pins
+     T6-1 J1-4))
+  (net GND
+   (pins
+     J1-1 T7-1))
+  (net PTT
+   (pins
+     J1-3 D1-3))
+  (net CAS
+   (pins
+     Q1-3 J1-7))
+  (net SP2
+   (pins
+     T8-1 J1-6))
+  (net SP1
+   (pins
+     J1-2 T9-1)))
+)

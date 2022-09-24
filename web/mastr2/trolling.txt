@@ -1,0 +1,164 @@
+From: WhitBrown@aol.com
+
+Below is textual copy of Paul's article from QST May, 1995.
+============
+TROLLING FOR MASTER IIs from QST May, 1995
+By Paul Gilbert, KE5ZW
+2608 El Toro Dr, No. 111-B
+Huntsville, TX 77340
+vis_pfg@pip.shsu.edu
+
+Many hams today feel that they need to have the latest and greatest 
+Gee-Whiz XYZ-345 all-mode radio with nine zillion channels, just to 
+work their local repeater. In the frenzy to keep up with that trend, 
+many great buys of used commercial gear are overlooked at hamfests 
+and auctions.
+
+Look for familiar brand names and models. When purchasing a used 
+commercial radio, such as the General Electric Master II, see if 
+it's for VHF or UHF and check its options, because many dealers 
+don't know. Because I'm most familiar with the GEs, I can give some 
+info and hints on the GE Master II.
+
+Although most of these great commercial radios are 
+crystal-controlled, and big and clunky, they can be excellent buys 
+at $100 or less.
+
+The Master II mobile was made in the late 1970s and the '80s as a 
+replacement for the Master Pro. It's a trunk-mount radio with a 
+control head and cable arrangement mounted in the driver's 
+compartment. The radio came in frequencies from 29 MHz to 800 MHz 
+with one, two or eight channels.
+
+To determine what model you're looking at, decode the combination 
+number printed on the metal plate to the right of the cable 
+connector on the Master II. The combo number is on the back of the 
+radio on an MVP and under the handle on an Exec II. Look for a 66 in 
+the combination number for a VHF rig and an 88 or 78 for UHF. These 
+will be the eighth and ninth digits in the combo number. 
+
+The 66 model has a frequency range of 136 to 174 MHz. The 78 is for 
+420 to 450 MHz and the 88 covers 450 to 470 MHz. The radios can be 
+easily tuned to the ham bands with no modifications, with one minor 
+exception for using the 88 or 450 to 470-MHz radio in the 420 MHz 
+range: You must add a 5-pF capacitor to three coils (T-106, 107 and 
+108) in the exciter, and order receive crystals for high-side 
+injection. Then tune the radio in a normal fashion. Otherwise, order 
+crystals and tune per manufacturers’ specs.
+
+One quick way to tell the UHF version of the Master II is by the 
+orange wire coming out of the receiver going to a point on the 
+circuit board in front of the receiver cans.
+
+Master II models came with various output-power levels from 40 to 
+110 W, depending on frequency. The power of the radio is the third 
+digit from the left of the combo number. A 4 is 20 W, 5 is 40 W, 6 
+is 75 W and 7 is 110 W.
+
+There were two basic versions of the UHF power amplifiers. The early 
+versions used a large hybrid power-control chip (usually black) and 
+had a blue, flat power-control pot. Later versions had a 
+multicomponent power-control circuit and a red pot. The “red pot” 
+version is more desirable for ham use and 420 MHz work because it 
+will put out full or near-full power in the 440 to 420 range. The 
+older “blue pot” version is about 50% efficient in the 420 range.
+
+Other things you can learn from the combo number are the number of 
+channels the radio will use, whether it's equipped with CTCSS, and 
+if it has a receiver preamp built in. Channel capabilities are 
+listed in the fifth-digit position: A for 1, C for 2 and K for 8. 
+The CTCSS option is the seventh digit : S for no CTCSS, U for CTCSS, 
+P for no CTCSS with receive preamp and G for CTCSS and preamp.
+
+Other Master II trivia includes the case style the radio was built 
+in. The most common Master II radio comes in the standard case, 
+about 2-1/2 inches thick, with only one receiver and transmitter. 
+It's painted a medium olive gray.
+
+Another case style is the E-line case. It was made to accommodate 
+several options, including four additional channels (for a total of 
+12), a second receiver or transmitter, and a synthesized 
+transmitter/receiver option, or combinations of the above.
+
+The E-line radios were about 5 inches thick and very heavy. The 
+first digit of the combo number would be an E on those radios. They 
+were painted the same medium olive gray. Some that were in UHF IMTS 
+mobile phone service have four-can UHF mobile duplexers in them.
+
+Depending on which model you find, there may be other options that 
+can be determined from the combo number. A GE Master II manual has 
+most of them.
+
+Moving on to the control head: there were three basic versions, with 
+many options and variations.
+
+The most common control head was the C-500 or clamshell-style head. 
+It can handle 12 channels and has an option of a one-channel 
+priority scan.
+
+The C-800 was the most common scan head made for the Master II. It 
+was big, at 9x5x7 inches, and it would scan up to eight channels, 
+with several options available.
+
+Last is the C-900. You think the C-800 is big until you see one of 
+these! it was half again larger than the C-800. It has buttons and 
+options such as 12-channel scan, multi-Channel Guard (CTCSS), siren, 
+gun release, lights and more. C-900 heads aren’t often found in good 
+condition.
+
+Manuals for the Master II often show up at hamfests, or can be 
+begged or borrowed from your local two-way shop or friends, and 
+people who sell them often advertise in ham magazines.
+
+As a 1970s-vintage radio, the Master II uses a transmit and a 
+receive crystal for each channel you want to work. When you order 
+the crystals, buy good ones from a company that will warranty them 
+for life. The prices range from $9 to $35, depending on the dealer, 
+the speed of the service and the tolerance of crystal.1
+
+Because the crystals take time to make, the best price is usually on 
+four-week delivery. This will get you better stability because the 
+crystals are burned in and tested better than ones ordered by 
+requesting 48-hour service.
+
+Master IIs use crystal holders called ICOMs, which come in several 
+models. For mobiles, use ones marked EC on the transmit side and EC 
+with one 5C on the receive side. The 5C is a frequency-compensation 
+ICOM and helps adjust the frequency with changes in temperature. 
+Don’t use more than one 5C. It’s best to put the 5C on the receive 
+side. The ICOMs are marked for transmit and receive, so try to keep 
+that sense correct. By buying good crystals and setting up the 
+compensation correctly, you shouldn't have trouble with frequency 
+changes.
+
+Other trivia needed for trolling for Master IIs are knowledge of the 
+vintage of Channel Guard Boards, SAS boards, Exciter boards and the 
+types of cables used.
+
+This information applies mainly to the Master II radio; the MVP and 
+Exec II radios are similar in design, but packaged differently. I 
+focused on the Master II because I know it best, but much of the 
+information on combo numbers and options apply to the MVP and Exec 
+II. The MVP was an under-dash-mount radio and the Exec II was a 
+trunk-mount version.
+
+Some of these radios have been put through the mill and are long 
+overdue for retirement. Buy the radio from someone who will back it 
+up if it doesn’t work. If it looks beat up, has corrosion on it or 
+is kludged up from several different radios, don’t buy it.
+
+I hope these tips on GE Master II hunting help you troll the 
+hamfests for the bargain of the show. These radios can serve you for 
+years and escape the fate of the scrap pile.
+
+(1) Sources for crystals include International Crystal Manufacturing 
+Co Inc, 701 W Sheridan, PO Box 26330, Oklahoma City, OK 73126; 
+800-725-1426, and JAN Crystals, 2341 Crystal Dr, PO Box 06017, Ft 
+Myers, FL 33906-6017; 800-526-9825, 813-936-2397, fax 813-936-3750.
+¾Mike Tracy, KC1SX, Technical Information Specialist, ARRL Lab
+
+
+------------------------------------------------------------------------
+We have a new web site! http://www.onelist.com
+------------------------------------------------------------------------
+The ORIGINAL Repeater Owners remailer. Accept no substitutes! 

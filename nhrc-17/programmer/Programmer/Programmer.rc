@@ -1,0 +1,347 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_N                   ICON                    "n.ico"
+IDI_A_UPROGRAMMER       ICON                    "Programmer.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_UPROGRAMMER MENU 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Select Com Port",             ID_FILE_SELECT_COMPORT
+        MENUITEM "New",                         ID_FILE_NEW
+        MENUITEM "Open...",                     ID_FILE_OPEN
+        MENUITEM "Save",                        ID_FILE_SAVE
+        MENUITEM "Save As...",                  ID_FILE_SAVE_AS
+        MENUITEM "Read From Controller",        ID_FILE_READ
+        MENUITEM "Write To Controller",         ID_FILE_WRITE
+		MENUITEM "Reset Controller",            ID_FILE_RESET_CONTROLLER
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "Edit"
+    BEGIN
+        POPUP "Control Operator Switches"
+        BEGIN
+            MENUITEM "Set 0",                       ID_CONTROLOPERATORSWITCHES_SET0
+            MENUITEM "Set 1",                       ID_CONTROLOPERATORSWITCHES_SET1
+            MENUITEM "Set 2",                       ID_CONTROLOPERATORSWITCHES_SET2
+            MENUITEM "Set 3",                       ID_CONTROLOPERATORSWITCHES_SET3
+            MENUITEM "Set 4",                       ID_CONTROLOPERATORSWITCHES_SET4
+        END
+        MENUITEM "Courtesy Tones",              ID_EDIT_COURTESYTONES
+        MENUITEM "CW ID",                       ID_EDIT_CWID
+        MENUITEM "Prefixes",                    ID_EDIT_PREFIXES
+        MENUITEM "Timers",                      ID_EDIT_TIMERS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About ...",                  IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDC_UPROGRAMMER ACCELERATORS 
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 165, 47
+STYLE DS_SETFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "System", 0, 0, 0x0
+BEGIN
+    ICON            IDI_A_UPROGRAMMER,IDC_MYICON,6,6,20,20
+    LTEXT           "NHRC-17 Programmer Version 1.00",IDC_STATIC,26,6,127,8
+    LTEXT           "Copyright © 2014, NHRC LLC",IDC_STATIC,25,14,131,8
+    DEFPUSHBUTTON   "OK",IDOK,67,30,30,11,BS_CENTER | WS_GROUP
+END
+
+IDD_TRANSFER DIALOGEX 0, 0, 184, 65
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_CAPTION
+CAPTION "Transferring Data"
+FONT 8, "System", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,67,45,50,14
+    CTEXT           "Please wait while the controller data is transferred.",IDC_STATIC,6,6,172,8
+    CTEXT           "0000 / 0000",IDC_MESSAGE,6,33,172,8
+    CONTROL         "",IDC_PROGRESSBAR,"msctls_progress32",WS_BORDER,6,25,172,7
+    CTEXT           "This will take a few seconds...",IDC_STATIC,6,15,172,8
+END
+
+IDD_PREFIXES DIALOGEX 0, 0, 147, 172
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Prefixes"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,16,150,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,81,150,50,14
+    RTEXT           "Control Operator Access",IDC_STATIC,5,8,93,8
+    EDITTEXT        IDC_PFX_EDIT_00,100,6,40,14,ES_AUTOHSCROLL
+    RTEXT           "DTMF Access",IDC_STATIC,7,28,92,8
+    EDITTEXT        IDC_PFX_EDIT_01,100,26,40,14,ES_AUTOHSCROLL
+    RTEXT           "Digital Output Control",IDC_STATIC,7,48,92,8
+    EDITTEXT        IDC_PFX_EDIT_02,100,46,40,14,ES_AUTOHSCROLL
+    RTEXT           "Load Saved Setup",IDC_STATIC,7,68,92,8
+    EDITTEXT        IDC_PFX_EDIT_03,100,66,40,14,ES_AUTOHSCROLL
+    RTEXT           "Audio Test",IDC_STATIC,7,88,92,8
+    EDITTEXT        IDC_PFX_EDIT_04,100,86,40,14,ES_AUTOHSCROLL
+    RTEXT           "Reset Alarm",IDC_STATIC,7,108,92,8
+    EDITTEXT        IDC_PFX_EDIT_05,100,106,40,14,ES_AUTOHSCROLL
+    RTEXT           "Unlock Controller",IDC_STATIC,7,128,92,8
+    EDITTEXT        IDC_PFX_EDIT_07,100,126,40,14,ES_AUTOHSCROLL
+END
+
+IDD_TIMERS DIALOGEX 0, 0, 218, 258
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Timers"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,46,237,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,122,237,50,14
+    RTEXT           "Long Hang Timer",IDC_STATIC,6,9,106,8
+    EDITTEXT        IDC_TIMER_EDIT_00,117,6,25,14,ES_NUMBER
+    LTEXT           "x 0.1 Seconds",IDC_STATIC,146,9,66,8
+    RTEXT           "Short Hang Timer",IDC_STATIC,6,23,106,8
+    EDITTEXT        IDC_TIMER_EDIT_01,117,21,25,14,ES_NUMBER
+    LTEXT           "x 0.1 Seconds",IDC_STATIC,146,24,66,8
+    RTEXT           "ID Timer Transmitter 1",IDC_STATIC,6,38,106,8
+    EDITTEXT        IDC_TIMER_EDIT_02,117,36,25,14,ES_NUMBER
+    LTEXT           "x 10 Seconds",IDC_STATIC,146,39,66,8
+    RTEXT           "ID Timer Transmitter 2",IDC_STATIC,6,53,106,8
+    EDITTEXT        IDC_TIMER_EDIT_03,117,51,25,14,ES_NUMBER
+    LTEXT           "x 10 Seconds",IDC_STATIC,146,54,66,8
+    RTEXT           "DTMF Access Mode Timer",IDC_STATIC,6,68,106,8
+    EDITTEXT        IDC_TIMER_EDIT_04,117,66,25,14,ES_NUMBER
+    LTEXT           "x 10 Seconds",IDC_STATIC,146,69,66,8
+    RTEXT           "Long Timeout Timer",IDC_STATIC,6,83,106,8
+    EDITTEXT        IDC_TIMER_EDIT_05,117,81,25,14,ES_NUMBER
+    LTEXT           "x 1 Seconds",IDC_STATIC,146,84,66,8
+    RTEXT           "Short Timeout Timer",IDC_STATIC,6,98,106,8
+    EDITTEXT        IDC_TIMER_EDIT_06,117,96,25,14,ES_NUMBER
+    LTEXT           "x 1 Seconds",IDC_STATIC,146,99,66,8
+    RTEXT           "Fan Timer",IDC_STATIC,6,113,106,8
+    EDITTEXT        IDC_TIMER_EDIT_07,117,111,25,14,ES_NUMBER
+    LTEXT           "x 10 Seconds",IDC_STATIC,146,114,66,8
+    RTEXT           "Alarm Interval Timer",IDC_STATIC,6,128,106,8
+    EDITTEXT        IDC_TIMER_EDIT_08,117,126,25,14,ES_NUMBER
+    LTEXT           "x 10 Seconds",IDC_STATIC,146,129,66,8
+    RTEXT           "Transmitter 1 Front Porch Delay",IDC_STATIC,6,144,106,8
+    EDITTEXT        IDC_TIMER_EDIT_09,117,141,25,14,ES_NUMBER
+    LTEXT           "x 10 ms",IDC_STATIC,146,144,66,8
+    RTEXT           "Transmitter 2 Front Porch Delay",IDC_STATIC,6,158,106,8
+    EDITTEXT        IDC_TIMER_EDIT_10,117,156,25,14,ES_NUMBER
+    LTEXT           "x 10 ms",IDC_STATIC,146,159,66,8
+    RTEXT           "Transmitter 1 CW Pitch",IDC_STATIC,6,173,106,8
+    EDITTEXT        IDC_TIMER_EDIT_11,117,171,25,14,ES_NUMBER
+    LTEXT           "1 - 31",IDC_STATIC,146,174,66,8
+    RTEXT           "Transmitter 1 CW Speed",IDC_STATIC,6,188,106,8
+    EDITTEXT        IDC_TIMER_EDIT_12,117,186,25,14,ES_NUMBER
+    LTEXT           "5 - 30 WPM",IDC_STATIC,146,189,66,8
+    RTEXT           "Transmitter 2 CW Pitch",IDC_STATIC,6,203,106,8
+    EDITTEXT        IDC_TIMER_EDIT_13,117,201,25,14,ES_NUMBER
+    LTEXT           "1 - 31",IDC_STATIC,146,204,66,8
+    RTEXT           "Transmitter 2 CW Speed",IDC_STATIC,6,218,106,8
+    EDITTEXT        IDC_TIMER_EDIT_14,117,216,25,14,ES_NUMBER
+    LTEXT           "5 - 30 WPM",IDC_STATIC,146,219,66,8
+END
+
+IDD_COURTESYTONES DIALOGEX 0, 0, 431, 118
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Courtesy Tones"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    RTEXT           "Select Courtesy Tone",IDC_STATIC,52,8,69,9
+    COMBOBOX        IDC_TONE_SELECT_COMBO,124,6,241,90,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Tones",IDC_TONES_RADIO,"Button",BS_AUTORADIOBUTTON,6,24,35,10
+    CONTROL         "CW Character",IDC_CWCHAR_RADIO,"Button",BS_AUTORADIOBUTTON,6,78,61,10
+    CTEXT           "Length",IDC_STATIC,20,42,24,9
+    CTEXT           "Pitch/Tone",IDC_STATIC,48,42,64,9
+    CTEXT           "Length",IDC_STATIC,120,42,24,9
+    CTEXT           "Pitch/Tone",IDC_STATIC,148,42,64,9
+    CTEXT           "Length",IDC_STATIC,220,42,24,9
+    CTEXT           "Pitch/Tone",IDC_STATIC,248,42,64,9
+    CTEXT           "Length",IDC_STATIC,320,42,24,9
+    CTEXT           "Pitch/Tone",IDC_STATIC,348,42,64,9
+    EDITTEXT        IDC_SEG_1_LENGTH_EDIT,22,52,20,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SEG_1_PITCH_COMBO,48,52,64,90,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_SEG_2_LENGTH_EDIT,122,52,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_SEG_2_PITCH_COMBO,148,52,64,90,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_SEG_3_LENGTH_EDIT,222,52,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_SEG_3_PITCH_COMBO,248,52,64,90,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_SEG_4_LENGTH_EDIT,322,52,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_SEG_4_PITCH_COMBO,348,52,64,90,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CWCHAR_COMBO,74,77,31,90,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,192,98,50,14
+END
+
+IDD_CONTROLOP DIALOGEX 0, 0, 173, 181
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit Control Operator Settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,61,161,50,14
+    COMBOBOX        IDC_GROUP_COMBO,6,18,161,120,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Item 0",IDC_CTLOP_CB_0,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,6,38,161,8,WS_EX_RIGHT
+    CONTROL         "Item 1",IDC_CTLOP_CB_1,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,6,53,161,8,WS_EX_RIGHT
+    CONTROL         "Item 2",IDC_CTLOP_CB_2,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,6,68,161,8,WS_EX_RIGHT
+    CONTROL         "Item 3",IDC_CTLOP_CB_3,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,6,83,161,8,WS_EX_RIGHT
+    CONTROL         "Item 4",IDC_CTLOP_CB_4,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,6,99,161,8,WS_EX_RIGHT
+    CONTROL         "Item 5",IDC_CTLOP_CB_5,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,6,113,161,8,WS_EX_RIGHT
+    CONTROL         "Item 6",IDC_CTLOP_CB_6,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,6,128,161,8,WS_EX_RIGHT
+    CONTROL         "Item 7",IDC_CTLOP_CB_7,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,6,143,161,8,WS_EX_RIGHT
+    CTEXT           "Saved Setup # 0",IDC_SAVEDSETUPMESSAGE,6,6,161,11
+END
+
+IDD_CWID DIALOGEX 0, 0, 123, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Edit CW ID"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,5,40,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,67,40,50,14
+    RTEXT           "CW ID 1",IDC_STATIC,6,8,47,8
+    EDITTEXT        IDC_CWID1TEXT,53,6,64,12
+    RTEXT           "CW ID 2",IDC_STATIC,6,22,47,8
+    EDITTEXT        IDC_CWID2TEXT,53,20,64,12
+END
+
+IDD_SELECT_COMPORT DIALOGEX 0, 0, 127, 62
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Select Com Port"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,6,40,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,69,40,50,14
+    COMBOBOX        IDC_COMPORT_COMBO,19,18,84,120,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CTEXT           "Select Com Port",IDC_STATIC,6,5,113,11
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_PREFIXES, DIALOG
+    BEGIN
+        RIGHTMARGIN, 141
+        BOTTOMMARGIN, 164
+    END
+
+    IDD_TIMERS, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 212
+        BOTTOMMARGIN, 251
+    END
+
+    IDD_CWID, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 117
+        BOTTOMMARGIN, 54
+    END
+
+    IDD_SELECT_COMPORT, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 119
+        BOTTOMMARGIN, 54
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,2479 @@
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00001 ;*******************************************************************************
+                    00002 ; PIC 16C84 Based Repeater Controller.
+                    00003 ; Copyright (C) 1996, 1997 Jeffrey B. Otterson, N1KDO.
+                    00004 ; All Rights Reserved by the author.
+                    00005 ;*******************************************************************************
+                    00006 ; This software contains proprietary trade secrets of the Nasty Hacker's
+                    00007 ; Repeater Consortium (NHRC).  It may not be distributed in any source or
+                    00008 ; binary form without the express written permission of the NHRC.
+                    00009 ;
+                    00010 ; 04 January 1998
+                    00011 ;*******************************************************************************
+  00000032          00012 VERSION EQU D'050'
+                    00013 
+                    00014 ; Set the F84 symbol to 1 if you are going to assemble this code to run on
+                    00015 ; a 16F84.  Set it to 0 for 16C84
+  00000001          00016 F84     EQU     1
+                    00017 
+                    00018 ; Set the NHRC3 symbol to 1 if you are targetting a NHRC-3 or NHRC-3/M2.
+                    00019 ; Set it to 0 for NHRC-2
+  00000001          00020 NHRC3   EQU     1
+                    00021 
+                    00022 ; Set the DEBUG symbol to 1 to really speed up the software's internal clocks
+                    00023 ; and timers for debugging in the simulator. Normally this is a 0.
+  00000000          00024 DEBUG   EQU     0
+                    00025 
+                    00026 ; Set the LOADEE symbol to 1 to preload the EEPROM cells with debugging data
+                    00027 ; for debugging. Normally this is a 0.
+  00000000          00028 LOADEE  EQU     0
+                    00029 ;
+                    00030         IF F84 == 1
+                    00031         LIST P=16F84, R=HEX
+                    00032         include "p16f84.inc"
+                    00001         LIST
+                    00002 ; P16F84.INC  Standard Header File, Version 2.00    Microchip Technology, Inc.
+                    00136         LIST
+                    00033         ELSE
+                    00034         LIST P=16C84, R=HEX
+                    00035         include "p16c84.inc"
+                    00036         ENDIF
+2007 000D           00037         __FUSES _CP_ON & _XT_OSC & _WDT_ON
+                    00038         ERRORLEVEL 0, -302      ; suppress Argument out of range errors
+                    00039 ;
+                    00040 ; Real Time Interrupt info
+                    00041 ; real time is counted by setting the TICK bit every 100 ms in the
+                    00042 ; interrupt handler.
+                    00043 ;
+                    00044 ;     1 s
+                    00045 ; -----------  = .000000279365115 sec per cycle
+                    00046 ; 3579545 cps
+                    00047 ;
+                    00048 ; processor clock is 4 * above = .00000111746046 sec instruction cycle
+                    00049 ; 256 of those is .000286069878 sec
+                    00050 ; 2 x prescale results in .000572139755
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00051 ; toggling a bit at that speed will result in a 873.9 hz square wave, which
+                    00052 ; is used for the CW and courtesy tones.
+                    00053 ; dividing that by 175 yields a period of .100124457 sec, the base timer tick.
+                    00054 
+                    00055 ;
+                    00056 ; Message Addressing Scheme:
+                    00057 ;   Stored Audio:
+                    00058 ;     0 - Initial ID, "Welcome to N1KDO repeater"
+                    00059 ;     1 - Normal ID, "N1KDO repeater"
+                    00060 ;     2 - Timeout message, "Repeater Timeout"
+                    00061 ;     3 - Tail message, "Club meeting tonight"
+                    00062 ;   CW messages:
+                    00063 ;     0 - CW ID, "de n1kdo/r"
+                    00064 ;     1 - CW timeout message, "to"
+                    00065 ;     2 - CW confirm message, "ok"
+                    00066 ;     3 - CW bad message, "ng"
+                    00067 ;
+                    00068 
+  00000000          00069 CW_ID   equ     h'00'           ; CW ID
+  00000001          00070 CW_TO   equ     h'01'           ; CW timeout
+  00000002          00071 CW_OK   equ     h'02'           ; CW OK
+  00000003          00072 CW_NG   equ     h'03'           ; CW NG
+  00000010          00073 ISD_IID equ     h'10'           ; ISD initial ID
+  00000011          00074 ISD_ID  equ     h'11'           ; ISD normal ID
+  00000012          00075 ISD_TO  equ     h'12'           ; ISD timeout message
+  00000013          00076 ISD_TM  equ     h'13'           ; ISD tail message
+  00000014          00077 ISD_SM  equ     h'14'           ; ISD simplex repeater message
+  00000015          00078 ISD_SMA equ     h'15'           ; ISD simplex repeater message, alt ID mode
+                    00079 
+  00000001          00080 INOTID  equ     1               ; indicates NOT isd ID message
+  00000002          00081 ISDSIM  equ     2               ; indicates simplex message
+  00000004          00082 ISDMSG  equ     4               ; indicates message is for ISD
+  00000007          00083 MSGREC  equ     7               ; set high bit to indicate record mode
+                    00084 
+                    00085 ;
+                    00086 ; The main program spins in Loop as fast as it can.
+                    00087 ; Timing is accomplished by the interrupt routine that sets 3 bits that
+                    00088 ; are used inside the main loop: TENTH, ONESEC, and TENSEC.  When these
+                    00089 ; bits are set, the corresponding timer(s) should be decremented.
+                    00090 ;
+                    00091 ; Port A has the DTMF data, and one bit that is used for muting and init
+                    00092 ; A.0 (in ) = DTMF bit 0
+                    00093 ; A.1 (in ) = DTMF bit 1
+                    00094 ; A.2 (in ) = DTMF bit 2
+                    00095 ; A.3 (in ) = DTMF bit 3
+                    00096 ; A.4 (in ) = init input at start up, mute output after
+                    00097 ;
+                    00098 ;Port A
+  0000000F          00099 TMASK   equ     0f
+  00000004          00100 INITBIT equ     4
+  00000004          00101 MUTE    equ     4               ; mute and init share A.4
+                    00102 ;
+                    00103 ; Port B has the following
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00104 ; B.0 (in ) = DTMF digit valid
+                    00105 ; B.1 (out) = PTT
+                    00106 ; B.2 (out) = ISD playl\
+                    00107 ; B.3 (out) = ISD A0
+                    00108 ; B.4 (out) = ISD A1
+                    00109 ; B.5 (out) = ISD record\
+                    00110 ; B.6 (out) = beep tone output
+                    00111 ; B.7 (in ) = COR
+                    00112 ;
+                    00113 ;PortB
+  00000000          00114 dv      equ     0               ; DTMF digit valid
+  00000001          00115 ptt     equ     1               ; PTT key
+  00000002          00116 isdPlay equ     2               ; ISD play   / chip enable
+  00000003          00117 isdRec  equ     3               ; ISD record / record (0)-play (1) select
+  00000004          00118 isdA0   equ     4               ; ISD message select bit 0
+  00000005          00119 isdA1   equ     5               ; ISD message select bit 1
+  00000006          00120 beepBit equ     6               ; beep generator
+  00000007          00121 COR     equ     7               ; unsquelched (0) / squelched (1)
+                    00122 
+  00000002          00123 CTL0    equ     2               ; output lead zero when no ISD
+  00000003          00124 CTL1    equ     3               ; output lead one  when no ISD
+                    00125 
+                    00126 ;TFlags                         ; timer flags
+  00000000          00127 TICK    equ     0               ; 100 ms tick flag
+  00000001          00128 TENTH   equ     1               ; tenth second decrementer flag
+  00000002          00129 ONESEC  equ     2               ; one second decrementer flag
+  00000003          00130 TENSEC  equ     3               ; ten second decrementer flag
+  00000004          00131 XCOR    equ     4               ; COR set at top of loop only from TFLCOR state
+  00000005          00132 CWTICK  equ     5               ; cw clock bit
+  00000006          00133 SAYOK   equ     6               ; force OK message flag
+  00000007          00134 TFLCOR  equ     7               ; debounced cor
+                    00135 
+                    00136 ;flags
+  00000000          00137 initID  equ     0               ; need to ID now
+  00000001          00138 needID  equ     1               ; need to send ID
+  00000002          00139 lastDV  equ     2               ; last pass digit valid
+  00000003          00140 init    equ     3               ; initialize
+  00000004          00141 lastCor equ     4               ; last COR flag
+  00000005          00142 isdRecF equ     5               ; ISD record flag
+  00000006          00143 cwOn    equ     6               ; cw sender is active...
+  00000007          00144 beepOn  equ     7               ; beep tone on
+                    00145 
+                    00146 ;cfgFlag
+  00000000          00147 NOISD   equ     0               ; no ISD part
+  00000001          00148 SIMPLEX equ     1               ; simplex repeater mode
+  00000002          00149 DELAY   equ     2               ; delay line is present
+  00000004          00150 NOCTSY  equ     4               ; suppress courtesy tone
+  00000005          00151 NOMUTE  equ     5               ; don't mute touch-tones
+  00000006          00152 ISDCTSY equ     6               ; play ISD message 3 for courtesy tone
+  00000007          00153 ALTID   equ     7               ; alternate ID control
+                    00154 
+                    00155 ;state, bit 0 set indicates transmitter should be on...
+  00000000          00156 SQUIET  equ     0
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  00000001          00157 SRPT    equ     1
+  00000002          00158 STIMOUT equ     2
+  00000003          00159 SHANG   equ     3
+  00000004          00160 SDISABL equ     4
+                    00161 
+  00000000          00162 ACTIVE  equ     0               ; active BIT, if set don't turn off PTT
+                    00163 
+                    00164 ;debounce count complete Bit
+                    00165         IF DEBUG == 1
+                    00166 CDBBIT  equ     1               ; debounce counts to 2, about 1.143 ms?
+                    00167 CDBVAL  equ     2
+                    00168         ELSE
+  00000005          00169 CDBBIT  equ     5               ; debounce counts to 32, about 18.2 ms
+  00000032          00170 CDBVAL  equ     32
+                    00171         ENDIF
+                    00172 
+                    00173 ;
+                    00174 ; EEPROM locations for data...
+                    00175 ;
+  00000000          00176 EEENAB  equ     h'00'
+  00000001          00177 EECONF  equ     h'01'
+  00000002          00178 EEHANG  equ     h'02'
+  00000003          00179 EETOUT  equ     h'03'
+  00000004          00180 EEID    equ     h'04'
+  00000005          00181 EETMSG  equ     h'05'
+  00000006          00182 EECWOK  equ     h'06'
+  00000009          00183 EECWNG  equ     h'09'
+  0000000C          00184 EECWTO  equ     h'0c'
+  0000000F          00185 EECWID  equ     h'0f'
+  0000001A          00186 EEIEND  equ     h'1a'           ; last EEPROM to program with data at init time
+  00000037          00187 EELAST  equ     h'37'           ; last EEPROM address to init
+                    00188 
+  00000038          00189 EEM0LEN equ     h'38'
+  00000039          00190 EEM1LEN equ     h'39'
+  0000003A          00191 EEM2LEN equ     h'3a'
+  0000003B          00192 EEM3LEN equ     h'3b'
+  0000003C          00193 EETTPRE equ     h'3c'
+                    00194 
+                    00195 ;
+                    00196 ;DTMF remote control constants
+                    00197 ;
+  00000004          00198 TONES   EQU     4               ; number of digits in touch tone command
+  00000004          00199 MAXCMD  EQU     4               ; maximum number of digits in command
+                    00200 
+                    00201 ;
+                    00202 ; CW sender constants
+                    00203 ;
+  00000001          00204 CWDIT   equ     1               ; dit = 100 ms
+  00000003          00205 CWDAH   equ     CWDIT * 3       ; dah = 300 ms
+  00000001          00206 CWIESP  equ     CWDIT           ; inter-element space = 100 ms
+  00000003          00207 CWILSP  equ     CWDAH           ; inter-letter space = 300 ms
+  00000007          00208 CWIWSP  equ     7               ; inter-word space = 700 ms
+                    00209 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  00000003          00210 ISDBKOF EQU     D'3'            ; preset simplex ISD backoff time .3 sec
+                    00211 
+                    00212         IF DEBUG == 1
+                    00213 OFBASE  equ     D'2'            ; overflow counts fast!
+                    00214 TEN     equ     D'4'
+                    00215         ELSE
+  000000AF          00216 OFBASE  equ     D'175'          ; overflow counts in 100.12 ms
+  0000000A          00217 TEN     equ     D'10'
+                    00218         ENDIF
+                    00219 
+  00000069          00220 CWCNT   equ     D'105'          ; approximately 60 ms for 20 wpm
+                    00221 
+  00000006          00222 IDSOON  equ     D'6'            ; ID soon, polite IDer threshold, 60 sec
+  00000014          00223 MUTEDLY equ     D'20'           ; DTMF muting timer
+                    00224 
+                    00225 ;macro definitions
+                    00226 push    macro
+                    00227         movwf   w_copy          ; save w reg in Buffer
+                    00228         swapf   w_copy,f        ; swap it
+                    00229         swapf   STATUS,w        ; get status
+                    00230         movwf   s_copy          ; save it
+                    00231         endm
+                    00232 ;
+                    00233 pop     macro
+                    00234         swapf   s_copy,w        ; restore status
+                    00235         movwf   STATUS          ;       /
+                    00236         swapf   w_copy,w        ; restore W reg
+                    00237         endm
+                    00238 
+                    00239         IF NHRC3 == 0           ; NHRC-3 target?
+                    00240                                 ; ISD Controls are inverted
+                    00241 
+                    00242 ISDPON  macro                   ; turn on ISD PLAYL/CS\&PD\ (play)
+                    00243         bsf     PORTB,isdPlay
+                    00244         endm
+                    00245 
+                    00246 ISDPOFF macro                   ; turn off ISD PLAYL/CD\&PD\ (stop playing)
+                    00247         bcf     PORTB,isdPlay
+                    00248         endm
+                    00249 
+                    00250 ISDRON  macro                   ; turn on ISD RECL/PR\ (start recording)
+                    00251         bsf     PORTB,isdRec
+                    00252         endm
+                    00253 
+                    00254 ISDROFF macro                   ; turn off ISD RECL/PR\ (stop recording)
+                    00255         bcf     PORTB,isdRec
+                    00256         endm
+                    00257 
+                    00258         ELSE
+                    00259 
+                    00260 ISDPON  macro                   ; turn on ISD PLAYL/CS\&PD\ (play)
+                    00261         bcf     PORTB,isdPlay
+                    00262         endm
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00263 
+                    00264 ISDPOFF macro                   ; turn off ISD PLAYL/CD\&PD\ (stop playing)
+                    00265         bsf     PORTB,isdPlay
+                    00266         endm
+                    00267 
+                    00268 ISDRON  macro                   ; turn on ISD RECL/PR\ (start recording)
+                    00269         bcf     PORTB,isdRec
+                    00270         endm
+                    00271 
+                    00272 ISDROFF macro                   ; turn off ISD RECL/PR\ (stop recording)
+                    00273         bsf     PORTB,isdRec
+                    00274         endm
+                    00275 
+                    00276         ENDIF
+                    00277 
+                    00278 ;variables
+                    00279         cblock  0c
+  0000000C          00280         w_copy                  ; saved W register for interrupt handler
+  0000000D          00281         s_copy                  ; saved status register for int handler
+  0000000E          00282         cfgFlag                 ; Configuration Flags
+  0000000F          00283         tFlags                  ; Timer Flags
+  00000010          00284         flags                   ; operating Flags
+  00000011          00285         ofCnt                   ; 100 ms timebase counter
+  00000012          00286         cwCntr                  ; cw timebase counter
+  00000013          00287         secCnt                  ; one second count
+  00000014          00288         tenCnt                  ; ten second count
+  00000015          00289         state                   ; CAS state
+  00000016          00290         hangDly                 ; hang timer preset, in tenths
+  00000017          00291         tOutDly                 ; timeout timer preset, in 1 seconds
+  00000018          00292         idDly                   ; id timer preset, in 10 seconds
+  00000019          00293         hangTmr                 ; hang timer, in tenths
+  0000001A          00294         tOutTmr                 ; timeout timer, in 1 seconds
+  0000001B          00295         idTmr                   ; id timer, in 10 seconds
+  0000001C          00296         sISDTmr                 ; simplex ISD back-off timer
+  0000001D          00297         muteTmr                 ; DTMF muting timer, in tenths
+  0000001E          00298         cwTmr                   ; CW element timer
+  0000001F          00299         msgNum                  ; message number to play
+  00000020          00300         tone                    ; touch tone digit received
+  00000021          00301         toneCnt                 ; digits received down counter
+  00000022          00302         cmdCnt                  ; command digits received
+  00000023          00303         tBuf1                   ; tones received buffer
+  00000024          00304         tBuf2                   ; tones received buffer
+  00000025          00305         tBuf3                   ; tones received buffer
+  00000026          00306         tBuf4                   ; tones received buffer
+  00000027          00307         cwBuff                  ; CW message buffer offset
+  00000028          00308         cwByte                  ; CW current byte (bitmap)
+  00000029          00309         tMsgCtr                 ; tail message counter
+  0000002A          00310         dBounce                 ; cor debounce counter
+                    00311 
+  0000002B          00312         isdPlaL                 ; ISD1240 playback timer, tenths, low word
+  0000002C          00313         isdPlaH                 ; ISD1240 playback timer, tenths, hi word
+  0000002D          00314         isdRecL                 ; ISD1240 record timer, tenths (up-counter) lo
+  0000002E          00315         isdRecH                 ; ISD1240 record timer, tenths (up-counter) hi
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00316         endc
+                    00317 
+                    00318 ;last RAM address is at 2f
+                    00319 
+                    00320 ;;;;;;;;;;;;;;;;;;
+                    00321 ;; MAIN PROGRAM ;;
+                    00322 ;;;;;;;;;;;;;;;;;;
+                    00323 
+0000                00324         org     0
+0000 2849           00325         goto    Start
+0001 0032           00326         dw      VERSION
+                    00327 
+                    00328         ;
+                    00329         ; interrupt handler
+                    00330         ;
+0004                00331         org     4
+                    00332         push                    ; preserve W and STATUS
+0004 008C               M         movwf   w_copy          ; save w reg in Buffer
+0005 0E8C               M         swapf   w_copy,f        ; swap it
+0006 0E03               M         swapf   STATUS,w        ; get status
+0007 008D               M         movwf   s_copy          ; save it
+                    00333 
+0008 190B           00334         btfsc   INTCON,T0IF
+0009 280B           00335         goto    TimrInt
+000A 2845           00336         goto    IntExit
+                    00337 
+000B                00338 TimrInt
+000B 1F90           00339         btfss   flags,beepOn    ; is beep turned on?
+000C 2812           00340         goto    TimrTst         ; no, continue
+000D 1F06           00341         btfss   PORTB,beepBit   ; is beepBit set?
+000E 2811           00342         goto    Beep0           ; no
+000F 1306           00343         bcf     PORTB,beepBit   ; yes, turn it off
+0010 2812           00344         goto    TimrTst         ; continue
+0011                00345 Beep0
+0011 1706           00346         bsf     PORTB,beepBit   ; beep bit is off, turn it on...
+                    00347 
+0012                00348 TimrTst
+0012 0B91           00349         decfsz  ofCnt,f         ; decrement the overflow counter
+0013 2817           00350         goto    TimrDone        ; if not 0, then
+0014 140F           00351         bsf     tFlags,TICK     ; set tick indicator flag
+0015 30AF           00352         movlw   OFBASE          ; preset overflow counter
+0016 0091           00353         movwf   ofCnt
+                    00354 
+0017                00355 TimrDone
+0017 0B92           00356         decfsz  cwCntr,f        ; decrement the cw timebase counter
+0018 281C           00357         goto    DeBounc
+0019 168F           00358         bsf     tFlags,CWTICK   ; set tick indicator
+001A 3069           00359         movlw   CWCNT           ; get preset value
+001B 0092           00360         movwf   cwCntr          ; preset cw timebase counter
+                    00361 
+001C                00362 DeBounc                         ; COR debounce
+001C 1F86           00363         btfss   PORTB,COR       ; check cor
+001D 282D           00364         goto    ICorOn          ; it's low...
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00365                                 ; squelch is closed; receiver is inactive
+001E 08AA           00366         movf    dBounce,f       ; check debounce counter for zero
+001F 1903           00367         btfsc   STATUS,Z        ; is it zero?
+0020 2844           00368         goto    TIntDone        ; yes
+0021 190E           00369         btfsc   cfgFlag,DELAY   ; is the audio delay present?
+0022 2826           00370         goto    DCorOff         ; yes...
+0023 0BAA           00371         decfsz  dBounce,f       ; no, decrement & test
+0024 2844           00372         goto    TIntDone        ; not zero yet
+0025 282B           00373         goto    DBCoff          ; it's zero, turn COR off
+                    00374 
+0026                00375 DCorOff                         ; delay is present, cor is off
+0026 0BAA           00376         decfsz  dBounce,f       ; is it zero?
+0027 2829           00377         goto    DCor2           ; no
+0028 282B           00378         goto    DBCoff          ; yes, turn off COR
+                    00379 
+0029                00380 DCor2                           ; 2nd decrement...
+0029 0BAA           00381         decfsz  dBounce,f       ; is it zero?
+002A 2844           00382         goto    TIntDone        ; no
+                    00383                                 ; yes, turn off COR
+                    00384 
+002B                00385 DBCoff
+002B 178F           00386         bsf     tFlags,TFLCOR   ; turn COR off
+002C 2844           00387         goto    TIntDone        ; done with COR debouncing...
+                    00388 
+002D                00389 ICorOn                          ; squelch is open; receiver is active
+002D 188E           00390         btfsc   cfgFlag,SIMPLEX ; test for simplex mode
+002E 283E           00391         goto    SCorOn          ; use special simplex debouncer
+002F 190E           00392         btfsc   cfgFlag,DELAY   ; is the audio delay present?
+0030 2838           00393         goto    DCorOn          ; yes...
+0031 1AAA           00394         btfsc   dBounce,CDBBIT  ; check debounce counter
+0032 2844           00395         goto    TIntDone        ; already maxed out
+0033 0AAA           00396         incf    dBounce,f       ; increment
+0034 1EAA           00397         btfss   dBounce,CDBBIT  ; is it maxed now?
+0035 2844           00398         goto    TIntDone        ; no
+0036 138F           00399         bcf     tFlags,TFLCOR   ; yes, turn COR on
+0037 2844           00400         goto    TIntDone        ; done with debouncing...
+                    00401 
+0038                00402 DCorOn                          ; debounce COR on
+0038 0F2A           00403         incfsz  dBounce,w       ; increment and test for wrap
+0039 283C           00404         goto    DCor1           ; not zero
+003A 138F           00405         bcf     tFlags,TFLCOR   ; yes, sum is zero, 255 stored,  turn COR on
+003B 2844           00406         goto    TIntDone        ; done with debouncing...
+                    00407         
+003C                00408 DCor1                           ; debounce COR on not max yet
+003C 0AAA           00409         incf    dBounce,f       ; increment dBounce counter
+003D 2844           00410         goto    TIntDone        ; done with debounce...
+                    00411 
+003E                00412 SCorOn                          ; SIMPLEX debounce has extra hysteresis
+                    00413         IF DEBUG == 1
+                    00414         bcf     tFlags,TFLCOR   ; nope, turn on COR flag
+                    00415         movlw   1               ; preset debounce
+                    00416         movwf   dBounce
+                    00417         goto    TIntDone
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00418         nop                     ; waste space so the debug section
+                    00419         nop                     ; is the same size as the non-debug
+                    00420         ELSE
+003E 3032           00421         movlw   CDBVAL          ; fetch debounce counter threshold
+003F 022A           00422         subwf   dBounce,w       ; subtract count from dBounce
+0040 1803           00423         btfsc   STATUS,C        ; is result negative
+0041 138F           00424         bcf     tFlags,TFLCOR   ; nope, turn on COR flag
+0042 0F2A           00425         incfsz  dBounce,w       ; increment & test dBounce
+0043 0AAA           00426         incf    dBounce,f       ; was not already at max, so increment
+                    00427         ENDIF
+0044                00428 TIntDone
+0044 110B           00429         bcf     INTCON,T0IF     ; clear RTCC int mask
+                    00430 
+0045                00431 IntExit
+                    00432         pop                     ; restore W and STATUS
+0045 0E0D               M         swapf   s_copy,w        ; restore status
+0046 0083               M         movwf   STATUS          ;       /
+0047 0E0C               M         swapf   w_copy,w        ; restore W reg
+0048 0009           00433         retfie
+                    00434 
+0049                00435 Start
+                    00436         IF NHRC3 == 0           ; NHRC-3 Target?
+                    00437                                 ; ISD controls NOT inverted
+                    00438         movlw   b'00000000'     ; preset ISD controls low
+                    00439         ELSE
+0049 300C           00440         movlw   b'00001100'     ; preset ISD controls high
+                    00441         ENDIF
+004A 0086           00442         movwf   PORTB           ; preset port B values...
+                    00443 
+004B 1683           00444         bsf     STATUS,RP0      ; select bank 1
+004C 301F           00445         movlw   b'00011111'     ; low 5 bits are input
+004D 0085           00446         movwf   TRISA           ; set port a as outputs
+004E 3081           00447         movlw   b'10000001'     ; RB0&RB7 inputs
+004F 0086           00448         movwf   TRISB
+                    00449 
+                    00450         IF DEBUG == 1
+                    00451         movlw   b'10001000'     ; DEBUG! no pull up, timer 0 gets no prescale
+                    00452         ELSE
+0050 3080           00453         movlw   b'10000000'     ; no pull up, timer 0 gets prescale 2
+                    00454         ENDIF
+                    00455 
+0051 0081           00456         movwf   OPTION_REG      ; set options
+                    00457 
+0052 1283           00458         bcf     STATUS,RP0      ; select page 0
+0053 0190           00459         clrf    flags           ; reset all flags
+0054 0185           00460         clrf    PORTA           ; make port a all low
+0055 0195           00461         clrf    state           ; clear state (quiet)
+0056 018F           00462         clrf    tFlags          ; clear timer flags
+0057 178F           00463         bsf     tFlags,TFLCOR   ; set debounced cor off
+0058 019F           00464         clrf    msgNum          ; clear message number
+0059 30AF           00465         movlw   OFBASE          ; preset overflow counter
+005A 0091           00466         movwf   ofCnt
+005B 3069           00467         movlw   CWCNT           ; get preset value
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+005C 0092           00468         movwf   cwCntr          ; preset cw timebase counter
+                    00469 
+005D 300A           00470         movlw   TEN             ; preset decade counters
+005E 0093           00471         movwf   secCnt          ; 1 second down counter
+005F 0094           00472         movwf   tenCnt          ; 10 second down counter
+                    00473 
+0060 018E           00474         clrf    cfgFlag         ; clear config flag
+0061 0199           00475         clrf    hangTmr         ; clear hang timer
+0062 019A           00476         clrf    tOutTmr         ; clear timeout timer
+0063 019B           00477         clrf    idTmr           ; clear idTimer
+0064 01AB           00478         clrf    isdPlaL         ; clear lo byte isd play timer
+0065 01AC           00479         clrf    isdPlaH         ; clear hi byte isd play timer
+0066 019D           00480         clrf    muteTmr         ; clear muting timer
+0067 019C           00481         clrf    sISDTmr         ; clear ISD back off timer
+0068 01A2           00482         clrf    cmdCnt          ; clear command counter
+0069 01AA           00483         clrf    dBounce         ; clear debounce timer counter
+006A 3004           00484         movlw   TONES
+006B 00A1           00485         movwf   toneCnt         ; preset tone counter
+                    00486 
+006C 1A05           00487         btfsc   PORTA,INITBIT   ; check to see if init is pulled low
+006D 2884           00488         goto    NoInit          ; init is not low, continue...
+                    00489 
+006E 1590           00490         bsf     flags,init      ; initialization in progress
+                    00491 
+006F 3037           00492         movlw   EELAST          ; get last address to initialize
+0070 0089           00493         movwf   EEADR           ; set EEPROM address to program
+0071                00494 InitLp
+0071 23B3           00495         call    InitDat         ; get init data byte
+0072 0088           00496         movwf   EEDATA          ; put into EEPROM data register
+0073 23A3           00497         call    EEProg          ; program byte
+0074 0889           00498         movf    EEADR,f         ; load status, set Z if zero (last byte done)
+0075 1903           00499         btfsc   STATUS,Z        ; skip if Z is clear (not last byte)
+0076 2879           00500         goto    InitISD         ; done initializing EEPROM data
+0077 0389           00501         decf    EEADR,f         ; decrement EEADR
+0078 2871           00502         goto    InitLp
+                    00503 
+0079                00504 InitISD
+0079 3001           00505         movlw   d'1'            ; 0.1 sec message length default
+007A 0088           00506         movwf   EEDATA          ; put into EEPROM data register
+007B 3038           00507         movlw   EEM0LEN         ; address of message 0 length
+007C 0089           00508         movwf   EEADR           ; set EEPROM address to program
+007D 23A3           00509         call    EEProg          ; program byte
+007E 0A89           00510         incf    EEADR,f         ; increment address of byte to init
+007F 23A3           00511         call    EEProg          ; program byte EEM1LEN
+0080 0A89           00512         incf    EEADR,f         ; increment address of byte to init
+0081 23A3           00513         call    EEProg          ; program byte EEM2LEN
+0082 0A89           00514         incf    EEADR,f         ; increment address of byte to init
+0083 23A3           00515         call    EEProg          ; program byte EEM3LEN
+                    00516 
+0084                00517 NoInit
+0084 1683           00518         bsf     STATUS,RP0      ; select bank 1
+0085 300F           00519         movlw   b'00001111'     ; low 4 bits are input, RA4 is muting control
+0086 0085           00520         movwf   TRISA           ; set port a as outputs
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0087 1283           00521         bcf     STATUS,RP0      ; select bank 0
+                    00522 
+0088 3000           00523         movlw   EEENAB          ; get address of enable byte
+0089 0089           00524         movwf   EEADR           ; store EEPROM address
+008A 2258           00525         call    EEEval          ; get data and evalate
+008B 3001           00526         movlw   EECONF          ; get address of configuration byte
+008C 0089           00527         movwf   EEADR           ; store EEPROM address
+008D 2258           00528         call    EEEval          ; get data and evalate
+008E 3002           00529         movlw   EEHANG          ; get address of hang timer preset value
+008F 0089           00530         movwf   EEADR           ; store EEPROM address
+0090 2258           00531         call    EEEval          ; get data and evalate
+0091 3003           00532         movlw   EETOUT          ; get address of timeout timer preset value
+0092 0089           00533         movwf   EEADR           ; store EEPROM address
+0093 2258           00534         call    EEEval          ; get data and evalate
+0094 3004           00535         movlw   EEID            ; get address of ID timer preset value
+0095 0089           00536         movwf   EEADR           ; store EEPROM address
+0096 2258           00537         call    EEEval          ; get data and evalate
+0097 3005           00538         movlw   EETMSG          ; get address of tail message counter preset
+0098 0089           00539         movwf   EEADR           ; store EEPROM address
+0099 2258           00540         call    EEEval          ; get data and evalate
+                    00541 
+009A 30A0           00542         movlw   b'10100000'     ; enable interrupts, & Timer 0 overflow
+009B 008B           00543         movwf   INTCON
+009C 1605           00544         bsf     PORTA,MUTE      ; mute the receiver audio.
+                    00545 
+009D                00546 Loop                            ; start of main loop
+009D 0064           00547         clrwdt                  ; reset the watchdog timer
+                    00548         ;check CW bit
+009E 1E8F           00549         btfss   tFlags,CWTICK   ; is the CWTICK set
+009F 28CE           00550         goto    NoCW
+00A0 128F           00551         bcf     tFlags,CWTICK   ; reset the CWTICK flag bit
+                    00552 
+                    00553         ;
+                    00554         ;CW sender
+                    00555         ;
+00A1 1F10           00556         btfss   flags,cwOn      ; sending CW?
+00A2 28CE           00557         goto    NoCW            ; nope
+00A3 0B9E           00558         decfsz  cwTmr,f         ; decrement CW timer
+00A4 28CE           00559         goto    NoCW            ; not zero
+                    00560 
+00A5 1F90           00561         btfss   flags,beepOn    ; was "key" down?
+00A6 28BD           00562         goto    CWKeyUp         ; nope
+                    00563                                 ; key was down
+00A7 1390           00564         bcf     flags,beepOn    ; key->up
+00A8 0328           00565         decf    cwByte,w        ; test CW byte to see if 1
+00A9 1903           00566         btfsc   STATUS,Z        ; was it 1 (Z set if cwByte == 1)
+00AA 28AE           00567         goto    CWNext          ; it was 1...
+00AB 3001           00568         movlw   CWIESP          ; get cw inter-element space
+00AC 009E           00569         movwf   cwTmr           ; preset cw timer
+00AD 28CE           00570         goto    NoCW            ; done with this pass...
+                    00571 
+00AE                00572 CWNext                          ; get next character of message
+00AE 0AA7           00573         incf    cwBuff,f        ; increment offset
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00AF 0827           00574         movf    cwBuff,w        ; get offset
+00B0 2358           00575         call    ReadEE          ; get char from EEPROM
+00B1 00A8           00576         movwf   cwByte          ; store character bitmap
+00B2 1903           00577         btfsc   STATUS,Z        ; is this a space (zero)
+00B3 28BA           00578         goto    CWWord          ; yes, it is 00
+00B4 0A28           00579         incf    cwByte,w        ; check to see if it is FF
+00B5 1903           00580         btfsc   STATUS,Z        ; if this bitmap was FF then Z will be set
+00B6 28CC           00581         goto    CWDone          ; yes, it is FF
+00B7 3003           00582         movlw   CWILSP          ; no, not 00 or FF, inter letter space
+00B8 009E           00583         movwf   cwTmr           ; preset cw timer
+00B9 28CE           00584         goto    NoCW            ; done with this pass...
+                    00585 
+00BA                00586 CWWord                          ; word space
+00BA 3007           00587         movlw   CWIWSP          ; get word space
+00BB 009E           00588         movwf   cwTmr           ; preset cw timer
+00BC 28CE           00589         goto    NoCW            ; done with this pass...
+                    00590 
+00BD                00591 CWKeyUp                         ; key was up, key again...
+00BD 0A28           00592         incf    cwByte,w        ; is cwByte == ff?
+00BE 1903           00593         btfsc   STATUS,Z        ; Z is set if cwByte == ff
+00BF 28CC           00594         goto    CWDone          ; got EOM
+                    00595 
+00C0 08A8           00596         movf    cwByte,f        ; check for zero/word space
+00C1 1D03           00597         btfss   STATUS,Z        ; is it zero
+00C2 28C4           00598         goto    CWTest          ; no...
+00C3 28AE           00599         goto    CWNext          ; is 00, word space...
+                    00600 
+00C4                00601 CWTest
+00C4 3001           00602         movlw   CWDIT           ; get dit length
+00C5 1828           00603         btfsc   cwByte,0        ; check low bit
+00C6 3003           00604         movlw   CWDAH           ; get DAH length
+00C7 009E           00605         movwf   cwTmr           ; preset cw timer
+00C8 1790           00606         bsf     flags,beepOn    ; turn key->down
+00C9 0CA8           00607         rrf     cwByte,f        ; rotate cw bitmap
+00CA 13A8           00608         bcf     cwByte,7        ; clear the MSB
+00CB 28CE           00609         goto    NoCW            ; done with this pass...
+                    00610 
+00CC                00611 CWDone                          ; done sending CW
+00CC 1310           00612         bcf     flags,cwOn      ; turn off CW flag
+00CD 2396           00613         call    CheckTx         ; turn off transmitter if ok to
+                    00614 
+00CE                00615 NoCW
+00CE 30E1           00616         movlw   b'11100001'     ; set timer flags mask
+00CF 058F           00617         andwf   tFlags,f        ; clear timer flags
+00D0 1C0F           00618         btfss   tFlags,TICK     ; check to see if a tick has happened
+00D1 28DE           00619         goto    Loop1           ; nope...
+                    00620 
+                    00621         ;
+                    00622         ; 100ms tick has occurred...
+                    00623         ;
+00D2 100F           00624         bcf     tFlags,TICK     ; reset tick flag
+00D3 148F           00625         bsf     tFlags,TENTH    ; set tenth second flag
+00D4 0B93           00626         decfsz  secCnt,f        ; decrement 1 second counter
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 13
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00D5 28DE           00627         goto    Loop1           ; not zero (not 1 sec interval)
+                    00628 
+                    00629         ;
+                    00630         ; 1s tick has occurred...
+                    00631         ;
+00D6 300A           00632         movlw   TEN             ; preset decade counter
+00D7 0093           00633         movwf   secCnt
+00D8 150F           00634         bsf     tFlags,ONESEC   ; set one second flag
+00D9 0B94           00635         decfsz  tenCnt,f        ; decrement 10 second counter
+00DA 28DE           00636         goto    Loop1           ; not zero (not 10 second interval)
+                    00637 
+                    00638         ;
+                    00639         ; 10s tick has occurred...
+                    00640         ;
+00DB 300A           00641         movlw   TEN             ; preset decade counter
+00DC 0094           00642         movwf   tenCnt
+00DD 158F           00643         bsf     tFlags,TENSEC   ; set ten second flag
+                    00644 
+                    00645         ;
+                    00646         ; main loop for repeater controller
+                    00647         ;
+00DE                00648 Loop1
+00DE 1B8F           00649         btfsc   tFlags,TFLCOR   ; is TFLCOR set?
+00DF 160F           00650         bsf     tFlags,XCOR     ; set XCOR, once per loop COR
+00E0 3000           00651         movlw   h'00'
+00E1 008A           00652         movwf   PCLATH          ; ensure that computed goto will stay in range
+00E2 0815           00653         movf    state,w         ; get state into w
+00E3 0782           00654         addwf   PCL,f           ; add w to PCL
+00E4 28E9           00655         goto    Quiet           ; 0
+00E5 291C           00656         goto    Repeat          ; 1
+00E6 2992           00657         goto    TimeOut         ; 2
+00E7 295C           00658         goto    Hang            ; 3
+00E8 299B           00659         goto    CasEnd          ; 4
+                    00660 
+00E9                00661 Quiet
+00E9 1A0F           00662         btfsc   tFlags,XCOR     ; is squelch open?
+00EA 299B           00663         goto    CasEnd          ; no
+                    00664 
+00EB 1C8E           00665         btfss   cfgFlag,SIMPLEX ; simplex mode?
+00EC 2902           00666         goto    QKeyUp
+                    00667                                 ; *** SIMPLEX ***
+00ED 1B10           00668         btfsc   flags,cwOn      ; is cw playing?
+00EE 299B           00669         goto    CasEnd          ; can't go into record if cw is playing
+                    00670 
+00EF 082B           00671         movf    isdPlaL,w       ; fetch lo order byte of ISD play timer
+00F0 042C           00672         iorwf   isdPlaH,w       ; or in hi order byte of ISD play timer
+00F1 041C           00673         iorwf   sISDTmr,w       ; or in backoff timer...
+00F2 1D03           00674         btfss   STATUS,Z        ; is it zero
+00F3 299B           00675         goto    CasEnd          ; no, ISD is playing, don't record
+                    00676 
+00F4 3001           00677         movlw   SRPT            ;
+00F5 0095           00678         movwf   state           ; change state to repeat
+                    00679 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 14
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00680         ISDPOFF                 ; stop any playing message
+00F6 1506               M         bsf     PORTB,isdPlay
+                    00681         ISDROFF                 ; stop any recording message
+00F7 1586               M         bsf     PORTB,isdRec
+00F8 1B9F           00682         btfsc   msgNum,MSGREC   ; is record mode already set?
+00F9 28FE           00683         goto    SimRec          ; yes, record it.
+00FA 3014           00684         movlw   ISD_SM          ; ISD simplex message
+00FB 1B8E           00685         btfsc   cfgFlag,ALTID   ; in alternate ID mode?
+00FC 3015           00686         movlw   ISD_SMA         ; ISD simplex message, alt id mode
+00FD 009F           00687         movwf   msgNum          ; set message number
+00FE                00688 SimRec        
+00FE 1086           00689         bcf     PORTB,ptt       ; turn transmitter off
+00FF 1205           00690         bcf     PORTA,MUTE      ; unmute
+0100 22EF           00691         call    Record          ; start recording
+0101 299B           00692         goto    CasEnd
+                    00693 
+0102                00694 QKeyUp
+0102 238A           00695         call    PTTon           ; turn transmitter on
+                    00696 
+0103                00697 KeyUp
+0103 082B           00698         movf    isdPlaL,w       ; fetch lo byte of ISD play timer
+0104 042C           00699         iorwf   isdPlaH,w       ; or in hi byte of ISD play timer
+0105 041C           00700         iorwf   sISDTmr,w       ; or in backoff timer...
+0106 1903           00701         btfsc   STATUS,Z        ; is result zero (means both are zero)
+0107 2910           00702         goto    Key0            ; yes, no message playing
+0108 189F           00703         btfsc   msgNum,INOTID   ; is it an ID message?
+0109 2910           00704         goto    Key0            ; no, let it go
+                    00705                                 ; stomp on playing voice message
+010A 01AB           00706         clrf    isdPlaL         ; clear ISD timer
+010B 01AC           00707         clrf    isdPlaH         ; clear ISD timer
+                    00708         ISDPOFF                 ; turn off ISD playback
+010C 1506               M         bsf     PORTB,isdPlay
+010D 3000           00709         movlw   CW_ID           ; play CW Id
+010E 009F           00710         movwf   msgNum          ; set message number
+010F 230C           00711         call    SetMsg          ; set up message playback
+                    00712 
+0110                00713 Key0
+0110 089D           00714         movf    muteTmr,f       ; examine mute timer
+0111 1903           00715         btfsc   STATUS,Z        ; skip if mute timer is non-zero
+0112 1205           00716         bcf     PORTA,MUTE      ; unmute
+0113 1F10           00717         btfss   flags,cwOn      ; is cw playing?
+0114 1390           00718         bcf     flags,beepOn    ; no, make sure that beep is off.
+                    00719 
+0115 0817           00720         movf    tOutDly,w       ; get timeout delay into w
+0116 009A           00721         movwf   tOutTmr         ; preset timeout counter
+                    00722 
+0117 3001           00723         movlw   SRPT
+0118 0095           00724         movwf   state           ; change state to repeat
+                    00725 
+0119 1B9F           00726         btfsc   msgNum,MSGREC   ; is record flag set?
+011A 22EF           00727         call    Record          ; yes... start recording
+011B 299B           00728         goto    CasEnd
+                    00729 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 15
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+011C                00730 Repeat
+011C 1D0F           00731         btfss   tFlags,ONESEC   ; check to see if one second tick
+011D 2923           00732         goto    Repeat1         ; nope...
+                    00733 
+011E 089A           00734         movf    tOutTmr,f       ; get tOutTmr zero state
+011F 1D03           00735         btfss   STATUS,Z        ; dont decrement if zero
+0120 0B9A           00736         decfsz  tOutTmr,f       ; decrement timeout timer
+0121 2923           00737         goto    Repeat1         ; not to zero yet...
+0122 2954           00738         goto    TimedOut        ; timed out!
+                    00739 
+0123                00740 Repeat1
+0123 1E0F           00741         btfss   tFlags,XCOR     ; is squelch open?
+0124 299B           00742         goto    CasEnd          ; no, keep repeating
+0125 1605           00743         bsf     PORTA,MUTE      ; mute the audio...
+0126 019D           00744         clrf    muteTmr         ; cancel timed unmute from dtmf muting
+                    00745 
+0127 1E90           00746         btfss   flags,isdRecF   ; is it in record mode?
+0128 293E           00747         goto    CorOff          ; nope, skip next part
+                    00748                                 ; recording, carrier dropped, stop recording
+0129 2308           00749         call    RecStop         ; stop recording
+012A 01AB           00750         clrf    isdPlaL         ; clear ISD timer
+012B 01AC           00751         clrf    isdPlaH
+012C 3000           00752         movlw   SQUIET
+012D 0095           00753         movwf   state           ; change state to quiet
+012E 1D1F           00754         btfss   msgNum,ISDSIM   ; is this a simplex message?
+012F 2933           00755         goto    RecEnd          ; no
+                    00756                                 ; *** SIMPLEX ***
+0130                00757 SimPlay
+0130 230C           00758         call    SetMsg          ; prepare to play message...
+0131 1010           00759         bcf     flags,initID    ; clear initial ID flag, don't want that here.
+0132 299B           00760         goto    CasEnd
+                    00761 
+0133                00762 RecEnd
+0133 081F           00763         movf    msgNum,w        ; get message number
+0134 3903           00764         andlw   b'00000011'     ; mask out bit 2-7
+0135 3E38           00765         addlw   EEM0LEN         ; add address of message 0 length
+0136 0089           00766         movwf   EEADR           ; set EEPROM address
+0137 032D           00767         decf    isdRecL,w       ; get timer - 1 (less 100 ms)
+0138 0088           00768         movwf   EEDATA          ; put into EEPROM data register...
+0139 23A3           00769         call    EEProg          ; save message length
+013A 3002           00770         movlw   CW_OK           ; get cw ok message
+013B 009F           00771         movwf   msgNum          ; set message number to play
+013C 230C           00772         call    SetMsg          ; set up message playback
+013D 299B           00773         goto    CasEnd          ; done here
+                    00774 
+013E                00775 CorOff                          ; cor on->off transition
+013E 188E           00776         btfsc   cfgFlag,SIMPLEX ; in simplex mode?
+013F 2930           00777         goto    SimPlay         ; play (truncated) recorded message
+                    00778 
+0140 019D           00779         clrf    muteTmr         ; reset the mute timer
+0141 019A           00780         clrf    tOutTmr         ; clear time out timer
+0142 0816           00781         movf    hangDly,w       ; get hang timer preset
+0143 1903           00782         btfsc   STATUS,Z        ; is hang timer preset 0?
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 16
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0144 2949           00783         goto    NoHang          ; no hang time
+0145 0099           00784         movwf   hangTmr         ; preset hang timer
+0146 3003           00785         movlw   SHANG
+0147 0095           00786         movwf   state           ; change state to hang
+0148 294B           00787         goto    CorOff2
+                    00788 
+0149                00789 NoHang
+0149 3000           00790         movlw   SQUIET          ; change state to quiet
+014A 0095           00791         movwf   state           ; save state
+                    00792 
+014B                00793 CorOff2
+014B 1810           00794         btfsc   flags,initID    ; check initial id flag
+014C 2365           00795         call    DoID            ; play the ID
+014D 1C90           00796         btfss   flags,needID    ; need to ID?
+014E 299B           00797         goto    CasEnd          ; no, go on...
+                    00798 
+                    00799         ;
+                    00800         ;if (idTmr <= idSoon) then goto StartID
+                    00801         ;implemented as: if ((IDSOON-idTimer)>=0) then ID
+                    00802         ;
+014F 081B           00803         movf    idTmr,w         ; get idTmr into W
+0150 3C06           00804         sublw   IDSOON          ; IDSOON-w ->w
+0151 1803           00805         btfsc   STATUS,C        ; C is clear if result is negative
+0152 2365           00806         call    DoID            ; ok to ID now, let's do it.
+0153 299B           00807         goto    CasEnd          ; don't need to ID yet...
+                    00808 
+0154                00809 TimedOut
+0154 1605           00810         bsf     PORTA,MUTE      ; mute the audio...
+0155 019D           00811         clrf    muteTmr         ; reset the mute timer
+0156 3002           00812         movlw   STIMOUT
+0157 0095           00813         movwf   state           ; change state to timed out
+0158 3012           00814         movlw   ISD_TO          ; ISD time out message
+0159 009F           00815         movwf   msgNum          ; set message number
+015A 230C           00816         call    SetMsg          ; set up message playback
+015B 299B           00817         goto    CasEnd
+                    00818 
+015C                00819 Hang
+015C 1E0F           00820         btfss   tFlags,XCOR     ; is squelch open?
+015D 2903           00821         goto    KeyUp           ; yes!
+                    00822 
+015E 1C8F           00823         btfss   tFlags,TENTH    ; check to see if tenth second tick
+015F 299B           00824         goto    CasEnd
+                    00825 
+0160 1B10           00826         btfsc   flags,cwOn      ; is cw playing?
+0161 2982           00827         goto    Hang2           ; yes, don't ctsy beep
+                    00828 
+0162 1A0E           00829         btfsc   cfgFlag,NOCTSY  ; check for suppressed courtesy tone
+0163 2982           00830         goto    Hang2           ; suppressed...
+                    00831 
+                    00832         ;test to see if time for ctsy tone here
+0164 0819           00833         movf    hangTmr,w       ; get hang timer
+0165 3E02           00834         addlw   2               ; add 200 ms
+0166 1F0E           00835         btfss   cfgFlag,ISDCTSY ; check for ISD stored courtesy tone
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 17
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0167 3E03           00836         addlw   3               ; add 300 ms more if not ISD courtesy tone
+0168 0216           00837         subwf   hangDly,w       ; subtract hang delay
+0169 1D03           00838         btfss   STATUS,Z        ; zero if equal
+016A 297A           00839         goto    Hang1
+016B 082B           00840         movf    isdPlaL,w       ; fetch lo byte of isd play timer
+016C 042C           00841         iorwf   isdPlaH,w       ; or in hi byte of isd play timer
+016D 041C           00842         iorwf   sISDTmr,w       ; or in backoff timer...
+016E 1D03           00843         btfss   STATUS,Z        ; is it zero?
+016F 2982           00844         goto    Hang2           ; no; ISD is playing, don't beep
+0170 1B0E           00845         btfsc   cfgFlag,ISDCTSY ; check for ISD stored courtesy tone
+0171 2974           00846         goto    ISDCtsy
+0172 1790           00847         bsf     flags,beepOn    ; turn on beep
+0173 2982           00848         goto    Hang2
+                    00849 
+0174                00850 ISDCtsy                         ; want to play ISD message 3 for courtesy tone
+0174 1B9F           00851         btfsc   msgNum,MSGREC   ; is record requested?
+0175 2982           00852         goto    Hang2           ; don't play it (it will stomp the record mode)
+0176 3013           00853         movlw   ISD_TM          ; ISD tail message plays as courtesy tone
+0177 009F           00854         movwf   msgNum          ; set message number
+0178 230C           00855         call    SetMsg          ; set up message playback
+0179 2982           00856         goto    Hang2
+                    00857 
+017A                00858 Hang1
+017A 1B0E           00859         btfsc   cfgFlag,ISDCTSY ; check for ISD stored courtesy tone
+017B 2982           00860         goto    Hang2
+                    00861 
+017C 0819           00862         movf    hangTmr,w       ; get hang timer
+017D 3E07           00863         addlw   7               ; add 700 ms so beep is 200 ms long
+017E 0216           00864         subwf   hangDly,w       ; subtract hang delay
+017F 1D03           00865         btfss   STATUS,Z        ; zero if equal
+0180 2982           00866         goto    Hang2
+0181 1390           00867         bcf     flags,beepOn    ; turn off beep
+                    00868 
+0182                00869 Hang2
+0182 0B99           00870         decfsz  hangTmr,f       ; decrement hang timer
+0183 299B           00871         goto    CasEnd          ; not zero yet
+                    00872 
+0184 3000           00873         movlw   SQUIET
+0185 0095           00874         movwf   state           ; change state to quiet
+                    00875 
+0186 08A9           00876         movf    tMsgCtr,f       ; check tail message counter
+0187 1903           00877         btfsc   STATUS,Z        ; Z will be set if counter is zero, skip
+0188 299B           00878         goto    CasEnd          ; tMsgCtr is zero
+0189 0BA9           00879         decfsz  tMsgCtr,f       ; decrement the tail message counter
+018A 299B           00880         goto    CasEnd          ; not zero yet
+018B 3005           00881         movlw   EETMSG          ; get address of tail message counter preset
+018C 2358           00882         call    ReadEE          ; read EEPROM
+018D 00A9           00883         movwf   tMsgCtr         ; restore w into tail message counter
+018E 3013           00884         movlw   ISD_TM          ; get the tail message
+018F 009F           00885         movwf   msgNum          ; save it as the message to play
+0190 230C           00886         call    SetMsg          ; set up message playback
+0191 299B           00887         goto    CasEnd          ; done
+                    00888 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 18
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0192                00889 TimeOut
+0192 1E0F           00890         btfss   tFlags,XCOR     ; is squelch open?
+0193 299B           00891         goto    CasEnd          ; no, stay timed out...
+                    00892 
+0194 3000           00893         movlw   SQUIET
+0195 0095           00894         movwf   state           ; change state to quiet
+                    00895 
+0196 188E           00896         btfsc   cfgFlag,SIMPLEX ; in simplex mode?
+0197 299B           00897         goto    CasEnd          ; surrender quietly if in simplex mode.
+0198 3012           00898         movlw   ISD_TO          ; ISD time out message
+0199 009F           00899         movwf   msgNum          ; set message number
+019A 230C           00900         call    SetMsg          ; set up message playback
+                    00901 
+019B                00902 CasEnd
+019B 1C8F           00903         btfss   tFlags,TENTH    ; check to see if tenth second tick
+019C 29CD           00904         goto    ID1             ; nope
+                    00905                                 ; yes, it is a tenth-tick
+019D 082B           00906         movf    isdPlaL,w       ; fetch lo byte of isd play timer
+019E 042C           00907         iorwf   isdPlaH,w       ; or in hi byte of isd play timer
+019F 1903           00908         btfsc   STATUS,Z        ; is it zero?
+01A0 29CD           00909         goto    ID1             ; yes, hi and lo are zero, no msg playing
+                    00910 
+01A1 1E90           00911         btfss   flags,isdRecF   ; is the ISD in record mode?
+01A2 29A6           00912         goto    CasE1           ; nope.
+01A3 0AAD           00913         incf    isdRecL,f       ; yes. increment the record timer
+01A4 1903           00914         btfsc   STATUS,Z        ; wrap around (carry)?
+01A5 0AAE           00915         incf    isdRecH,f       ; increment hi order counter...
+                    00916 
+01A6                00917 CasE1
+01A6 08AC           00918         movf    isdPlaH,f       ; check hi byte of ISD play timer
+01A7 1903           00919         btfsc   STATUS,Z        ; is it zero?
+01A8 29AE           00920         goto    CasE1A          ; yes, zero.
+01A9 08AB           00921         movf    isdPlaL,f       ; check lo byte of ISD play timer
+01AA 1903           00922         btfsc   STATUS,Z        ; is it zero?
+01AB 03AC           00923         decf    isdPlaH,f       ; yes, borrow one from hi byte of ISD play timer
+01AC 03AB           00924         decf    isdPlaL,f       ; decrement lo byte of ISD play timer
+01AD 29CD           00925         goto    ID1             ; can't have counted to zero yet, continue.
+                    00926 
+01AE                00927 CasE1A                          ; hi byte of ISD timer found to be zero
+01AE 0BAB           00928         decfsz  isdPlaL,f       ; decrement ISD1240 play timer
+01AF 29CD           00929         goto    ID1             ; not zero yet...
+                    00930                                 ; ISD play timer counted down to zero.
+01B0 1E90           00931         btfss   flags,isdRecF   ; is it in record mode
+01B1 29C5           00932         goto    ISDpOff         ; no
+                    00933 
+01B2 2308           00934         call    RecStop         ; stop recording
+01B3 1D1F           00935         btfss   msgNum,ISDSIM   ; is this the simplex message?
+01B4 29BD           00936         goto    CasE1B          ; no.  
+                    00937 
+                    00938         ;; jeff -- trouble spot here.  Just play the message RIGHT NOW!
+                    00939 
+01B5 019A           00940         clrf    tOutTmr         ; stop the timeout timer
+01B6 019D           00941         clrf    muteTmr
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 19
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+01B7 1605           00942         bsf     PORTA,MUTE      ; mute the audio...
+01B8 3002           00943         movlw   STIMOUT
+01B9 0095           00944         movwf   state           ; change state to timedout
+01BA 230C           00945         call    SetMsg          ; prepare to play message...
+01BB 1010           00946         bcf     flags,initID    ; clear initial ID flag, don't want that here.
+01BC 29CD           00947         goto    ID1             ; continue
+                    00948         
+01BD                00949 CasE1B                          ; store message length
+01BD 081F           00950         movf    msgNum,w        ; get message number
+01BE 3903           00951         andlw   b'00000011'     ; mask out bit 2-7
+01BF 3E38           00952         addlw   EEM0LEN         ; add address of message 0 length
+01C0 0089           00953         movwf   EEADR           ; set EEPROM address
+                    00954 
+01C1 032D           00955         decf    isdRecL,w       ; get timer - 1
+01C2 0088           00956         movwf   EEDATA          ; put into EEPROM data register...
+01C3 23A3           00957         call    EEProg          ; save message length
+01C4 29CD           00958         goto    ID1
+                    00959 
+01C5                00960 ISDpOff
+                    00961         ISDPOFF                 ; zero, turn off ISD1240 playback
+01C5 1506               M         bsf     PORTB,isdPlay
+01C6 1C8E           00962         btfss   cfgFlag,SIMPLEX ; in simplex repeater mode?
+01C7 29CD           00963         goto    ID1             ; no.
+                    00964         ;; here! check to see if the ID timer is going to expire soon and play
+                    00965         ;; id now...
+01C8 081B           00966         movf    idTmr,w         ; get idTmr into W
+01C9 3C06           00967         sublw   IDSOON          ; IDSOON-w ->w
+01CA 1803           00968         btfsc   STATUS,C        ; C is clear if result is negative
+01CB 2365           00969         call    DoID            ; ok to ID now, let's do it.
+01CC 29DC           00970         goto    CkBkOff         ; continue
+                    00971 
+01CD                00972 ID1
+01CD 089B           00973         movf    idTmr,f
+01CE 1903           00974         btfsc   STATUS,Z        ; is idTmr 0
+01CF 29DC           00975         goto    CkBkOff         ; yes...
+                    00976 
+01D0 1D8F           00977         btfss   tFlags,TENSEC   ; check to see if ten second tick
+01D1 29DC           00978         goto    CkBkOff         ; nope...
+                    00979 
+                    00980         ;; this nasty logic defers the ID if in simplex repeater mode
+                    00981         ;; and recording.  It will put off the ID for up to the entire
+                    00982         ;; record time.
+01D2 1C8E           00983         btfss   cfgFlag,SIMPLEX ; in simplex repeater mode?
+01D3 29D9           00984         goto    ID1A            ; nope...
+01D4 031B           00985         decf    idTmr,w         ; get ID timer -1
+01D5 1D03           00986         btfss   STATUS,Z        ; is it zero?
+01D6 29D9           00987         goto    ID1A            ; nope...
+01D7 1A90           00988         btfsc   flags,isdRecF   ; recording?
+01D8 29DC           00989         goto    CkBkOff         ; defer ID while recording
+                    00990 
+01D9                00991 ID1A
+01D9 0B9B           00992         decfsz  idTmr,f         ; decrement ID timer
+01DA 29DC           00993         goto    CkBkOff         ; not zero yet...
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 20
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    00994                                 ; id timer is zero! time to ID
+01DB 2365           00995         call    DoID            ; play the ID
+                    00996 
+01DC                00997 CkBkOff
+01DC 089C           00998         movf    sISDTmr,f       ; check ISD backoff timer
+01DD 1903           00999         btfsc   STATUS,Z        ; is it zero?
+01DE 29E4           01000         goto    CkTone          ; yes
+01DF 1C8F           01001         btfss   tFlags,TENTH    ; check to see if tenth second tick
+01E0 29E4           01002         goto    CkTone          ; nope
+01E1 0B9C           01003         decfsz  sISDTmr,f       ; decrement ISD1240 backoff timer
+01E2 29E4           01004         goto    CkTone          ; not zero yet...
+01E3 2310           01005         call    PlayMsg         ; start the message playing
+                    01006 
+01E4                01007 CkTone
+01E4 1C06           01008         btfss   PORTB,dv        ; check M8870 digit valid
+01E5 29F2           01009         goto    NoTone          ; not set
+01E6 1910           01010         btfsc   flags,lastDV    ; check to see if set on last pass
+01E7 2A22           01011         goto    ToneDon         ; it was already set
+01E8 1510           01012         bsf     flags,lastDV    ; set lastDV flag
+                    01013 
+01E9 1A8E           01014         btfsc   cfgFlag,NOMUTE  ; check for no muting flag
+01EA 29EE           01015         goto    MuteEnd         ; no muting...
+                    01016 
+01EB 3014           01017         movlw   MUTEDLY         ; get mute timer delay
+01EC 009D           01018         movwf   muteTmr         ; preset mute timer
+01ED 1605           01019         bsf     PORTA,MUTE      ; set muting
+                    01020 
+01EE                01021 MuteEnd
+01EE 0805           01022         movf    PORTA,w         ; get DTMF digit
+01EF 390F           01023         andlw   TMASK           ; mask off hi nibble
+01F0 00A0           01024         movwf   tone            ; save digit
+01F1 2A22           01025         goto    ToneDon
+                    01026 
+01F2                01027 NoTone
+01F2 1D10           01028         btfss   flags,lastDV    ; is lastDV set
+01F3 2A22           01029         goto    ToneDon         ; nope...
+01F4 1110           01030         bcf     flags,lastDV    ; clear lastDV flag...
+                    01031 
+01F5 1990           01032         btfsc   flags,init      ; in init mode?
+01F6 2A15           01033         goto    WrTone          ; yes, go write the tone
+                    01034 
+01F7 0821           01035         movf    toneCnt,w       ; test toneCnt
+01F8 1D03           01036         btfss   STATUS,Z        ; is it zero?
+01F9 2A06           01037         goto    CkDigit         ; no
+                    01038 
+                    01039         ;password has been successfully entered, start storing tones
+                    01040 
+                    01041         ;make sure that there is room for this digit
+01FA 3004           01042         movlw   MAXCMD          ; get max # of command tones
+01FB 0222           01043         subwf   cmdCnt,w        ; cmdCnt - MAXCMD -> w
+01FC 1903           01044         btfsc   STATUS,Z        ; if Z is set then there is no more room
+01FD 2A23           01045         goto    Wait            ; no room, just ignore it...
+                    01046 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 21
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    01047         ;there is room for this digit, calculate buffer address...
+01FE 3023           01048         movlw   tBuf1           ; get address of first byte in buffer
+01FF 0722           01049         addwf   cmdCnt,w        ; add offset
+0200 0084           01050         movwf   FSR             ; set indirection register
+0201 0820           01051         movf    tone,w          ; get tone
+0202 23DF           01052         call    MapDTMF         ; convert to hex value
+0203 0080           01053         movwf   INDF            ; save into buffer location
+0204 0AA2           01054         incf    cmdCnt,f        ; increment cmdCnt
+0205 2A23           01055         goto    Wait
+                    01056 
+0206                01057 CkDigit
+                    01058         ;check this digit against the code table
+0206 3C04           01059         sublw   TONES           ; w = TONES - w; w now has digit number
+0207 3E3C           01060         addlw   EETTPRE         ; w = w + EETTPRE; the digit's EEPROM address
+0208 2358           01061         call    ReadEE          ; read EEPROM
+0209 0220           01062         subwf   tone,w          ; w = tone - w
+020A 1D03           01063         btfss   STATUS,Z        ; is w zero?
+020B 2A0E           01064         goto    NotTone         ; no...
+020C 03A1           01065         decf    toneCnt,f       ; decrement toneCnt
+020D 2A22           01066         goto    ToneDon
+                    01067 
+020E                01068 NotTone
+020E 3004           01069         movlw   TONES
+020F 0221           01070         subwf   toneCnt,w
+0210 1903           01071         btfsc   STATUS,Z        ; is this the first digit?
+0211 2A20           01072         goto    BadTone         ; yes
+0212 3004           01073         movlw   TONES           ; reset to check to see if this digit
+0213 00A1           01074         movwf   toneCnt         ; is the first digit...
+0214 2A06           01075         goto    CkDigit
+                    01076 
+0215                01077 WrTone                          ; save tone in EEPROM to init password
+0215 0821           01078         movf    toneCnt,w       ; test toneCnt
+0216 3C04           01079         sublw   TONES           ; w = TONES - w; w now has digit number
+0217 3E3C           01080         addlw   EETTPRE         ; w = w + EETTPRE; the digit's EEPROM address
+0218 0089           01081         movwf   EEADR           ; EEADR = w
+0219 0820           01082         movf    tone,w          ; get tone
+021A 0088           01083         movwf   EEDATA          ; put into EEPROM data register...
+021B 23A3           01084         call    EEProg          ; call EEPROM prog routine
+                    01085 
+021C 0BA1           01086         decfsz  toneCnt,f       ; decrement tone count
+021D 2A22           01087         goto    ToneDon         ; not zero, still in init mode
+021E 1190           01088         bcf     flags,init      ; zero, out of init mode
+021F 170F           01089         bsf     tFlags,SAYOK    ; request OK message be sent
+                    01090 
+0220                01091 BadTone
+0220 3004           01092         movlw   TONES           ; no... get number of command tones into w
+0221 00A1           01093         movwf   toneCnt         ; preset number of command tones
+                    01094 
+0222                01095 ToneDon
+0222 2396           01096         call    CheckTx         ; turn off TX if OK
+                    01097 
+0223                01098 Wait
+0223 1C8F           01099         btfss   tFlags,TENTH    ; check to see if one tenth second tick
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 22
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0224 2A2E           01100         goto    Wait1           ; nope...
+                    01101 
+0225 089D           01102         movf    muteTmr,f       ; test mute timer
+0226 1903           01103         btfsc   STATUS,Z        ; Z is set if not DTMF muting
+0227 2A2E           01104         goto    Wait1           ;
+0228 0B9D           01105         decfsz  muteTmr,f       ; decrement muteDly
+0229 2A2E           01106         goto    Wait1           ; have not reached the end of the mute time
+022A 0815           01107         movf    state,w         ; get repeater state
+022B 3C01           01108         sublw   SRPT            ; compare state to REPEAT state
+022C 1903           01109         btfsc   STATUS,Z        ; is result 0 (same)
+022D 1205           01110         bcf     PORTA,MUTE      ; yep, unmute
+                    01111 
+022E                01112 Wait1
+022E 1A0F           01113         btfsc   tFlags,XCOR     ; is squelch open?
+022F 2A35           01114         goto    CorOn           ; yes
+0230 1E10           01115         btfss   flags,lastCor   ; cor is off, is last COR off?
+0231 289D           01116         goto    Loop            ; last COR is also off, do nothing here
+                    01117         ;COR on->off transition (receiver has just unsquelched)
+0232 1210           01118         bcf     flags,lastCor   ; clear last COR flag
+0233 235E           01119         call    ClrTone         ; clear password tones & commands
+0234 289D           01120         goto    Loop
+                    01121 
+0235                01122 CorOn
+0235 1A10           01123         btfsc   flags,lastCor   ; cor is ON, is last COR on?
+0236 289D           01124         goto    Loop            ; last COR is also on, do nothing here
+                    01125         ;COR off->on transition (receiver has just squelched)
+0237 1610           01126         bsf     flags,lastCor   ; set last COR flag
+                    01127 
+                    01128         ;evaluate touch tones in buffer
+0238 08A2           01129         movf    cmdCnt,f        ; check to see if any stored tones
+0239 1903           01130         btfsc   STATUS,Z        ; is it zero?
+023A 2ADF           01131         goto    NoCmd           ; no stored tones
+                    01132 
+023B 3004           01133         movlw   MAXCMD          ; get max # of command tones
+023C 0222           01134         subwf   cmdCnt,w        ; cmdCnt - MAXCMD -> w
+023D 1D03           01135         btfss   STATUS,Z        ; if Z is set then there are enough digits
+023E 2ADF           01136         goto    NoCmd           ; not enough command digits...
+                    01137 
+                    01138         ;there are tones stored in the buffer...
+023F 0E23           01139         swapf   tBuf1,w         ; swap nibble of tBuf1 and store in w
+0240 0424           01140         iorwf   tBuf2,w         ; or in low nibble (tBuf2)
+0241 00A3           01141         movwf   tBuf1           ; store resultant 8 bit value into tBuf1
+                    01142 
+0242 0E25           01143         swapf   tBuf3,w         ; swap nibble of tBuf3 and store in w
+0243 0426           01144         iorwf   tBuf4,w         ; or in low nibble (tBuf4)
+0244 00A5           01145         movwf   tBuf3           ; store resultant 8 bit value into tBuf3
+                    01146 
+                    01147         ;test the address...
+0245 1BA3           01148         btfsc   tBuf1,7         ; bit 7 is not allowed
+0246 2AE8           01149         goto    BadCmd
+0247 1B23           01150         btfsc   tBuf1,6         ; bit 6 indicates command: 4xxx,5xxx,6xxx,7xxx
+0248 2A95           01151         goto    MsgCmd
+                    01152 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 23
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0249 0823           01153         movf    tBuf1,w         ; get the address to program
+024A 3C37           01154         sublw   EELAST          ; subtract from EELAST, last valid prog addr
+024B 1C03           01155         btfss   STATUS,C        ; skip if tBuf1 <= EELAST
+024C 2AE8           01156         goto    BadCmd          ; that address is not user programmable
+                    01157 
+                    01158         ;program the byte...
+024D 0823           01159         movf    tBuf1,w         ; get address
+024E 0089           01160         movwf   EEADR
+024F 0825           01161         movf    tBuf3,w         ; get data byte
+0250 0088           01162         movwf   EEDATA
+0251 23A3           01163         call    EEProg          ; program EE byte
+                    01164 
+0252 2258           01165         call    EEEval          ; evaluate the change
+                    01166         
+0253 3002           01167         movlw   CW_OK
+0254 009F           01168         movwf   msgNum
+0255 230C           01169         call    SetMsg          ; set up message playback
+0256 235E           01170         call    ClrTone
+0257 289D           01171         goto    Loop
+                    01172 
+0258                01173 EEEval
+0258 0809           01174         movf    EEADR,w         ; get the EEPROM address
+0259 3C05           01175         sublw   EETMSG          ; subtract last config data address
+025A 1C03           01176         btfss   STATUS,C        ; skip if EEADR <= EETMSG (result non-negative)
+025B 0008           01177         return                  ; not a config data address (ID or other)
+025C 3002           01178         movlw   h'02'
+025D 008A           01179         movwf   PCLATH          ; ensure that computed goto will stay in range
+025E 0809           01180         movf    EEADR,w         ; get the EEPROM address
+025F 0782           01181         addwf   PCL,f           ; computed goto
+0260 2A66           01182         goto    TstEnab
+0261 2A7A           01183         goto    TstConf
+0262 2A89           01184         goto    TstHang
+0263 2A8C           01185         goto    TstTOut
+0264 2A8F           01186         goto    TstID
+0265 2A92           01187         goto    TstTM
+                    01188 
+0266                01189 TstEnab
+0266 2358           01190         call    ReadEE          ; get the data
+0267 1D03           01191         btfss   STATUS,Z        ; is data 0?
+0268 2A75           01192         goto    TstEna1         ; nope
+0269 3004           01193         movlw   SDISABL         ; get disabled state value
+026A 0095           01194         movwf   state           ; save disabled state value
+026B 1C8E           01195         btfss   cfgFlag,SIMPLEX ; in simplex mode?
+026C 0008           01196         return                  ; nope...
+                    01197         ISDPOFF                 ; stop playing ISD
+026D 1506               M         bsf     PORTB,isdPlay
+                    01198         ISDROFF                 ; stop recording
+026E 1586               M         bsf     PORTB,isdRec
+026F 019C           01199         clrf    sISDTmr         ; clear simplex backoff timer
+0270 01AD           01200         clrf    isdRecL         ; set recorded message length to 0
+0271 01AE           01201         clrf    isdRecH         ; set recorded message length to 0
+0272 01AB           01202         clrf    isdPlaL         ; clear playback timer low byte
+0273 01AC           01203         clrf    isdPlaH         ; clear playback timer hi byte
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 24
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0274 0008           01204         return
+                    01205 
+0275                01206 TstEna1
+0275 3000           01207         movlw   SQUIET          ; enable repeater
+0276 0095           01208         movwf   state           ; save quiet state
+0277 1010           01209         bcf     flags,initID    ; clear initial id flag
+0278 1090           01210         bcf     flags,needID    ; clear needId flag
+0279 0008           01211         return
+                    01212 
+027A                01213 TstConf
+027A 2358           01214         call    ReadEE          ; get the data
+027B 008E           01215         movwf   cfgFlag         ; store w into config flag
+                    01216 
+027C 0815           01217         movf    state,w         ; get state value
+027D 3C04           01218         sublw   SDISABL         ; subtract disabled state value
+027E 1903           01219         btfsc   STATUS,Z        ; skip if result is not zero (!=)
+027F 0008           01220         return                  ; no need to mess with the rest...
+                    01221 
+0280 0199           01222         clrf    hangTmr         ; clear hang timer
+0281 019A           01223         clrf    tOutTmr         ; clear timeout timer
+0282 01AB           01224         clrf    isdPlaL         ; clear lo byte of isd play timer
+0283 01AC           01225         clrf    isdPlaH         ; clear hi byte of isd play timer
+0284 019D           01226         clrf    muteTmr         ; clear muting timer
+0285 019C           01227         clrf    sISDTmr         ; clear ISD back off timer
+                    01228 
+0286 2308           01229         call    RecStop         ; stop recording (just in case)
+0287 0195           01230         clrf    state           ; reset to quiet state
+0288 0008           01231         return
+                    01232 
+0289                01233 TstHang
+0289 2358           01234         call    ReadEE          ; get the data
+028A 0096           01235         movwf   hangDly         ; store w into hang time delay preset
+028B 0008           01236         return
+                    01237 
+028C                01238 TstTOut
+028C 2358           01239         call    ReadEE          ; get the data
+028D 0097           01240         movwf   tOutDly         ; store w into time out delay preset
+028E 0008           01241         return
+                    01242 
+028F                01243 TstID
+028F 2358           01244         call    ReadEE          ; get the data
+0290 0098           01245         movwf   idDly           ; store w into ID delay preset
+0291 0008           01246         return
+                    01247 
+0292                01248 TstTM
+0292 2358           01249         call    ReadEE          ; get the data
+0293 00A9           01250         movwf   tMsgCtr         ; store w into tail message counter
+0294 0008           01251         return
+                    01252 
+0295                01253 MsgCmd                          ; 4x, 5x, 6x, 7x commands
+0295 0823           01254         movf    tBuf1,w         ; get command byte
+0296 398E           01255         andlw   b'10001110'     ; check for invalid values
+0297 1D03           01256         btfss   STATUS,Z        ;
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 25
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0298 2AE8           01257         goto    BadCmd          ; only 40, 41, 50, 51, 60, 61, 70, 71 valid
+                    01258 
+0299 3002           01259         movlw   h'02'           ; this value must equal address' high byte
+                    01260 
+029A 008A           01261         movwf   PCLATH          ; ensure that computed goto will stay in range
+                    01262 
+029B 0E23           01263         swapf   tBuf1,w         ; swap command byte into w
+029C 3903           01264         andlw   b'00000011'     ; mask bits that make up remainder of command
+029D 0782           01265         addwf   PCL,f           ; add w to PCL
+029E 2AA2           01266         goto    Cmd4x           ; bits 2-7 has been stripped so 4 = 0
+029F 2AAB           01267         goto    Cmd5x
+02A0 2ABF           01268         goto    Cmd6x
+02A1 2AD1           01269         goto    Cmd7x
+                    01270 
+02A2                01271 Cmd4x
+02A2 0825           01272         movf    tBuf3,w         ; get argument
+02A3 009F           01273         movwf   msgNum          ; save into message number
+02A4 1C23           01274         btfss   tBuf1,0         ; is it command 41nn
+02A5 2AA9           01275         goto    Cmd40P          ; no, 40nn command
+02A6 019C           01276         clrf    sISDTmr         ; clear ISD backoff timer to nuke simplex message.
+02A7 179F           01277         bsf     msgNum,MSGREC   ; set message record bit
+02A8 289D           01278         goto    Loop
+                    01279 
+02A9                01280 Cmd40P                          ; command 40nn -- play message
+02A9 230C           01281         call    SetMsg          ; set up message playback
+02AA 289D           01282         goto    Loop
+                    01283 
+02AB                01284 Cmd5x
+02AB 1C0E           01285         btfss   cfgFlag,NOISD   ; check to see if ISD is not present
+02AC 2AE8           01286         goto    BadCmd          ; the ISD is there, port commands invalid
+02AD 0823           01287         movf    tBuf1,w         ; get command byte
+02AE 390F           01288         andlw   b'00001111'     ; mask off high nibble
+02AF 1D03           01289         btfss   STATUS,Z        ; is result (low nibble) zero?
+02B0 2AE8           01290         goto    BadCmd          ; nope
+                    01291 
+02B1 1A25           01292         btfsc   tBuf3,4         ; lo bit of hi nibble clear?
+02B2 2AB9           01293         goto    Cmd50Odd        ; nope, 501, 503, etc.
+                    01294 
+02B3 1825           01295         btfsc   tBuf3,0         ; lo bit clear?
+02B4 2AB7           01296         goto    Cmd50ES         ; nope, set (turn on)
+02B5 1106           01297         bcf     PORTB,CTL0      ; clear output (off/lo)
+02B6 2AEA           01298         goto    GoodCmd
+                    01299 
+02B7                01300 Cmd50ES
+02B7 1506           01301         bsf     PORTB,CTL0      ; set output (on/hi)
+02B8 2AEA           01302         goto    GoodCmd
+                    01303 
+02B9                01304 Cmd50Odd
+02B9 1825           01305         btfsc   tBuf3,0         ; lo bit clear?
+02BA 2ABD           01306         goto    Cmd50OS         ; nope, set (turn on)
+02BB 1186           01307         bcf     PORTB,CTL1      ; clear output (off/lo)
+02BC 2AEA           01308         goto    GoodCmd
+                    01309 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 26
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+02BD                01310 Cmd50OS
+02BD 1586           01311         bsf     PORTB,CTL1      ; set output (on/hi)
+02BE 2AEA           01312         goto    GoodCmd
+                    01313 
+02BF                01314 Cmd6x                           ; command 6x
+02BF 0823           01315         movf    tBuf1,w         ; get cmd
+02C0 390E           01316         andlw   h'0e'           ; mask extra bits
+02C1 1D03           01317         btfss   STATUS,Z        ; 60 or 61 permitted only
+02C2 2AE8           01318         goto    BadCmd          ; not 60 or 61
+02C3 22D2           01319         call    GetBit          ; get mask
+02C4 1823           01320         btfsc   tBuf1,0         ; is low bit of addr/cmd set?
+02C5 2ACA           01321         goto    Cmd61           ; yes
+02C6 098E           01322         comf    cfgFlag,f       ; invert the config flags byte
+02C7 048E           01323         iorwf   cfgFlag,f       ; set the specified bit
+02C8 098E           01324         comf    cfgFlag,f       ; invert the config flags byte again
+02C9 2ACB           01325         goto    Cmd6xW          ; go write the change
+                    01326 
+02CA                01327 Cmd61                           ; set config bit
+02CA 048E           01328         iorwf   cfgFlag,f       ; set the specified bit
+02CB                01329 Cmd6xW
+02CB 3001           01330         movlw   EECONF          ; get the address for the config byte
+02CC 0089           01331         movwf   EEADR           ; store the eeprom address
+02CD 080E           01332         movf    cfgFlag,w       ; get the config flag
+02CE 0088           01333         movwf   EEDATA          ; move it to the EEPROM data buffer
+02CF 23A3           01334         call    EEProg          ; program EE byte
+02D0 2AEA           01335         goto    GoodCmd
+                    01336         
+02D1                01337 Cmd7x
+02D1 2AE8           01338         goto    BadCmd
+                    01339 
+02D2                01340 GetBit                          ; return mask in w with bit w set
+02D2 3002           01341         movlw   h'02'           ; in range 200-2ff
+02D3 008A           01342         movwf   PCLATH          ; ensure that computed goto will stay in range
+02D4 0825           01343         movf    tBuf3,w         ; get the selected bit
+02D5 3907           01344         andlw   h'07'           ; must be in 0-7 range
+02D6 0782           01345         addwf   PCL,f           ; computed goto
+02D7 3401           01346         retlw   b'00000001'     ; bit 0
+02D8 3402           01347         retlw   b'00000010'     ; bit 1
+02D9 3404           01348         retlw   b'00000100'     ; bit 2
+02DA 3408           01349         retlw   b'00001000'     ; bit 3
+02DB 3410           01350         retlw   b'00010000'     ; bit 4
+02DC 3420           01351         retlw   b'00100000'     ; bit 5
+02DD 3440           01352         retlw   b'01000000'     ; bit 6
+02DE 3480           01353         retlw   b'10000000'     ; bit 7
+                    01354 
+02DF                01355 NoCmd                           ; no command was received
+02DF 1D90           01356         btfss   flags,init      ; in init mode?
+02E0 2AE3           01357         goto    CkSayOk         ; nope
+02E1 3000           01358         movlw   CW_ID           ; select CW ID message
+02E2 2AEB           01359         goto    CmdRes          ; play ID since in init mode
+                    01360 
+02E3                01361 CkSayOk
+02E3 1F0F           01362         btfss   tFlags,SAYOK    ; is the say ok flag set?
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 27
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+02E4 2AED           01363         goto    CmdDone         ; nope
+02E5 130F           01364         bcf     tFlags,SAYOK    ; reset the flag
+02E6 3002           01365         movlw   CW_OK           ; select CW OK message
+02E7 2AEB           01366         goto    CmdRes          ; play it and continue
+                    01367 
+02E8                01368 BadCmd
+02E8 3003           01369         movlw   CW_NG
+02E9 2AEB           01370         goto    CmdRes
+02EA                01371 GoodCmd
+02EA 3002           01372         movlw   CW_OK
+02EB                01373 CmdRes
+02EB 009F           01374         movwf   msgNum
+02EC 230C           01375         call    SetMsg          ; set up message playback
+02ED                01376 CmdDone
+02ED 235E           01377         call    ClrTone
+02EE 289D           01378         goto    Loop
+                    01379 
+02EF                01380 Record
+02EF 139F           01381         bcf     msgNum,MSGREC   ; clear record flag
+02F0 01AD           01382         clrf    isdRecL         ; zero record time
+02F1 01AE           01383         clrf    isdRecH         ; zero record time
+                    01384 
+                    01385         IF NHRC3 == 0           ; NHRC-3 target?
+                    01386                                 ; no, this is a NHRC2
+                    01387         clrf    isdPlaH         ; zero play hi word; useful for all NHRC-2
+                    01388         btfsc   msgNum,ISDSIM   ; is this the simplex message?
+                    01389         goto    ISD1420S        ; yes
+                    01390 I1420N                          ; ISD1420 normal
+                    01391         movlw   D'48'           ; 4.8 seconds
+                    01392         movwf   isdPlaL         ; save low byte isd max time
+                    01393         goto    Rec1
+                    01394 
+                    01395 I1420S                          ; ISD1420 simplex
+                    01396         btfsc   cfgFlag,ALTID   ; alternate ID mode?
+                    01397         goto    ISD1420A        ; yes
+                    01398         movlw   D'148'          ; 14.8 seconds
+                    01399         movwf   isdPlaL         ; save low byte isd max time
+                    01400         goto    Rec1
+                    01401 
+                    01402 I1420A                          ; ISD1420 simplex, alternate ID mode
+                    01403         movlw   D'198'          ; 19.8 seconds
+                    01404         movwf   isdPlaL         ; save low byte isd max time
+                    01405         goto    Rec1
+                    01406 
+                    01407         ELSE                    ; not NHRC-2 target, it's a NHRC-3
+                    01408 
+02F2 191F           01409         btfsc   msgNum,ISDSIM   ; is this the simplex message?
+02F3 2AF7           01410         goto    I2590S          ; yes
+02F4                01411 I2590N                          ; ISD2590 normal
+02F4 30DF           01412         movlw   D'223'          ; 22.3 seconds
+02F5 00AB           01413         movwf   isdPlaL         ; save lo byte isd max time
+02F6 2B03           01414         goto    Rec1
+                    01415 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 28
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+02F7                01416 I2590S                          ; ISD2590 simplex
+02F7 1B8E           01417         btfsc   cfgFlag,ALTID   ; alternate ID mode?
+02F8 2AFE           01418         goto    I2590A          ; yes
+02F9 3003           01419         movlw   H'03'           ; 768 ticks
+02FA 00AC           01420         movwf   isdPlaH         ; save hi byte isd max time
+02FB 3082           01421         movlw   H'82'           ; 130 more ticks = 89.8 seconds
+02FC 00AB           01422         movwf   isdPlaL         ; save lo byte isd max time
+02FD 2B03           01423         goto    Rec1
+                    01424 
+02FE                01425 I2590A                          ; ISD2590 simplex, alternate ID mode
+02FE 3002           01426         movlw   H'02'           ; 512 ticks
+02FF 00AC           01427         movwf   isdPlaH         ; save hi byte isd max time
+0300 30A1           01428         movlw   H'A1'           ; 161 more ticks = 67.3 seconds
+0301 00AB           01429         movwf   isdPlaL         ; save lo byte isd max time
+0302 2B03           01430         goto    Rec1
+                    01431 
+                    01432         ENDIF
+                    01433 
+0303                01434 Rec1                            ; start recording on the ISD
+0303 2351           01435         call    SelMsg          ; set up the address bits
+0304 1690           01436         bsf     flags,isdRecF   ; set record mode
+                    01437 
+                    01438         ISDRON                  ; start recording
+0305 1186               M         bcf     PORTB,isdRec
+                    01439         IF NHRC3 == 1           ; NHRC-3 target?
+                    01440         ISDPON                  ; it is, set the chip select
+0306 1106               M         bcf     PORTB,isdPlay
+                    01441         ENDIF
+0307 0008           01442         return                  ; nope
+                    01443 
+0308                01444 RecStop                         ; stop recording
+                    01445         if NHRC3 == 1           ; NHRC-3 target?
+                    01446         ISDPOFF                 ; yes, turn off chip select
+0308 1506               M         bsf     PORTB,isdPlay
+                    01447         ENDIF
+                    01448         ISDROFF                 ; stop recording
+0309 1586               M         bsf     PORTB,isdRec
+030A 1290           01449         bcf     flags,isdRecF   ; turn off record flag
+030B 0008           01450         return
+                    01451 
+030C                01452 SetMsg                          ; set up message playback after short delay
+030C 3003           01453         movlw   ISDBKOF         ; get the message start delay time
+030D 009C           01454         movwf   sISDTmr         ; set the message start delay timer
+030E 238A           01455         call    PTTon           ; turn transmitter on
+030F 0008           01456         return
+                    01457         
+0310                01458 PlayMsg
+0310 1E1F           01459         btfss   msgNum,ISDMSG   ; is it an ISD message?
+0311 2B24           01460         goto    StartCW         ; nope, it's a CW message
+                    01461                                 ; ISD message request
+0312 191F           01462         btfsc   msgNum,ISDSIM   ; is this the simplex message?
+0313 2B2D           01463         goto    ISDPlay         ; yes, play it now
+0314 1C8E           01464         btfss   cfgFlag,SIMPLEX ; in simplex mode?
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 29
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0315 2B18           01465         goto    PlayM1          ; no
+0316 1F8E           01466         btfss   cfgFlag,ALTID   ; in alternate id mode?
+0317 2B22           01467         goto    MsgCWID         ; no, play CWID
+                    01468 
+0318                01469 PlayM1
+0318 1C0E           01470         btfss   cfgFlag,NOISD   ; is the ISD absent?
+0319 2B2D           01471         goto    ISDPlay         ; no, play audio message
+031A 121F           01472         bcf     msgNum,ISDMSG   ; convert ISD message to CW message
+031B 1C9F           01473         btfss   msgNum,INOTID   ; is it not an ID
+031C 2B22           01474         goto    MsgCWID         ; it is an id message
+031D 181F           01475         btfsc   msgNum,0        ; skip if timeout message
+031E 0008           01476         return                  ; don't even try to play tail message
+031F 3001           01477         movlw   CW_TO           ; select CW timeout message
+0320 009F           01478         movwf   msgNum          ; set message number
+0321 2B24           01479         goto    StartCW         ; play the CW timeout message
+                    01480 
+0322                01481 MsgCWID
+0322 3000           01482         movlw   CW_ID           ; force CW ID
+0323 009F           01483         movwf   msgNum          ; set message number
+                    01484 ;
+                    01485 ; Start sending a CW message
+                    01486 ;
+0324                01487 StartCW
+0324 23D6           01488         call    GetCwMsg        ; lookup message, put message offset in W
+0325 00A7           01489         movwf   cwBuff          ; save offset
+0326 2358           01490         call    ReadEE          ; read byte from EEPROM
+0327 00A8           01491         movwf   cwByte          ; save byte in CW bitmap
+0328 3007           01492         movlw   CWIWSP          ; get startup delay
+0329 009E           01493         movwf   cwTmr           ; preset cw timer
+032A 1390           01494         bcf     flags,beepOn    ; make sure that beep is off
+032B 1710           01495         bsf     flags,cwOn      ; turn on CW sender
+                    01496         ;call   PTTon           ; turn on PTT...
+032C 0008           01497         return
+                    01498 
+                    01499 ;
+                    01500 ;Play message from ISD1420; message address in msgNum
+                    01501 ;
+032D                01502 ISDPlay
+032D 2351           01503         call    SelMsg          ; select ISD message msgNum
+032E 1D1F           01504         btfss   msgNum,ISDSIM   ; check bit 2; set indicates simplex
+032F 2B44           01505         goto    PNorm           ; not set
+0330 082D           01506         movf    isdRecL,w       ; check lo byte of ISD record timer
+0331 042E           01507         iorwf   isdRecH,w       ; or in hi byte of ISD record timer
+0332 1903           01508         btfsc   STATUS,Z        ; is it zero? (no message recorded)
+0333 2B42           01509         goto    SimBail         ; yes, bail out.
+                    01510 
+                    01511         ; shave 100 ms from message length to try to kill squelch crash
+0334 08AD           01512         movf    isdRecL,f       ; check for borrow
+0335 1903           01513         btfsc   STATUS,Z        ; is it zero? (need to borrow?)
+0336 03AE           01514         decf    isdRecH,f       ; borrow...
+0337 032D           01515         decf    isdRecL,w       ; shave off 100mS
+0338 00AB           01516         movwf   isdPlaL         ; save into timer
+0339 082E           01517         movf    isdRecH,w       ; get hi order byte of recorded message dur.
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 30
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+033A 00AC           01518         movwf   isdPlaH         ; save into timer hi byte.
+033B 01AD           01519         clrf    isdRecL         ; clear record length timer lo byte
+033C 01AE           01520         clrf    isdRecH         ; clear record length timer hi byte
+                    01521 
+033D 082B           01522         movf    isdPlaL,w       ; check lo byte of ISD record timer
+033E 042C           01523         iorwf   isdPlaH,w       ; or in hi byte of ISD record timer
+033F 1903           01524         btfsc   STATUS,Z        ; is it zero? (no message recorded)
+0340 2B42           01525         goto    SimBail         ; yes, bail out.
+0341 2B4F           01526         goto    PNow            ; play the message
+                    01527 
+0342                01528 SimBail                         ; don't play simplex message
+0342 1086           01529         bcf     PORTB,ptt       ; turn off ptt
+0343 0008           01530         return                  ; bail
+                    01531 
+0344                01532 PNorm
+0344 01AC           01533         clrf    isdPlaH         ; clear hi order byte of ISD play timer
+0345 081F           01534         movf    msgNum,w        ; get message number
+0346 3903           01535         andlw   b'00000011'     ; mask out bits 2-7
+0347 3E38           01536         addlw   EEM0LEN         ; add the base of the message lengths
+0348 0089           01537         movwf   EEADR           ; save address
+0349 2358           01538         call    ReadEE          ; read EEPROM, w has message length after
+034A 00AB           01539         movwf   isdPlaL         ; set lo order byte of ISD play timer
+034B 1D03           01540         btfss   STATUS,Z        ; is the length 0
+034C 2B4F           01541         goto    PNow            ; no, play...
+034D 1086           01542         bcf     PORTB,ptt       ; yes, turn off PTT
+034E 0008           01543         return                  ; continue...
+                    01544 
+034F                01545 PNow
+                    01546         ISDPON                  ; start ISD1240 playback
+034F 1106               M         bcf     PORTB,isdPlay
+0350 0008           01547         return
+                    01548 
+                    01549 ;
+                    01550 ;Set ISD message address lines from msgNum
+                    01551 ;
+0351                01552 SelMsg
+0351 1206           01553         bcf     PORTB,isdA0     ; reset message address bits
+0352 1286           01554         bcf     PORTB,isdA1
+0353 181F           01555         btfsc   msgNum,0        ; check bit 0
+0354 1606           01556         bsf     PORTB,isdA0
+0355 189F           01557         btfsc   msgNum,1        ; check bit 1
+0356 1686           01558         bsf     PORTB,isdA1
+0357 0008           01559         return
+                    01560 
+                    01561 ;
+                    01562 ; Read EEPROM byte
+                    01563 ; address is supplied in W on call, data is returned in w
+                    01564 ;
+0358                01565 ReadEE
+0358 0089           01566         movwf   EEADR           ; EEADR = w
+0359 1683           01567         bsf     STATUS,RP0      ; select bank 1
+035A 1408           01568         bsf     EECON1,RD       ; read EEPROM
+035B 1283           01569         bcf     STATUS,RP0      ; select bank 0
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 31
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+035C 0808           01570         movf    EEDATA,w        ; get EEDATA into w
+035D 0008           01571         return
+                    01572 
+                    01573 ;
+                    01574 ; clear tone buffer and reset good digit counters
+                    01575 ;
+035E                01576 ClrTone
+035E 3004           01577         movlw   TONES           ; no... get number of command tones into w
+035F 00A1           01578         movwf   toneCnt         ; preset number of command tones
+0360 01A2           01579         clrf    cmdCnt          ; clear number of command bytes...
+0361 01A3           01580         clrf    tBuf1           ; clear command buffer bytes
+0362 01A4           01581         clrf    tBuf2
+0363 01A5           01582         clrf    tBuf3
+0364 0008           01583         return
+                    01584 
+                    01585 ;
+                    01586 ; Play the appropriate ID message, reset ID timers & flags
+                    01587 ;
+0365                01588 DoID
+0365 1C90           01589         btfss   flags,needID    ; need to ID?
+0366 0008           01590         return                  ; nope...
+0367 180E           01591         btfsc   cfgFlag,NOISD   ; is the ISD absent?
+0368 2B7F           01592         goto    DoIDCW          ; yes. use CW ID.
+0369 188E           01593         btfsc   cfgFlag,SIMPLEX ; are we in simplex mode?
+036A 2B74           01594         goto    DoIDSim         ; yes.
+036B 1E0F           01595         btfss   tFlags,XCOR     ; is squelch open?
+036C 2B7F           01596         goto    DoIDCW          ; yes, use CW ID.
+036D 3010           01597         movlw   ISD_IID         ; select initial ID
+036E 1810           01598         btfsc   flags,initID    ; is it the initial ID?
+036F 2B80           01599         goto    DoIDany         ; yes... play it
+0370 1B8E           01600         btfsc   cfgFlag,ALTID   ; alternate ID mode selected?
+0371 2B7F           01601         goto    DoIDCW          ; yes, play CW ID instead of normal ID
+0372 3011           01602         movlw   ISD_ID          ; regular ID
+0373 2B80           01603         goto    DoIDany         ; play it
+                    01604 
+0374                01605 DoIDSim
+0374 082B           01606         movf    isdPlaL,w       ; fetch lo byte of isd play timer
+0375 042C           01607         iorwf   isdPlaH,w       ; or in hi byte of isd play timer
+0376 041C           01608         iorwf   sISDTmr,w       ; or in backoff timer...
+0377 1D03           01609         btfss   STATUS,Z        ; is it zero?
+0378 2B7F           01610         goto    DoIDCW          ; no, an ISD message is playing, play CW ID
+0379 1F8E           01611         btfss   cfgFlag,ALTID   ; in alternate ID mode?
+037A 2B7F           01612         goto    DoIDCW          ; no. use CW ID.
+037B 1E0F           01613         btfss   tFlags,XCOR     ; is squelch open?
+037C 2B7F           01614         goto    DoIDCW          ; yes, use CW ID.
+037D 3010           01615         movlw   ISD_IID         ; get ID message 0 (initial ID)
+037E 2B80           01616         goto    DoIDany
+                    01617 
+037F                01618 DoIDCW
+037F 3000           01619         movlw   CW_ID           ; CW ID
+0380                01620 DoIDany
+0380 009F           01621         movwf   msgNum          ; set message number
+0381 230C           01622         call    SetMsg          ; set up message playback
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 32
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0382 0818           01623         movf    idDly,w         ; get ID timer delay into w
+0383 009B           01624         movwf   idTmr           ; store to idTmr down-counter
+0384 1010           01625         bcf     flags,initID    ; clear initial ID flag
+0385 0815           01626         movf    state,w         ; get the repeater state
+0386 3C01           01627         sublw   SRPT            ; compare to REPEAT state
+0387 1D03           01628         btfss   STATUS,Z        ; in REPEAT state?
+0388 1090           01629         bcf     flags,needID    ; no. reset needID flag.
+0389 0008           01630         return
+                    01631 
+                    01632 ;
+                    01633 ; turn on PTT & set up ID timer, etc., if needed.
+                    01634 ;
+038A                01635 PTTon                           ; key the transmitter
+038A 1486           01636         bsf     PORTB,ptt       ; apply PTT!
+038B 089B           01637         movf    idTmr,f         ; check ID timer
+038C 1903           01638         btfsc   STATUS,Z        ; is it zero?
+038D 2B91           01639         goto    PTTinit         ; yes
+038E 1890           01640         btfsc   flags,needID    ; is needID set?
+038F 0008           01641         return                  ; yes. done.
+0390 2B92           01642         goto    PTTset          ; not set, set needID and reset idTmr
+0391                01643 PTTinit
+0391 1410           01644         bsf     flags,initID    ; ID timer was zero, set initial ID flag
+0392                01645 PTTset
+0392 1490           01646         bsf     flags,needID    ; need to play ID
+0393 0818           01647         movf    idDly,w         ; get ID timer delay into w
+0394 009B           01648         movwf   idTmr           ; store to down-counter
+0395 0008           01649         return
+                    01650 
+                    01651 ;
+                    01652 ; check to see if there is any reason to leave the transmitter on
+                    01653 ;
+0396                01654 CheckTx
+0396 1815           01655         btfsc   state,ACTIVE    ; in an active state?
+0397 0008           01656         return                  ; it's active; don't shut off
+                    01657 
+0398 082B           01658         movf    isdPlaL,w       ; fetch lo byte of isd play timer
+0399 042C           01659         iorwf   isdPlaH,w       ; or in hi byte of isd play timer
+039A 1D03           01660         btfss   STATUS,Z        ; skip next if zero
+039B 0008           01661         return                  ; ISD message is playing, don't shut off
+                    01662 
+039C 089C           01663         movf    sISDTmr,f       ; check ISD back off timer for 0
+039D 1D03           01664         btfss   STATUS,Z        ; skip next if zero
+039E 0008           01665         return                  ; waiting on back off timer, don't shut off
+039F 1B10           01666         btfsc   flags,cwOn      ; is cw sender going?
+03A0 0008           01667         return                  ; cw is playing, don't shut off
+03A1 1086           01668         bcf     PORTB,ptt       ; turn transmitter off
+03A2 0008           01669         return
+                    01670 
+                    01671 ;
+                    01672 ; Program EEPROM byte
+                    01673 ;
+03A3                01674 EEProg
+03A3 0064           01675         clrwdt                  ; this can take 10 ms, so clear WDT first
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 33
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+03A4 1683           01676         bsf     STATUS,RP0      ; select bank 1
+03A5 138B           01677         bcf     INTCON,GIE      ; disable interrupts
+03A6 1508           01678         bsf     EECON1,WREN     ; enable EEPROM write
+03A7 3055           01679         movlw   h'55'
+03A8 0089           01680         movwf   EECON2          ; write 55
+03A9 30AA           01681         movlw   h'AA'
+03AA 0089           01682         movwf   EECON2          ; write AA
+03AB 1488           01683         bsf     EECON1,WR       ; start write
+03AC 1108           01684         bcf     EECON1,WREN     ; disable write
+03AD                01685 EEPLoop
+03AD 0000           01686         nop
+03AE 1888           01687         btfsc   EECON1,WR       ; is write cycle complete?
+03AF 2BAD           01688         goto    EEPLoop         ; wait for write to finish
+                    01689 
+03B0 178B           01690         bsf     INTCON,GIE      ; enable interrupts
+03B1 1283           01691         bcf     STATUS,RP0      ; select bank 0
+03B2 0008           01692         return
+                    01693 
+                    01694 ;
+                    01695 ; EEPROM Memory Map (@ 2100h)
+                    01696 ;   00 enable/disable flag
+                    01697 ;   01 configuration flag
+                    01698 ;   02 hang timer preset
+                    01699 ;   03 timeout timer preset
+                    01700 ;   04 id timer preset
+                    01701 ;   05 tail message count
+                    01702 ;   06-08 CW OK ( 3 bytes)
+                    01703 ;   09-0b CW NG ( 3 bytes)
+                    01704 ;   0c-0e CW TO ( 3 bytes)
+                    01705 ;   0f-1a CW id (12 bytes)
+                    01706 ;   1b-37 empty (29 bytes)
+                    01707 ;   38 isd message 0 length
+                    01708 ;   39 isd message 1 length
+                    01709 ;   3a isd message 2 length
+                    01710 ;   3b isd message 3 length
+                    01711 ;   3c-3f Password (4 bytes)
+                    01712 
+                    01713 ;
+                    01714 ; Lookup values to load EEPROM addresses with at initialize time
+                    01715 ; if EEADR > EEIEND, return 0.
+                    01716 ;
+03B3                01717 InitDat
+                    01718 
+03B3 0809           01719         movf    EEADR,w         ; get current address
+03B4 3C1A           01720         sublw   EEIEND          ; EEIEND - EEADR -> w
+03B5 1C03           01721         btfss   STATUS,C        ; C is clear if result is negative
+03B6 3400           01722         retlw   0               ; zero this location
+                    01723 
+03B7 3003           01724         movlw   h'03'           ; this subroutine is in the top 256 bytes
+03B8 008A           01725         movwf   PCLATH          ; ensure that computed goto will stay in range
+03B9 0809           01726         movf    EEADR,w         ; get EEPROM address into w
+03BA 0782           01727         addwf   PCL,f           ; add w to PCL
+03BB 3400           01728         retlw   h'00'           ; 00 -- enable flag, initially disabled!
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 34
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    01729         if NHRC3 == 0
+                    01730         retlw   h'00'           ; 01 -- configuration flag
+                    01731         ELSE
+03BC 3408           01732         retlw   h'08'           ; 01 -- configuration flag
+                    01733         ENDIF
+03BD 3432           01734         retlw   h'32'           ; 02 -- hang timer preset, in tenths
+03BE 341E           01735         retlw   h'1e'           ; 03 -- timeout timer preset, in 1 seconds
+03BF 3436           01736         retlw   h'36'           ; 04 -- id timer preset, in 10 seconds
+03C0 3400           01737         retlw   h'00'           ; 05 -- tail message count
+03C1 340F           01738         retlw   h'0f'           ; 06 -- 'O'      1
+03C2 340D           01739         retlw   h'0d'           ; 07 -- 'K'      2
+03C3 34FF           01740         retlw   h'ff'           ; 08 -- EOM      3
+03C4 3405           01741         retlw   h'05'           ; 09 -- 'N'      1
+03C5 340B           01742         retlw   h'0b'           ; 0a -- 'G'      2
+03C6 34FF           01743         retlw   h'ff'           ; 0b -- EOM      3
+03C7 3403           01744         retlw   h'03'           ; 0c -- 'T'      1
+03C8 340F           01745         retlw   h'0f'           ; 0d -- 'O'      2
+03C9 34FF           01746         retlw   h'ff'           ; 0e -- EOM      3
+03CA 3409           01747         retlw   h'09'           ; 0f -- 'D'      1
+03CB 3402           01748         retlw   h'02'           ; 10 -- 'E'      2
+03CC 3400           01749         retlw   h'00'           ; 11 -- space    3
+03CD 3405           01750         retlw   h'05'           ; 12 -- 'N'      4
+03CE 3410           01751         retlw   h'10'           ; 13 -- 'H'      5
+03CF 340A           01752         retlw   h'0a'           ; 14 -- 'R'      6
+03D0 3415           01753         retlw   h'15'           ; 15 -- 'C'      7
+03D1 3429           01754         retlw   h'29'           ; 16 -- '/'      8
+                    01755         IF NHRC3 == 0
+                    01756         retlw   h'3c'           ; 17 -- '2'      9
+                    01757         ELSE
+03D2 3438           01758         retlw   h'38'           ; 17 -- '3'      9
+                    01759         ENDIF
+03D3 34FF           01760         retlw   h'ff'           ; 18 -- EOM     10
+03D4 34FF           01761         retlw   h'ff'           ; 19 -- EOM     11
+03D5 34FF           01762         retlw   h'ff'           ; 1a -- EOM     12  can fit 6 letter id....
+                    01763 
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 35
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                    01764         page
+                    01765 
+                    01766 ; Lookup EEPROM address of CW message based on index of message
+                    01767 ;
+03D6                01768 GetCwMsg
+03D6 3003           01769         movlw   h'03'           ; this subroutine is in the top 256 bytes
+03D7 008A           01770         movwf   PCLATH          ; ensure that computed goto will stay in range
+03D8 081F           01771         movf    msgNum,w        ; get msgNum into w
+03D9 3903           01772         andlw   b'00000011'     ; force it into range...
+03DA 0782           01773         addwf   PCL,f           ; add w to PCL
+03DB 340F           01774         retlw   EECWID          ; 0 = ID message
+03DC 340C           01775         retlw   EECWTO          ; 1 = 1 timeout message
+03DD 3406           01776         retlw   EECWOK          ; 2 = 2 ok message
+03DE 3409           01777         retlw   EECWNG          ; 3 = 3 ng message
+                    01778 
+                    01779 ; DTMF to HEX mapping
+                    01780 ;
+                    01781 ;   ___ ___ ___ ___
+                    01782 ;  |   |   |   |   |
+                    01783 ;  | 1 | 2 | 3 | A |
+                    01784 ;  |___|___|___|___|
+                    01785 ;  |   |   |   |   |
+                    01786 ;  | 4 | 5 | 6 | B |
+                    01787 ;  |___|___|___|___|
+                    01788 ;  |   |   |   |   |
+                    01789 ;  | 7 | 8 | 9 | C |
+                    01790 ;  |___|___|___|___|
+                    01791 ;  |   |   |   |   |
+                    01792 ;  |*/E| 0 |#/F| D |
+                    01793 ;  |___|___|___|___|
+                    01794 ;
+                    01795 
+03DF                01796 MapDTMF
+03DF 3003           01797         movlw   h'03'           ; this subroutine is in the top 256 bytes
+03E0 008A           01798         movwf   PCLATH          ; ensure that computed goto will stay in range
+03E1 0820           01799         movf    tone,w          ; get tone into w
+03E2 0782           01800         addwf   PCL,f           ; add w to PCL
+03E3 340D           01801         retlw   0d              ; 0 = D key
+03E4 3401           01802         retlw   01              ; 1 = 1 key
+03E5 3402           01803         retlw   02              ; 2 = 2 key
+03E6 3403           01804         retlw   03              ; 3 = 3 key
+03E7 3404           01805         retlw   04              ; 4 = 4 key
+                    01806 
+03E8 3405           01807         retlw   05              ; 5 = 5 key
+03E9 3406           01808         retlw   06              ; 6 = 6 key
+03EA 3407           01809         retlw   07              ; 7 = 7 key
+03EB 3408           01810         retlw   08              ; 8 = 8 key
+03EC 3409           01811         retlw   09              ; 9 = 9 key
+03ED 3400           01812         retlw   00              ; A = 0 key
+03EE 340E           01813         retlw   0e              ; B = * key (e)
+03EF 340F           01814         retlw   0f              ; C = # key (f)
+03F0 340A           01815         retlw   0a              ; D = A key
+03F1 340B           01816         retlw   0b              ; E = B key
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 36
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+03F2 340C           01817         retlw   0c              ; F = C key
+                    01818 
+                    01819 
+                    01820         IF LOADEE == 1
+                    01821         org     2100h
+                    01822         de      h'01'           ; 00 -- enable flag, initially disabled!
+                    01823         de      h'82'           ; 01 -- configuration flag
+                    01824         de      h'32'           ; 02 -- hang timer preset, in tenths
+                    01825         de      h'3c'           ; 03 -- timeout timer preset, in 1 seconds
+                    01826         de      h'0c'           ; 04 -- id timer preset, in 10 seconds
+                    01827         de      h'00'           ; 05 -- tail message count
+                    01828         de      h'0f'           ; 06 -- 'O'      1
+                    01829         de      h'0d'           ; 07 -- 'K'      2
+                    01830         de      h'ff'           ; 08 -- EOM      3
+                    01831         de      h'05'           ; 09 -- 'N'      1
+                    01832         de      h'0b'           ; 0a -- 'G'      2
+                    01833         de      h'ff'           ; 0b -- EOM      3
+                    01834         de      h'03'           ; 0c -- 'T'      1
+                    01835         de      h'0f'           ; 0d -- 'O'      2
+                    01836         de      h'ff'           ; 0e -- EOM      3
+                    01837         de      h'09'           ; 0f -- 'D'      1
+                    01838         de      h'02'           ; 10 -- 'E'      2
+                    01839         de      h'00'           ; 11 -- space    3
+                    01840         de      h'05'           ; 12 -- 'N'      4
+                    01841         de      h'3e'           ; 13 -- '1'      5
+                    01842         de      h'0d'           ; 14 -- 'k'      6
+                    01843         de      h'09'           ; 15 -- 'd'      7
+                    01844         de      h'0f'           ; 16 -- 'o'      8
+                    01845         de      h'29'           ; 17 -- '/'      9
+                    01846         de      h'ff'           ; 18 -- 'r'     10
+                    01847         de      h'0a'           ; 19 -- EOM     11
+                    01848         de      h'ff'           ; 1a -- EOM     12  can fit 6 letter id....
+                    01849         org     2138h
+                    01850         de      h'10'           ; 38 -- length of message 0
+                    01851         de      h'20'           ; 39 -- length of message 1
+                    01852         de      h'30'           ; 3a -- length of message 2
+                    01853         de      h'40'           ; 3b -- length of message 3
+                    01854         de      h'01'           ; 3c -- password nibble 1
+                    01855         de      h'02'           ; 3d -- password nibble 2
+                    01856         de      h'03'           ; 3e -- password nibble 3
+                    01857         de      h'04'           ; 3f -- password nibble 4
+                    01858         ENDIF
+                    01859         end
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 37
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ACTIVE                            00000000
+ALTID                             00000007
+BadCmd                            000002E8
+BadTone                           00000220
+Beep0                             00000011
+C                                 00000000
+CDBBIT                            00000005
+CDBVAL                            00000032
+COR                               00000007
+CTL0                              00000002
+CTL1                              00000003
+CWCNT                             00000069
+CWDAH                             00000003
+CWDIT                             00000001
+CWDone                            000000CC
+CWIESP                            00000001
+CWILSP                            00000003
+CWIWSP                            00000007
+CWKeyUp                           000000BD
+CWNext                            000000AE
+CWTICK                            00000005
+CWTest                            000000C4
+CWWord                            000000BA
+CW_ID                             00000000
+CW_NG                             00000003
+CW_OK                             00000002
+CW_TO                             00000001
+CasE1                             000001A6
+CasE1A                            000001AE
+CasE1B                            000001BD
+CasEnd                            0000019B
+CheckTx                           00000396
+CkBkOff                           000001DC
+CkDigit                           00000206
+CkSayOk                           000002E3
+CkTone                            000001E4
+ClrTone                           0000035E
+Cmd40P                            000002A9
+Cmd4x                             000002A2
+Cmd50ES                           000002B7
+Cmd50OS                           000002BD
+Cmd50Odd                          000002B9
+Cmd5x                             000002AB
+Cmd61                             000002CA
+Cmd6x                             000002BF
+Cmd6xW                            000002CB
+Cmd7x                             000002D1
+CmdDone                           000002ED
+CmdRes                            000002EB
+CorOff                            0000013E
+CorOff2                           0000014B
+CorOn                             00000235
+DBCoff                            0000002B
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 38
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+DC                                00000001
+DCor1                             0000003C
+DCor2                             00000029
+DCorOff                           00000026
+DCorOn                            00000038
+DEBUG                             00000000
+DELAY                             00000002
+DeBounc                           0000001C
+DoID                              00000365
+DoIDCW                            0000037F
+DoIDSim                           00000374
+DoIDany                           00000380
+EEADR                             00000009
+EECON1                            00000088
+EECON2                            00000089
+EECONF                            00000001
+EECWID                            0000000F
+EECWNG                            00000009
+EECWOK                            00000006
+EECWTO                            0000000C
+EEDATA                            00000008
+EEENAB                            00000000
+EEEval                            00000258
+EEHANG                            00000002
+EEID                              00000004
+EEIE                              00000006
+EEIEND                            0000001A
+EEIF                              00000004
+EELAST                            00000037
+EEM0LEN                           00000038
+EEM1LEN                           00000039
+EEM2LEN                           0000003A
+EEM3LEN                           0000003B
+EEPLoop                           000003AD
+EEProg                            000003A3
+EETMSG                            00000005
+EETOUT                            00000003
+EETTPRE                           0000003C
+F                                 00000001
+F84                               00000001
+FSR                               00000004
+GIE                               00000007
+GetBit                            000002D2
+GetCwMsg                          000003D6
+GoodCmd                           000002EA
+Hang                              0000015C
+Hang1                             0000017A
+Hang2                             00000182
+I2590A                            000002FE
+I2590N                            000002F4
+I2590S                            000002F7
+ICorOn                            0000002D
+ID1                               000001CD
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 39
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ID1A                              000001D9
+IDSOON                            00000006
+INDF                              00000000
+INITBIT                           00000004
+INOTID                            00000001
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+ISDBKOF                           00000003
+ISDCTSY                           00000006
+ISDCtsy                           00000174
+ISDMSG                            00000004
+ISDPOFF                           
+ISDPON                            
+ISDPlay                           0000032D
+ISDROFF                           
+ISDRON                            
+ISDSIM                            00000002
+ISD_ID                            00000011
+ISD_IID                           00000010
+ISD_SM                            00000014
+ISD_SMA                           00000015
+ISD_TM                            00000013
+ISD_TO                            00000012
+ISDpOff                           000001C5
+InitDat                           000003B3
+InitISD                           00000079
+InitLp                            00000071
+IntExit                           00000045
+Key0                              00000110
+KeyUp                             00000103
+LOADEE                            00000000
+Loop                              0000009D
+Loop1                             000000DE
+MAXCMD                            00000004
+MSGREC                            00000007
+MUTE                              00000004
+MUTEDLY                           00000014
+MapDTMF                           000003DF
+MsgCWID                           00000322
+MsgCmd                            00000295
+MuteEnd                           000001EE
+NHRC3                             00000001
+NOCTSY                            00000004
+NOISD                             00000000
+NOMUTE                            00000005
+NOT_PD                            00000003
+NOT_RBPU                          00000007
+NOT_TO                            00000004
+NoCW                              000000CE
+NoCmd                             000002DF
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 40
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+NoHang                            00000149
+NoInit                            00000084
+NoTone                            000001F2
+NotTone                           0000020E
+OFBASE                            000000AF
+ONESEC                            00000002
+OPTION_REG                        00000081
+PCL                               00000002
+PCLATH                            0000000A
+PNorm                             00000344
+PNow                              0000034F
+PORTA                             00000005
+PORTB                             00000006
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PTTinit                           00000391
+PTTon                             0000038A
+PTTset                            00000392
+PlayM1                            00000318
+PlayMsg                           00000310
+QKeyUp                            00000102
+Quiet                             000000E9
+RBIE                              00000003
+RBIF                              00000000
+RD                                00000000
+RP0                               00000005
+RP1                               00000006
+ReadEE                            00000358
+Rec1                              00000303
+RecEnd                            00000133
+RecStop                           00000308
+Record                            000002EF
+Repeat                            0000011C
+Repeat1                           00000123
+SAYOK                             00000006
+SCorOn                            0000003E
+SDISABL                           00000004
+SHANG                             00000003
+SIMPLEX                           00000001
+SQUIET                            00000000
+SRPT                              00000001
+STATUS                            00000003
+STIMOUT                           00000002
+SelMsg                            00000351
+SetMsg                            0000030C
+SimBail                           00000342
+SimPlay                           00000130
+SimRec                            000000FE
+Start                             00000049
+StartCW                           00000324
+T0CS                              00000005
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 41
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+TEN                               0000000A
+TENSEC                            00000003
+TENTH                             00000001
+TFLCOR                            00000007
+TICK                              00000000
+TIntDone                          00000044
+TMASK                             0000000F
+TMR0                              00000001
+TONES                             00000004
+TRISA                             00000085
+TRISB                             00000086
+TimeOut                           00000192
+TimedOut                          00000154
+TimrDone                          00000017
+TimrInt                           0000000B
+TimrTst                           00000012
+ToneDon                           00000222
+TstConf                           0000027A
+TstEna1                           00000275
+TstEnab                           00000266
+TstHang                           00000289
+TstID                             0000028F
+TstTM                             00000292
+TstTOut                           0000028C
+VERSION                           00000032
+W                                 00000000
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Wait                              00000223
+Wait1                             0000022E
+WrTone                            00000215
+XCOR                              00000004
+Z                                 00000002
+_CP_OFF                           00003FFF
+_CP_ON                            0000000F
+_HS_OSC                           00003FFE
+_LP_OSC                           00003FFC
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_RC_OSC                           00003FFF
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_XT_OSC                           00003FFD
+__16F84                           00000001
+beepBit                           00000006
+beepOn                            00000007
+cfgFlag                           0000000E
+cmdCnt                            00000022
+cwBuff                            00000027
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 42
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+cwByte                            00000028
+cwCntr                            00000012
+cwOn                              00000006
+cwTmr                             0000001E
+dBounce                           0000002A
+dv                                00000000
+flags                             00000010
+hangDly                           00000016
+hangTmr                           00000019
+idDly                             00000018
+idTmr                             0000001B
+init                              00000003
+initID                            00000000
+isdA0                             00000004
+isdA1                             00000005
+isdPlaH                           0000002C
+isdPlaL                           0000002B
+isdPlay                           00000002
+isdRec                            00000003
+isdRecF                           00000005
+isdRecH                           0000002E
+isdRecL                           0000002D
+lastCor                           00000004
+lastDV                            00000002
+msgNum                            0000001F
+muteTmr                           0000001D
+needID                            00000001
+ofCnt                             00000011
+pop                               
+ptt                               00000001
+push                              
+sISDTmr                           0000001C
+s_copy                            0000000D
+secCnt                            00000013
+state                             00000015
+tBuf1                             00000023
+tBuf2                             00000024
+tBuf3                             00000025
+tBuf4                             00000026
+tFlags                            0000000F
+tMsgCtr                           00000029
+tOutDly                           00000017
+tOutTmr                           0000001A
+tenCnt                            00000014
+tone                              00000020
+toneCnt                           00000021
+w_copy                            0000000C
+MPASM 02.01 Released         RPTR050D.ASM   2-28-1998  20:20:35         PAGE 43
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+
+0000 : XX--XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+00C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0100 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0140 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0180 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+01C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0200 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0240 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0280 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+02C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0300 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0340 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0380 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+03C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXX-------------
+2000 : -------X-------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:  1009
+Program Memory Words Free:    15
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,    11 suppressed
+
+

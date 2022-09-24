@@ -1,0 +1,6 @@
+4/22/02
+
+fan control 2.4 on causes bizzarre RB CTCSS bug.
+
+RB is in OR squelch by default.
+

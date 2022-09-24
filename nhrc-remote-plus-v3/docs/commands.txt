@@ -1,0 +1,200 @@
+NHRC-Remote Plus Intelligent DTMF Remote Control | Proprietary and Confidential
+Implemented Commands                                                   NHRC LLC
+Version 3.00-beta
+24 October 2011
+
+**************
+** COMMANDS **
+**************
+
+  Command Default  Action
+  Number  Command
+
+    00      *0     set/reset config bits (aka control op)
+
+    01      11     output 1 on
+
+    02      10     output 1 off
+
+    03      21     output 2 on
+
+    04      20     output 2 off
+
+    05      31     output 3 on
+
+    06      30     output 3 off
+
+    07      41     output 4 on
+
+    08      40     output 4 off
+
+    09      51     output 5 on
+
+    10      50     output 5 off
+
+    11      61     output 6 on
+
+    12      60     output 6 off
+
+    13      71     output 7 on
+
+    14      70     output 7 off
+
+    15      81     output 8 on
+
+    16      80     output 8 off
+
+    17      *1     program/play CW ID
+
+                   <prefix> play ID message
+
+                   <prefix> <dd..dd..dd..> program cw message n with CW data 
+                   in dd.dd.dd --  see CW encoding table.
+
+                   example: *1 62 42 73 23 -- program NHRC as CW ID
+
+    18      *2     set timers / other
+                   <prefix><timer-digit><value>
+
+                   timer-digit    purpose      default   resolution 
+                        0         id timer     ?         10 sec
+                        1         pulse time   5         .1 sec
+                        2         load port    0         n/a
+                                  85 decimal = 55 hex alternating pattern 1
+                                  170 decimal = AA hex alternating pattern 2  
+
+    19      *3     program commands
+
+                   <program-commands-command><command-number><new-command> 
+
+                   program command number <command-number> with <new-command>
+
+                   <program-commands-command> is the command to program commands.
+                                              it is set to "*3" by default.
+
+                   <command-number> is in the range of 00-19.  Both digits must be 
+                                    specified.
+
+                   <new-command> is 1 to 8 digits 0-9, A, B, C, D, E, F, #, *
+                                 which represents the new command to program for the 
+                                 given command number.
+
+                   example:  to set the output on command (command number 11)
+                             to be 369, and assuming the program-commands command is
+                             still the factory default of *3, send this:
+
+                             *3 11 369
+                             ^  ^   ^
+                             |  |   +-- the new command
+                             |  +------ the command number for output 6 on
+                             +--------- the new command you want to use to turn on
+                                        output 6
+
+                   Prefix 19 (the program command prefixes prefix) cannot be 
+                   programmed unless the INIT jumper is installed.
+
+                   <command-number> 99 is a magic value that will program ALL output 
+                   control commands to be the <new-command> followed by the 
+                   output number and then either 0 or 1, for off and 1 for on.  
+                   5 digit MAX new-prefix when using MAGIC
+
+                   example: to program all OUTPUT commands to start with 555666, send:
+                            *3 99 555666
+                            this will program the commands as follows:
+                                port 1 on  command 55566611
+                                port 1 off command 55566610
+                                port 2 on  command 55566621
+                                port 2 off command 55566620
+                                    .
+                                    .
+                                    .
+                                port 8 on  command 55566681
+                                port 8 off command 55566680
+ 
+      
+**********************
+* Configuration Bits *
+**********************
+
+Group	Item    Description			Default	Comment
+
+0	0	reserved       			0	
+0	1	reserved       			0	
+0	2	reserved       			0	
+0	3	reserved       			0	
+0	4	reserved       			0	
+0	5	reserved       			0	
+0	6	reserved       			0	
+0	7	tone telemetry mode		0	1=send hi/lo tones instead of CW ON OFF
+
+1	0	digital output 1 pulse control	0       0=not pulsed, 1=pulsed
+1	1	digital output 2 pulse control	0       0=not pulsed, 1=pulsed
+1	2	digital output 3 pulse control	0       0=not pulsed, 1=pulsed
+1	3	digital output 4 pulse control	0       0=not pulsed, 1=pulsed
+1	4	digital output 5 pulse control	0       0=not pulsed, 1=pulsed
+1	5	digital output 6 pulse control	0       0=not pulsed, 1=pulsed
+1	6	digital output 7 pulse control	0       0=not pulsed, 1=pulsed
+1	7	digital output 8 pulse control	0       0=not pulsed, 1=pulsed
+
+2	0	digital output 1 control	0
+2	1	digital output 2 control	0
+2	2	digital output 3 control	0
+2	3	digital output 4 control	0
+2	4	digital output 5 control	0
+2	5	digital output 6 control	0
+2	6	digital output 7 control	0
+2	7	digital output 8 control     	0
+
+**************
+** CW Table **
+**************
+
+letter  code
+0	00
+1	01
+2	02
+3	03
+4	04
+5	05
+6	06
+7	07
+8	08
+9	09
+a	21
+b	22
+c	23
+d	31
+e	32
+f	33
+g	41
+h	42
+i	43
+j	51
+k	52
+l	53
+m	61
+n	62
+o	63
+p	71
+q	70
+r	72
+s	73
+t	81
+u	82
+v	83
+w	91	
+x	92
+y	93
+z	90
+space   11
+/       12
+
+
+Program N1KDO as CW ID:
+
+  *1 62 01 52 31 63
+ 
+Program KA1OKQ as CW ID:
+
+  *1 52 21 01 63 52 70
+ 

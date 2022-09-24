@@ -1,0 +1,6 @@
+Separate control code for link on/off
+Seperate control code for digital output
+
+2) Make sure ID timer set to 00 will never ID.
+
+3) Make sure hang timer set to 00 will correctly not hang.

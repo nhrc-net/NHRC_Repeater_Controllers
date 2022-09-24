@@ -1,0 +1,118 @@
+NHRC-4 Repeater Controller										NHRC Repeater Controllers
+Bill of Materials										444 Micol Road
+"Revised: Wednesday, January 07, 1998"										"Pembroke, NH 03275"
+Revision: B										603-485-2248
+										
+Item	Qty.	Ref.	Schematic Value		Description	Mfg.	Mfg. P/N	Digi-Key P/N	 Unit Cost 	Notes
+1	11	C1	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C2	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C3	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C5	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C6	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C9	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C10	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C12	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C13	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C18	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+		C21	1uF		1uF 16V Tantalum Cap	Panasonic	ECS-F1CE105K	P2105-ND	 $0.24 	
+2	2	C11	0.0068uF		0.0068uF 50V X7R Ceramic Radial Cap	Panasonic	ECU-S1H682KBA	P4951-ND	 $0.18 	see note 2
+		C4	0.0068uF		0.0068uF 50V X7R Ceramic Radial Cap	Panasonic	ECU-S1H682KBA	P4951-ND	 $0.18 	see note 2
+3	1	C7	22uF	25V	22uF 25V Tantalum Cap	Panasonic	ECS-F1EE226	P2051-ND	 $1.74 	
+4	6	C8	0.1uF		0.1uF 50V Z5U Ceramic Radial Cap	Panasonic	ECU-S1H104MEA	P4924-ND	 $0.21 	
+		C14	0.1uF		0.1uF 50V Z5U Ceramic Radial Cap	Panasonic	ECU-S1H104MEA	P4924-ND	 $0.21 	
+		C16	0.1uF		0.1uF 50V Z5U Ceramic Radial Cap	Panasonic	ECU-S1H104MEA	P4924-ND	 $0.21 	
+		C17	0.1uF		0.1uF 50V Z5U Ceramic Radial Cap	Panasonic	ECU-S1H104MEA	P4924-ND	 $0.21 	
+		C19	0.1uF		0.1uF 50V Z5U Ceramic Radial Cap	Panasonic	ECU-S1H104MEA	P4924-ND	 $0.21 	
+		C20	0.1uF		0.1uF 50V Z5U Ceramic Radial Cap	Panasonic	ECU-S1H104MEA	P4924-ND	 $0.21 	
+5	1	C15	220uF	25V	220uF 25V Aluminum Radial Electrolytic Cap	Panasonic	ECE-A1EGE221	P5245-ND	 $0.56 	
+6	1	C22	33pF		33pF 100V C0G Ceramic Radial Cap	Panasonic	ECU-S2A330JCA	P4843-ND	 $0.18 	
+7	2	D3	LED	RED	Red T1¾ LED	Lite-On	LTL-4203	LT1124-ND	 $0.23 	
+		D1	LED	RED	Red T1¾ LED	Lite-On	LTL-4203	LT1124-ND	 $0.23 	
+8	2	D4	LED	GRN	Green T1¾ LED	Lite-On	LTL-4233	LT1130-ND	 $0.23 	
+		D2	LED	GRN	Green T1¾ LED	Lite-On	LTL-4233	LT1130-ND	 $0.23 	
+9	1	D5	LED	YEL	Yellow T1¾ LED	Lite-On	LTL-4253	LT1133-ND	 $0.23 	
+10	1	D6	1N5226B	3.3V	3.3V 5% 500mW Zener Diode	Diodes Inc.	1N5226B	1N5226BCT-ND	 $0.22 	
+11	3	JP1	JUMPER		"2 Circuit Header, .100"" Straight"	Molex	22-03-2021	WM4000-ND	 $0.20 	
+		JP2	JUMPER		"2 Circuit Header, .100"" Straight"	Molex	22-03-2021	WM4000-ND	 $0.20 	
+		JP3	JUMPER		"2 Circuit Header, .100"" Straight"	Molex	22-03-2021	WM4000-ND	 $0.20 	
+12	1	J1	HEADER 8		"8 Circuit Header, .100"" Straight w/ lock"	Molex	22-23-2081	WM4206-ND	 $0.76 	
+13	2	J3	HEADER 6		"6 Circuit Header, .100"" Straight w/ lock"	Molex	22-23-2061	WM4204-ND	 $0.63 	
+		J2	HEADER 6		"6 Circuit Header, .100"" Straight w/ lock"	Molex	22-23-2061	WM4204-ND	 $0.63 	
+14	2	J4	HEADER 4		"4 Circuit Header, .100"" Straight w/ lock"	Molex	22-23-2041	WM4202-ND	 $0.48 	
+		J5	HEADER 4		"4 Circuit Header, .100"" Straight w/ lock"	Molex	22-23-2041	WM4202-ND	 $0.48 	
+15	3	Q1	IRF510		N Channel HEXFET	IRF	IRF510	IRF510-ND	 $0.77 	
+		Q2	IRF510		N Channel HEXFET	IRF	IRF510	IRF510-ND	 $0.77 	
+		Q6	IRF510		N Channel HEXFET	IRF	IRF510	IRF510-ND	 $0.77 	
+16	4	Q3	2N3904		NPN Transistor	Fairchild	2N3904	2N3904-ND	 $0.29 	
+		Q5	2N3904		NPN Transistor	Fairchild	2N3904	2N3904-ND	 $0.29 	
+		Q8	2N3904		NPN Transistor	Fairchild	2N3904	2N3904-ND	 $0.29 	
+		Q9	2N3904		NPN Transistor	Fairchild	2N3904	2N3904-ND	 $0.29 	
+17	2	Q4	MPF102		N Channel JFET	Fairchild	MPF102	MPF102-ND	 $0.56 	
+		Q7	MPF102		N Channel JFET	Fairchild	MPF102	MPF102-ND	 $0.56 	
+18	3	Q10	2N7000		N Channel MOSFET	Fairchild	2N7000	2N7000-ND	 $0.38 	
+		Q12	2N7000		N Channel MOSFET	Fairchild	2N7000	2N7000-ND	 $0.38 	
+		Q13	2N7000		N Channel MOSFET	Fairchild	2N7000	2N7000-ND	 $0.38 	
+19	1	Q11	2N3906		PNP Transistor	Fairchild	2N3906	2N3906-ND	 $0.29 	
+20	13	R1	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R2	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R3	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R7	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R12	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R17	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R22	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R26	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R29	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R30	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R33	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R37	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+		R40	10K		10K ¼W 5% Carbon Film Resistor	Yaego	10K CR-1/4W-B 5%	10KQBK-ND	 $0.02 	
+21	3	R4	100		100 ¼W 5% Carbon Film Resistor	Yaego	100E CR-1/4W-B 5%	100QBK-ND	 $0.02 	
+		R10	100		100 ¼W 5% Carbon Film Resistor	Yaego	100E CR-1/4W-B 5%	100QBK-ND	 $0.02 	
+		R19	100		100 ¼W 5% Carbon Film Resistor	Yaego	100E CR-1/4W-B 5%	100QBK-ND	 $0.02 	
+22	2	R20	510K		510K ¼W 5% Carbon Film Resistor	Yaego	510K CR-1/4W-B 5%	510KQBK-ND	 $0.02 	see note 3
+		R5	510K		510K ¼W 5% Carbon Film Resistor	Yaego	510K CR-1/4W-B 5%	510KQBK-ND	 $0.02 	see note 3
+23	2	R21	51K		51K ¼W 5% Carbon Film Resistor	Yaego	51K CR-1/4W-B 5%	51KQBK-ND	 $0.02 	see note 3
+		R6	51K		51K ¼W 5% Carbon Film Resistor	Yaego	51K CR-1/4W-B 5%	51KQBK-ND	 $0.02 	see note 3
+24	3	R8	33K		33K ¼W 5% Carbon Film Resistor	Yaego	33K CR-1/4W-B 5%	33KQBK-ND	 $0.02 	
+		R23	33K		33K ¼W 5% Carbon Film Resistor	Yaego	33K CR-1/4W-B 5%	33KQBK-ND	 $0.02 	
+		R36	33K		33K ¼W 5% Carbon Film Resistor	Yaego	33K CR-1/4W-B 5%	33KQBK-ND	 $0.02 	
+25	5	R9	470		470 ¼W 5% Carbon Film Resistor	Yaego	470E CR-1/4W-B 5%	470QBK-ND	 $0.02 	
+		R16	470		470 ¼W 5% Carbon Film Resistor	Yaego	470E CR-1/4W-B 5%	470QBK-ND	 $0.02 	
+		R24	470		470 ¼W 5% Carbon Film Resistor	Yaego	470E CR-1/4W-B 5%	470QBK-ND	 $0.02 	
+		R27	470		470 ¼W 5% Carbon Film Resistor	Yaego	470E CR-1/4W-B 5%	470QBK-ND	 $0.02 	
+		R31	470		470 ¼W 5% Carbon Film Resistor	Yaego	470E CR-1/4W-B 5%	470QBK-ND	 $0.02 	
+26	3	R11	22K		22K ¼W 5% Carbon Film Resistor	Yaego	22K CR-1/4W-B 5%	22KQBK-ND	 $0.02 	
+		R13	22K		22K ¼W 5% Carbon Film Resistor	Yaego	22K CR-1/4W-B 5%	22KQBK-ND	 $0.02 	
+		R18	22K		22K ¼W 5% Carbon Film Resistor	Yaego	22K CR-1/4W-B 5%	22KQBK-ND	 $0.02 	
+27	7	R14	100K		100K ¼W 5% Carbon Film Resistor	Yaego	100K CR-1/4W-B 5%	100KQBK-ND	 $0.02 	
+		R15	100K		100K ¼W 5% Carbon Film Resistor	Yaego	100K CR-1/4W-B 5%	100KQBK-ND	 $0.02 	
+		R25	100K		100K ¼W 5% Carbon Film Resistor	Yaego	100K CR-1/4W-B 5%	100KQBK-ND	 $0.02 	
+		R32	100K		100K ¼W 5% Carbon Film Resistor	Yaego	100K CR-1/4W-B 5%	100KQBK-ND	 $0.02 	
+		R34	100K		100K ¼W 5% Carbon Film Resistor	Yaego	100K CR-1/4W-B 5%	100KQBK-ND	 $0.02 	
+		R35	100K		100K ¼W 5% Carbon Film Resistor	Yaego	100K CR-1/4W-B 5%	100KQBK-ND	 $0.02 	
+		R39	100K		100K ¼W 5% Carbon Film Resistor	Yaego	100K CR-1/4W-B 5%	100KQBK-ND	 $0.02 	
+28	1	R28	300K		300K ¼W 5% Carbon Film Resistor	Yaego	300K CR-1/4W-B 5%	300KQBK-ND	 $0.02 	
+29	1	R38	39K		39K ¼W 5% Carbon Film Resistor	Yaego	39K CR-1/4W-B 5%	39KQBK-ND	 $0.02 	
+30	1	U1	TL064		Quad Op-Amp	TI	TL064CN	N/A		see note 1
+31	1	U2	LM7805CT		5V 1.0A Voltage Regulator	Nat'l Semi	LM340T-5.0	LM340T-5.0-ND	 $0.88 	
+32	1	U3	M-8870-01		DTMF Decoder	Teltone	M-8870-01	N/A		see note 1
+33	1	U4	PIC16F84-04/P		PIC Microcontroller (Blank)	Microchip	PIC16F84-04I/P	PIC16F84-04I/P-ND	 $6.88 	see note 1
+34	4	VR1	10K	POT	10K 6mm Carbon Trimpot	Panasonic	EVN-D8AA03B14	D4AA14-ND	 $0.22 	
+		VR3	10K	POT	10K 6mm Carbon Trimpot	Panasonic	EVN-D8AA03B14	D4AA14-ND	 $0.22 	
+		VR4	10K	POT	10K 6mm Carbon Trimpot	Panasonic	EVN-D8AA03B14	D4AA14-ND	 $0.22 	
+		VR6	10K	POT	10K 6mm Carbon Trimpot	Panasonic	EVN-D8AA03B14	D4AA14-ND	 $0.22 	
+35	2	VR2	500K	POT	500K 6mm Carbon Trimpot	Panasonic	EVN-D8AA03B55	D4AA55-ND	 $0.22 	
+		VR5	500K	POT	500K 6mm Carbon Trimpot	Panasonic	EVN-D8AA03B55	D4AA55-ND	 $0.22 	
+36	1	Y1	3.579MHz		3.579545MHz Crystal	CTX	MP036S	CTX049-ND	 $1.27 	
+Additional Items										
+37	1				NHRC-4 PCB	NHRC	NHRC-4PCB	N/A		see note 1
+38	2				18 Pin DIP Socket	AMP	2-640359-3	A9318-ND	 $0.10 	use at U3/U4
+39	1				14 Pin DIP Socket	AMP	2-640357-3	A9314-ND	 $0.07 	use at U1
+40	1				"8 Circuit Housing, .100"" w/ lock and polarizer"	Molex	22-01-3087	WM2006-ND	 $0.57 	mate for J1
+41	2				"6 Circuit Housing, .100"" w/ lock and polarizer"	Molex	22-01-3067	WM2004-ND	 $0.42 	mate for J2/J3
+42	2				"4 Circuit Housing, .100"" w/ lock and polarizer"	Molex	22-01-3047	WM2002-ND	 $0.29 	mate for J4/J5
+43	28				Crimp Terminal for Molex Housing	Molex	08-50-0114	WM2200-ND	 $0.11 	
+44	5				Shorting Jumpers	3M	929950-00-I	929950-00-ND	 $0.10 	"for JP1-3, J4/5"
+Other Notes:			"1. U1, U3, U4 (Programmed) and PCB are included w/ the NHRC-4 kit."							
+			2. Optional: do not populate part if deemphasis is NOT required.							
+			3. Optional: use 100K part if deemphasis is NOT required.							

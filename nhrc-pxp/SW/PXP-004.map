@@ -1,0 +1,233 @@
+MPLINK 4.49, Linker
+Linker Map File - Created Tue Mar 30 08:28:02 2021
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x000000    program   0x000000
+                   .org_1       code   0x000000    program   0x000004
+                   .org_2       code   0x000004    program   0x00010c
+                   .org_3       code   0x000200    program   0x0002a0
+                   .org_4       code   0x000800    program   0x000000
+                   .org_5       code   0x001000    program   0x0001d6
+                   .org_6       code   0x001800    program   0x0001f0
+                   .org_7       code   0x001900    program   0x00001a
+   .config_2007_PXP-004.O       code   0x002007    program   0x000002
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x000001      
+                            0x000004    0x000089      
+                            0x000200    0x00034f      
+                            0x001000    0x0010ea      
+                            0x001800    0x0018f7      
+                            0x001900    0x00190c      
+                            0x002007    0x002007      
+            969 out of 8454 program addresses used, program memory utilization is 11%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                  BadCMsg   0x0018c4    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   CBDone   0x000289    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Check1   0x00024c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  Check10   0x000244    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 Check100   0x00023c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 CheckTic   0x000254    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 Chek1000   0x000234    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Ck10Ms   0x000265    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  CkRChar   0x00029e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   CkRNow   0x000293    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   CkRead   0x000278    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   CkWNow   0x000289    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  CkWrite   0x000267    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   ClrMem   0x00021e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      D5L   0x0010d7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    DLoop   0x0010e7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Dly150   0x0010df    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Dly250   0x0010e3    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    Dly50   0x0010db    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Dly5ms   0x0010d5    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   ErrMsg   0x0018db    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  GetByte   0x0010b7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  GetMsgC   0x000032    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   GetNib   0x001085    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  GetNibH   0x001094    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  GetNibL   0x001095    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  InitMsg   0x001800    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  InitTbl   0x001804    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  IntExit   0x000029    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 IntHndlr   0x000002    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   LEDEnd   0x000259    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   LEDoff   0x000259    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    LLoop   0x001054    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Load   0x001053    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    Loop0   0x000232    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    Loop1   0x000259    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  MenuMsg   0x00181a    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  MenuTbl   0x00181e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg0   0x00003f    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg1   0x000040    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg2   0x000046    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg3   0x00004c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg4   0x000052    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg5   0x000058    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg6   0x00005e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg7   0x00006d    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Msg7_1   0x000075    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   MsgTbl   0x000037    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    OkMsg   0x001900    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  PutByte   0x0010c5    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   PutNib   0x001099    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  PutNibH   0x0010a9    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  PutNibL   0x0010b0    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      RD0   0x000287    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     RD01   0x000283    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RXLoop   0x00100d    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   ReadEE   0x00105a    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    ReadX   0x001000    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  RetChar   0x00007d    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    RxChk   0x000311    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxChk1   0x000319    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  RxChkNG   0x00032c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    RxCmd   0x0002aa    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdD   0x0002d7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdR   0x0002df    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdU   0x0002ea    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdV   0x0002f2    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdW   0x0002f7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxProg   0x000301    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    SLoop   0x00104d    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Save   0x00104c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    Start   0x000200    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 TimrDone   0x000018    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  TimrInt   0x000015    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    URInt   0x00001a    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    UTInt   0x00001e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   UTIntD   0x000024    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      WR0   0x000276    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     WR01   0x000272    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   WXLoop   0x00102e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   WritEd   0x00106a    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  WriteEE   0x001069    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  WriteEl   0x00107f    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   WriteX   0x001021    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   XmitM1   0x000082    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  XmitMsg   0x000080    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      a2b   0x00033c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  a2bJunk   0x00034f    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   a2bLet   0x000348    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      b2a   0x000331    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   b2aLet   0x000339    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  bcksTbl   0x0018c8    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  errmTbl   0x0018df    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   okmTbl   0x001904    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   rxsTbl   0x0002a6    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                 IntHndlr   0x000002    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  TimrInt   0x000015    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 TimrDone   0x000018    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    URInt   0x00001a    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    UTInt   0x00001e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   UTIntD   0x000024    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  IntExit   0x000029    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  GetMsgC   0x000032    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   MsgTbl   0x000037    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg0   0x00003f    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg1   0x000040    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg2   0x000046    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg3   0x00004c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg4   0x000052    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg5   0x000058    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg6   0x00005e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Msg7   0x00006d    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Msg7_1   0x000075    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  RetChar   0x00007d    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  XmitMsg   0x000080    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   XmitM1   0x000082    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    Start   0x000200    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   ClrMem   0x00021e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    Loop0   0x000232    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 Chek1000   0x000234    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 Check100   0x00023c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  Check10   0x000244    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Check1   0x00024c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                 CheckTic   0x000254    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    Loop1   0x000259    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   LEDEnd   0x000259    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   LEDoff   0x000259    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Ck10Ms   0x000265    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  CkWrite   0x000267    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     WR01   0x000272    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      WR0   0x000276    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   CkRead   0x000278    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     RD01   0x000283    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      RD0   0x000287    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   CkWNow   0x000289    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   CBDone   0x000289    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   CkRNow   0x000293    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  CkRChar   0x00029e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   rxsTbl   0x0002a6    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    RxCmd   0x0002aa    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdD   0x0002d7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdR   0x0002df    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdU   0x0002ea    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdV   0x0002f2    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxCmdW   0x0002f7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxProg   0x000301    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    RxChk   0x000311    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RxChk1   0x000319    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  RxChkNG   0x00032c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      b2a   0x000331    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   b2aLet   0x000339    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      a2b   0x00033c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   a2bLet   0x000348    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  a2bJunk   0x00034f    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    ReadX   0x001000    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   RXLoop   0x00100d    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   WriteX   0x001021    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   WXLoop   0x00102e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Save   0x00104c    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    SLoop   0x00104d    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                     Load   0x001053    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    LLoop   0x001054    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   ReadEE   0x00105a    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  WriteEE   0x001069    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   WritEd   0x00106a    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  WriteEl   0x00107f    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   GetNib   0x001085    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  GetNibH   0x001094    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  GetNibL   0x001095    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   PutNib   0x001099    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  PutNibH   0x0010a9    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  PutNibL   0x0010b0    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  GetByte   0x0010b7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  PutByte   0x0010c5    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Dly5ms   0x0010d5    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                      D5L   0x0010d7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    Dly50   0x0010db    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Dly150   0x0010df    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   Dly250   0x0010e3    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    DLoop   0x0010e7    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  InitMsg   0x001800    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  InitTbl   0x001804    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  MenuMsg   0x00181a    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  MenuTbl   0x00181e    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  BadCMsg   0x0018c4    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  bcksTbl   0x0018c8    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   ErrMsg   0x0018db    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                  errmTbl   0x0018df    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                    OkMsg   0x001900    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+                   okmTbl   0x001904    program     static C:\nhrc\trunk\nhrc-pxp\SW\PXP-004.ASM
+
+

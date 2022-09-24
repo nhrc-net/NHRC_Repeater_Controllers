@@ -1,0 +1,838 @@
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;*******************************************************************************
+                      00002 ; NHRC-Tester Repeater Controller Tester
+                      00003 ; Copyright (C) 2002, 2003. 2004 Jeffrey B. Otterson and NHRC LLC.
+                      00004 ; All Rights Reserved.
+                      00005 ;*******************************************************************************
+                      00006 ; This software contains proprietary and confidential trade secrets of NHRC LLC.
+                      00007 ; It may not be distributed in any source or binary form without the express
+                      00008 ; written permission of NHRC LLC.
+                      00009 ;*******************************************************************************
+  0000000C            00010 VERSION EQU D'012'
+                      00011 
+                      00012 ; Set the DEBUG symbol to 1 to really speed up the software's internal clocks
+                      00013 ; and timers for debugging in the simulator. Normally this is a 0.
+  00000000            00014 DEBUG   EQU     0
+                      00015 
+                      00016         ;; SPSW is set to 0 for button, 1 for switch on half-duplex control.
+  00000001            00017 SPSW    equ     1
+                      00018 
+                      00019         LIST P=16F628, F=INHX8M, R=HEX
+                      00020         include "p16f628.inc"
+                      00001         LIST
+                      00002 ; P16F628.INC  Standard Header File, Version 1.01    Microchip Technology, Inc.
+                      00258         LIST
+                      00021         ;; __FUSES _CP_ALL & _INTRC_OSC_NOCLKOUT & _WDT_ON & _LVP_OFF & _MCLRE_OFF & _PWRTE_ON
+2007   0375           00022         __FUSES _CP_ALL & _INTRC_OSC_CLKOUT & _WDT_ON & _LVP_OFF & _PWRTE_ON
+                      00023         ERRORLEVEL 0, -302      ; suppress Argument out of range errors
+                      00024 ;
+                      00025 ; Real Time Interrupt info
+                      00026 ; real time is counted by setting the TICK bit every 100 ms in the
+                      00027 ; interrupt handler.
+                      00028 ;
+                      00029 ;     1 s
+                      00030 ; -----------  = .00000025 sec per cycle
+                      00031 ; 4,000,000 hz
+                      00032 ;
+                      00033 ; processor clock is 4 * above = .000001 sec (1 us) instruction cycle
+                      00034 ; timer prescale of 4.
+                      00035 ; count to 250 for 1 ms tick.
+                      00036 
+                      00037 ;PORTA
+  00000000            00038 TP1     equ     0               ; spare
+  00000001            00039 PL_LED  equ     1               ; PL enabled LED, output
+  00000002            00040 COR_LED equ     2               ; COR enabled LED, output
+  00000003            00041 S_CTCSS equ     3               ; PL detect to controller, output
+  00000004            00042 S_COR   equ     4               ; COR detect to controller, output
+                      00043 
+                      00044 ;PORTB
+  00000000            00045 MICGATE equ     0               ; mic gate
+  00000001            00046 PNKGATE equ     1               ; pink noise gate
+  00000002            00047 RPTGATE equ     2               ; speaker audio gate
+  00000003            00048 TP2     equ     3               ; test point
+  00000004            00049 MIC_PTT equ     4               ; mic ptt button, input
+  00000005            00050 MICCHAN equ     5               ; mic channel button, input
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  00000006            00051 RPT_PTT equ     6               ; repeater controller ptt, input
+  00000007            00052 BUTTON  equ     7               ; test set pushbutton, input
+                      00053 
+                      00054 ;flags
+  00000000            00055 F_COR   equ     0               ; COR selected on mic PTT.
+  00000001            00056 F_CTCSS equ     1               ; CTCSS selected on mic PTT.
+  00000002            00057 F_CLEAR equ     2               ; keep this bit clear for incf hack to work
+  00000003            00058 F_TXMUT equ     3               ; TX mute control
+                      00059 
+                      00060                 ;; bits 4-7 are the debounced versions of the PORTB inputs.
+                      00061         
+                      00062 ;tFlags                         ; timer flags
+  00000000            00063 TICK    equ     0               ; 1 ms tick indicator flag
+  00000001            00064 T1MS    equ     1               ; 1 ms tick flag
+  00000002            00065 T10MS   equ     2               ; 10 ms tick flag
+  00000003            00066 T100MS  equ     3               ; 100 ms tick flag
+                      00067 
+                      00068         IF DEBUG == 1
+                      00069 TEN     equ     D'2'
+                      00070         ELSE
+  0000000A            00071 TEN     equ     D'10'
+                      00072         ENDIF
+                      00073 
+  0000000D            00074 T0PRE   equ     D'13'           ; 14 gave 1003 hz.
+                      00075 
+  00000003            00076 CDBBIT  equ     3               ; debounce counts to 32, about 18.2 ms
+  00000008            00077 CDBVAL  equ     8
+                      00078 
+  00000096            00079 PLPRE   equ     d'150'          ; PL startup timer
+  00000096            00080 CRSHPRE equ     d'150'          ; PL squelch crash timer
+                      00081 
+  00000064            00082 LEDPRE  equ     d'100'          ; PL & COR LED delay timer, 10ms * 100 = 1000 ms.
+                      00083         
+                      00084 ;macro definitions
+                      00085 push    macro
+                      00086         movwf   w_copy          ; save w reg in Buffer
+                      00087         swapf   w_copy,f        ; swap it
+                      00088         swapf   STATUS,w        ; get status
+                      00089         movwf   s_copy          ; save it
+                      00090         endm
+                      00091 ;
+                      00092 pop     macro
+                      00093         swapf   s_copy,w        ; restore status
+                      00094         movwf   STATUS          ;       /
+                      00095         swapf   w_copy,w        ; restore W reg
+                      00096         endm
+                      00097 
+                      00098 ;variables
+                      00099         cblock  20              ; 80 bytes from 20 to 6f
+  00000020            00100         w_copy                  ; 20 saved W register for interrupt handler
+  00000021            00101         s_copy                  ; 21 saved status register for int handler
+  00000022            00102         tFlags                  ; 23 Timer Flags
+  00000023            00103         flags                   ; 24 operating Flags
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  00000024            00104         onems                   ; 25 1 ms counter
+  00000025            00105         tenms                   ; 26 10 ms counter
+  00000026            00106         hundms                  ; 27 100 ms counter
+  00000027            00107         dbcButn                 ; 28 button debouncer timer.
+  00000028            00108         dbcMPtt                 ; 29 mic PTT button debouncer.
+  00000029            00109         dbcMChn                 ; 2a mic channel button debouncer.
+  0000002A            00110         dbcCPtt                 ; 2b controller PTT debouncer.
+  0000002B            00111         temp                    ; 2c temp value, use & abuse
+  0000002C            00112         crshTmr                 ; 2d squelch crash timer (PL release delay)
+  0000002D            00113         plTmr                   ; 2e PL timer (PL assert delay)
+  0000002E            00114         ledTmr                  ; 2f PL & COR LED delay timer.
+                      00115         endc
+                      00116 
+                      00117 ;;;;;;;;;;;;;;;;;;
+                      00118 ;; MAIN PROGRAM ;;
+                      00119 ;;;;;;;;;;;;;;;;;;
+                      00120 
+0000                  00121         org     0
+0000   2813           00122         goto    Start
+0001   000C           00123         dw      VERSION
+                      00124 
+                      00125         ;
+                      00126         ; interrupt handler
+                      00127         ;
+0004                  00128         org     4
+                      00129         push                    ; preserve W and STATUS
+0004   00A0               M         movwf   w_copy          ; save w reg in Buffer
+0005   0EA0               M         swapf   w_copy,f        ; swap it
+0006   0E03               M         swapf   STATUS,w        ; get status
+0007   00A1               M         movwf   s_copy          ; save it
+                      00130 
+0008   190B           00131         btfsc   INTCON,T0IF
+0009   280B           00132         goto    TimrInt
+000A   280F           00133         goto    IntExit
+                      00134 
+000B                  00135 TimrInt
+000B   300D           00136         movlw   T0PRE           ; get timer 0 preset value
+000C   0081           00137         movwf   TMR0            ; preset timer 0
+000D   1422           00138         bsf     tFlags,TICK     ; set tick indicator flag
+000E   110B           00139         bcf     INTCON,T0IF     ; clear RTCC int mask
+                      00140 
+000F                  00141 IntExit
+                      00142         pop                     ; restore W and STATUS
+000F   0E21               M         swapf   s_copy,w        ; restore status
+0010   0083               M         movwf   STATUS          ;       /
+0011   0E20               M         swapf   w_copy,w        ; restore W reg
+0012   0009           00143         retfie
+                      00144 
+0013                  00145 Start
+0013   3018           00146         movlw   b'00011000'     ; preset value
+0014   0085           00147         movwf   PORTA           ; preset port A
+0015   3002           00148         movlw   b'00000010'     ; preset value
+0016   0086           00149         movwf   PORTB           ; preset port B
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00150         
+0017   3007           00151         movlw   h'07'           ; turn off all comparators
+0018   009F           00152         movwf   CMCON
+                      00153 
+0019   1683           00154         bsf     STATUS,RP0      ; select bank 1
+001A   3000           00155         movlw   b'00000000'     ; RA0..4 are outputs
+001B   0085           00156         movwf   TRISA           ; set port port directions
+001C   30F0           00157         movlw   b'11110000'     ; RB7..4 are inputs
+001D   0086           00158         movwf   TRISB
+                      00159 
+                      00160         IF DEBUG == 1
+                      00161         movlw   b'10001000'     ; DEBUG! no pull up, timer 0 gets no prescale
+                      00162         ELSE
+001E   3081           00163         movlw   b'10000001'     ; no pull up, timer 0 gets prescale 4
+                      00164         ENDIF
+                      00165 
+001F   0081           00166         movwf   OPTION_REG      ; set options
+                      00167 
+0020   1283           00168         bcf     STATUS,RP0      ; select page 0
+                      00169         
+0021   01A3           00170         clrf    flags           ; reset all operational flags
+0022   01A2           00171         clrf    tFlags          ; reset all timing flags
+                      00172 
+0023   300A           00173         movlw   TEN             ; preset decade counters
+0024   00A4           00174         movwf   onems           ; 1 ms down counter
+0025   00A5           00175         movwf   tenms           ; 10 ms down counter
+0026   00A6           00176         movwf   hundms          ; 100 ms down counter
+                      00177 
+0027   01A7           00178         clrf    dbcButn         ; init button debouncer timer.
+0028   01A8           00179         clrf    dbcMPtt         ; init mic PTT button debouncer.
+0029   01A9           00180         clrf    dbcMChn         ; init mic channel button debouncer.
+002A   01AA           00181         clrf    dbcCPtt         ; init controller PTT debouncer.
+                      00182 
+002B   01AC           00183         clrf    crshTmr         ; clear PL deassert timer.
+002C   01AD           00184         clrf    plTmr           ; clear PL assert timer.
+002D   01AE           00185         clrf    ledTmr          ; clear PL & COR LED timer.
+                      00186 
+002E   1423           00187         bsf     flags,F_COR     ; set initial mode for COR.
+002F   1486           00188         bsf     PORTB,PNKGATE   ; turn on white noise
+0030   1605           00189         bsf     PORTA,S_COR     ; turn off COR output (negative logic)
+0031   1585           00190         bsf     PORTA,S_CTCSS   ; turn off CTCSS output (negative logic)
+0032   30A0           00191         movlw   b'10100000'     ; enable interrupts, & Timer 0 overflow
+0033   008B           00192         movwf   INTCON
+                      00193 
+0034                  00194 Loop                            ; start of main loop
+0034   0064           00195         clrwdt                  ; reset the watchdog timer
+0035   30F1           00196         movlw   b'11110001'     ; set timer flags mask
+0036   05A2           00197         andwf   tFlags,f        ; clear timer flags
+0037   1C22           00198         btfss   tFlags,TICK     ; check to see if a tick has happened
+0038   284A           00199         goto    Loop1           ; nope...
+                      00200 
+                      00201         ;
+                      00202         ; 1 ms tick has occurred...
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00203         ;
+0039   1022           00204         bcf     tFlags,TICK     ; reset tick flag
+003A   14A2           00205         bsf     tFlags,T1MS     ; set 1ms flag
+003B   0BA4           00206         decfsz  onems,f         ; decrement 1 ms counter
+003C   284A           00207         goto    Loop1           ; not zero (not 10 ms interval)
+                      00208 
+                      00209         ;
+                      00210         ; 10 ms tick has occurred...
+                      00211         ;
+003D   300A           00212         movlw   TEN             ; preset decade counter
+003E   00A4           00213         movwf   onems           ; preset decade counter
+003F   1522           00214         bsf     tFlags,T10MS    ; set 10 ms flag
+0040   0BA5           00215         decfsz  tenms,f         ; decrement 10 ms counter
+0041   284A           00216         goto    Loop1           ; not zero (not 100 ms interval)
+                      00217 
+                      00218         ;
+                      00219         ; 100 ms tick has occurred...
+                      00220         ;
+0042   300A           00221         movlw   TEN             ; preset decade counter
+0043   00A5           00222         movwf   tenms           ; preset decade counter
+0044   15A2           00223         bsf     tFlags,T100MS   ; set 100 ms flag
+0045   0BA6           00224         decfsz  hundms,f        ; decrement 100 ms counter
+0046   284A           00225         goto    Loop1           ; not zero (not 1 sec interval)
+                      00226 
+                      00227         ;
+                      00228         ; 1 s tick has occurred...
+                      00229         ;
+0047   300A           00230         movlw   TEN             ; preset decade counter
+0048   00A6           00231         movwf   hundms          ; preset decade counter
+0049   15A2           00232         bsf     tFlags,T100MS   ; set 100 ms flag
+                      00233 
+                      00234 ; *****************************************************************************
+                      00235 ; *****************************************************************************
+                      00236 ; ***   MAIN LOOP STARTS HERE...                                            ***
+                      00237 ; *****************************************************************************
+                      00238 ; *****************************************************************************
+                      00239 
+004A                  00240 Loop1
+                      00241         ;; LED BLINKER!!!  I'M ALIVE!!!  I'M ALIVE!!!
+004A   1DA2           00242         btfss   tFlags,T100MS
+004B   2851           00243         goto    LedEnd
+004C   1C05           00244         btfss   PORTA,TP1
+004D   2850           00245         goto    l3off
+004E   1005           00246         bcf     PORTA,TP1
+004F   2851           00247         goto    LedEnd
+0050                  00248 l3off 
+0050   1405           00249         bsf     PORTA,TP1
+0051                  00250 LedEnd
+                      00251 
+0051   1CA2           00252         btfss   tFlags,T1MS     ; is 1ms flag set?
+0052   28CF           00253         goto    T1End           ; nope.
+                      00254         ;; 1 ms debouncer timer check...
+                      00255 
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0053                  00256 ChkMPtt                         ; debounce mike PTT button.
+0053   1E06           00257         btfss   PORTB,MIC_PTT   ; mic ptt button
+0054   286B           00258         goto    NoMPtt          ; no mic PTT
+0055   19A8           00259         btfsc   dbcMPtt,CDBBIT  ; check for full...
+0056   2882           00260         goto    ChkMChn         ; already full.
+0057   0AA8           00261         incf    dbcMPtt,f       ; increment the debounce counter.
+0058   1DA8           00262         btfss   dbcMPtt,CDBBIT  ; check for full, now...
+0059   2882           00263         goto    ChkMChn         ; not full yet.
+005A   1A23           00264         btfsc   flags,MIC_PTT   ; already set on?
+005B   2882           00265         goto    ChkMChn         ; yes.
+005C   1623           00266         bsf     flags,MIC_PTT   ; no, set mic ptt flag bit.
+                      00267         ;;  Mic PTT state transition, 0->1
+005D   1C23           00268         btfss   flags,F_COR     ; is COR mode is enabled?
+005E   2861           00269         goto    PNoCOR          ; nope
+005F   1205           00270         bcf     PORTA,S_COR     ; set COR output. (negative logic)
+0060   1505           00271         bsf     PORTA,COR_LED   ; turn on COR LED.
+0061                  00272 PNoCOR
+0061   1CA3           00273         btfss   flags,F_CTCSS   ; is PL mode enabled?
+0062   2865           00274         goto    MPtt11          ; no.
+0063   3096           00275         movlw   PLPRE           ; get PL startup timer.
+0064   00AD           00276         movwf   plTmr           ; set PL startup timer
+0065                  00277 MPtt11
+0065   1086           00278         bcf     PORTB,PNKGATE   ; turn off white noise
+0066   1406           00279         bsf     PORTB,MICGATE   ; turn on mic audio
+0067   01AC           00280         clrf    crshTmr         ; reset squelch crash timer.
+0068   19A3           00281         btfsc   flags,F_TXMUT   ; is TX MUTE enabled?
+0069   1106           00282         BCF     PORTB,RPTGATE   ; yes, mute controller TX audio.
+006A   2882           00283         goto    ChkMChn         ; done with off->on transition. 
+                      00284 
+006B                  00285 NoMPtt                          ; mic PTT NOT PRESSED.
+006B   08A8           00286         movf    dbcMPtt,f       ; test.
+006C   1903           00287         btfsc   STATUS,Z        ; is it zero?
+006D   2882           00288         goto    ChkMChn         ; yes.
+006E   0BA8           00289         decfsz  dbcMPtt,f       ; no, decrement it.
+006F   2882           00290         goto    ChkMChn         ; still not zero yet.
+0070   1E23           00291         btfss   flags,MIC_PTT   ; already set on?
+0071   2882           00292         goto    ChkMChn         ; no.
+0072   1223           00293         bcf     flags,MIC_PTT   ; yes, clear mic ptt flag bit.
+                      00294         ;; mic PTT state transition, 1->0
+0073   1C23           00295         btfss   flags,F_COR     ; is COR mode is enabled?
+0074   2877           00296         goto    PoNoCOR         ; no.
+0075   1605           00297         bsf     PORTA,S_COR     ; yes, clear COR output. (negative logic)
+0076   1105           00298         bcf     PORTA,COR_LED   ; turn off COR LED.
+0077                  00299 PoNoCOR
+0077   1CA3           00300         btfss   flags,F_CTCSS   ; is PL mode enabled?
+0078   287B           00301         goto    MPtt01          ; no.
+0079   3096           00302         movlw   CRSHPRE         ; get squelch crash timer.
+007A   00AC           00303         movwf   crshTmr         ; set squelch crash timer.
+007B                  00304 MPtt01
+007B   01AD           00305         clrf    plTmr           ; clear pl startup timer
+007C   1486           00306         bsf     PORTB,PNKGATE   ; turn on white noise
+007D   1006           00307         bcf     PORTB,MICGATE   ; turn off mic audio
+                      00308 
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+007E   1DA3           00309         btfss   flags,F_TXMUT   ; is TX mute flag set?
+007F   2882           00310         goto    ChkMChn         ; no.
+0080   1B23           00311         btfsc   flags,RPT_PTT   ; controller PTT asserted?
+0081   1506           00312         bsf     PORTB,RPTGATE   ; turn on controller tx audio.
+                      00313         
+0082                  00314 ChkMChn                         ; debounce mike channel button.
+0082   1E86           00315         btfss   PORTB,MICCHAN   ; mic channel button
+0083   289A           00316         goto    NoMChn          ; no mic channel
+0084   19A9           00317         btfsc   dbcMChn,CDBBIT  ; check for full...
+0085   28A2           00318         goto    ChkCPtt         ; already full.
+0086   0AA9           00319         incf    dbcMChn,f       ; increment the debounce counter.
+0087   1DA9           00320         btfss   dbcMChn,CDBBIT  ; check for full, now...
+0088   28A2           00321         goto    ChkCPtt         ; not full yet.
+0089   1AA3           00322         btfsc   flags,MICCHAN   ; already set on?
+008A   28A2           00323         goto    ChkCPtt         ; yes.
+008B   16A3           00324         bsf     flags,MICCHAN   ; no, set mic ptt flag bit.
+                      00325         ;; mike channel button state transition, 0->1
+                      00326         ;; mike channel button was pressed.
+                      00327         ;movf   ledTmr,f        ; get ledTmr
+                      00328         ;btfsc  STATUS,Z        ; is ledTmr zero?
+                      00329         ;goto   MChn0           ; yes.
+008C   1123           00330         bcf     flags,F_CLEAR   ; keep this bit clear.
+008D   0AA3           00331         incf    flags,f         ; increment flags.
+008E   1123           00332         bcf     flags,F_CLEAR   ; keep this bit clear.
+                      00333         ;movlw  b'00000011'     ; mask
+                      00334         ;andwf  flags,w         ; and it
+                      00335         ;btfsc  STATUS,Z        ; is it zero?
+                      00336         ;bsf    flags,F_COR     ; yes. zero is not permitted.
+                      00337 
+008F                  00338 MChn0
+008F   3064           00339         movlw   LEDPRE          ; get ledTmr preset
+0090   00AE           00340         movwf   ledTmr          ; set ledTmr
+                      00341 
+                      00342         ;; now show COR & PL status on LEDs.
+0091   1C23           00343         btfss   flags,F_COR     ; is COR mode set?
+0092   1105           00344         bcf     PORTA,COR_LED   ; no. turn off COR led.
+                      00345 
+0093   1823           00346         btfsc   flags,F_COR     ; is COR mode set?
+0094   1505           00347         bsf     PORTA,COR_LED   ; yes. turn on COR led.
+                      00348 
+0095   1CA3           00349         btfss   flags,F_CTCSS   ; is CTCSS mode set?
+0096   1085           00350         bcf     PORTA,PL_LED    ; no. turn off CTCSS led.
+                      00351 
+0097   18A3           00352         btfsc   flags,F_CTCSS   ; is CTCSS mode set?
+0098   1485           00353         bsf     PORTA,PL_LED    ; yes. turn on CTCSS led.
+                      00354         
+0099   28A2           00355         goto    ChkCPtt         ; done with off->on transition. 
+                      00356 
+009A                  00357 NoMChn                          ; mic channel NOT PRESSED.
+009A   08A9           00358         movf    dbcMChn,f       ; test.
+009B   1903           00359         btfsc   STATUS,Z        ; is it zero?
+009C   28A2           00360         goto    ChkCPtt         ; yes.
+009D   0BA9           00361         decfsz  dbcMChn,f       ; no, decrement it.
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+009E   28A2           00362         goto    ChkCPtt         ; still not zero yet.
+009F   1EA3           00363         btfss   flags,MICCHAN   ; already set on?
+00A0   28A2           00364         goto    ChkCPtt         ; no.
+00A1   12A3           00365         bcf     flags,MICCHAN   ; yes, clear mic ptt flag bit.
+                      00366         ;; mike channel button state transition, 1->0
+                      00367 
+00A2                  00368 ChkCPtt                         ; debounce Controller PTT
+00A2   1F06           00369         btfss   PORTB,RPT_PTT   ; mic ptt button
+00A3   28B3           00370         goto    NoCPtt          ; no mic PTT
+00A4   19AA           00371         btfsc   dbcCPtt,CDBBIT  ; check for full...
+00A5   28BC           00372         goto    ChkButn         ; already full.
+00A6   0AAA           00373         incf    dbcCPtt,f       ; increment the debounce counter.
+00A7   1DAA           00374         btfss   dbcCPtt,CDBBIT  ; check for full, now...
+00A8   28BC           00375         goto    ChkButn         ; not full yet.
+00A9   1B23           00376         btfsc   flags,RPT_PTT   ; already set on?
+00AA   28BC           00377         goto    ChkButn         ; yes.
+00AB   1723           00378         bsf     flags,RPT_PTT   ; no, set mic ptt flag bit.
+                      00379         ;; controller PTT state transition, 0->1
+                      00380         ;; deal with simplex emulation (TX MUTE)
+00AC   1DA3           00381         btfss   flags,F_TXMUT   ; is TX Mute flag set?
+00AD   28B1           00382         goto    CPtt1           ; no
+00AE   1E23           00383         btfss   flags,MIC_PTT   ; is Mike PTT pressed?
+00AF   28B1           00384         goto    CPtt1           ; no.
+00B0   28BC           00385         goto    ChkButn         ; TX mute is set.  don't send audio.
+                      00386         
+00B1                  00387 CPtt1
+00B1   1506           00388         bsf     PORTB,RPTGATE   ; turn on speaker audio gate
+00B2   28BC           00389         goto    ChkButn         ; done with off->on transition. 
+                      00390 
+00B3                  00391 NoCPtt                          ; controller PTT not asserted.
+00B3   08AA           00392         movf    dbcCPtt,f       ; test.
+00B4   1903           00393         btfsc   STATUS,Z        ; is it zero?
+00B5   28BC           00394         goto    ChkButn         ; yes.
+00B6   0BAA           00395         decfsz  dbcCPtt,f       ; no, decrement it.
+00B7   28BC           00396         goto    ChkButn         ; still not zero yet.
+00B8   1F23           00397         btfss   flags,RPT_PTT   ; already set on?
+00B9   28BC           00398         goto    ChkButn         ; no.
+00BA   1323           00399         bcf     flags,RPT_PTT   ; yes, clear mic ptt flag bit.
+                      00400         ;; controller PTT state transition, 1->0
+00BB   1106           00401         bcf     PORTB,RPTGATE   ; turn off speaker audio gate
+                      00402 
+00BC                  00403 ChkButn                         ; check control button.
+00BC   1B86           00404         btfsc   PORTB,BUTTON    ; tester button
+00BD   28C0           00405         goto    NoButn          ; button not pressed.
+                      00406         IF SPSW == 0            ; button, not switch
+                      00407         btfsc   dbcButn,CDBBIT  ; check for full...
+                      00408         goto    ChkDone         ; already full.
+                      00409         incf    dbcButn,f       ; increment the debounce counter.
+                      00410         btfss   dbcButn,CDBBIT  ; check for full, now...
+                      00411         goto    ChkDone         ; not full yet.
+                      00412         btfsc   flags,BUTTON    ; already set on?
+                      00413         goto    ChkDone         ; yes.
+                      00414         bsf     flags,BUTTON    ; no, set button pressed flag bit.
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00415         ;; tester control button state transition, 0->1
+                      00416         btfss   flags,F_TXMUT   ; is TX mute flag set?
+                      00417         goto    TXM0            ; no.
+                      00418         bcf     flags,F_TXMUT   ; clear it.
+                      00419         goto    ChkDone         ; done
+                      00420 TXM0                            ; TX mute bit is not set
+                      00421         ENDIF
+00BE   15A3           00422         bsf     flags,F_TXMUT   ; turn on half-duplex mode.
+00BF   28C1           00423         goto    ChkDone         ; done.
+                      00424 
+00C0                  00425 NoButn                          ; tester button not pressed.
+                      00426         IF SPSW == 0            ; button, not switch
+                      00427         movf    dbcButn,f       ; test.
+                      00428         btfsc   STATUS,Z        ; is it zero?
+                      00429         goto    ChkDone         ; yes.
+                      00430         decfsz  dbcButn,f       ; no, decrement it.
+                      00431         goto    ChkDone         ; still not zero yet.
+                      00432         btfss   flags,BUTTON    ; already set on?
+                      00433         goto    ChkDone         ; no.
+                      00434         bcf     flags,BUTTON    ; yes, clear button pressed bit.
+                      00435         ;; tester control button state transition, 1->0
+                      00436         ELSE
+00C0   11A3           00437         bcf     flags,F_TXMUT   ; turn off half-duplex mode.
+                      00438         ENDIF
+                      00439         
+00C1                  00440 ChkDone                         ; done checking/debouncing inputs.
+                      00441 
+00C1   08AC           00442         movf    crshTmr,f       ; check squelch crash timer.
+00C2   1903           00443         btfsc   STATUS,Z        ; is it zero?
+00C3   28C8           00444         goto    ChkPlT          ; yes.
+00C4   0BAC           00445         decfsz  crshTmr,f       ; decrement timer.
+00C5   28C8           00446         goto    ChkPlT          ; not zero yet.
+00C6   1585           00447         bsf     PORTA,S_CTCSS   ; turn off CTCSS output. (negative logic)
+00C7   1085           00448         bcf     PORTA,PL_LED    ; turn off status LED led.
+                      00449 
+00C8                  00450 ChkPlT
+00C8   08AD           00451         movf    plTmr,f         ; check pl startup timer.
+00C9   1903           00452         btfsc   STATUS,Z        ; is it zero?
+00CA   28CF           00453         goto    TTDone          ; yes.
+00CB   0BAD           00454         decfsz  plTmr,f         ; decrement timer.
+00CC   28CF           00455         goto    TTDone          ; not zero yet.
+00CD   1185           00456         bcf     PORTA,S_CTCSS   ; turn on CTCSS output. (negative logic)
+00CE   1485           00457         bsf     PORTA,PL_LED    ; turn on status LED led.
+                      00458 
+00CF                  00459 TTDone  
+                      00460 
+00CF                  00461 T1End                           ; end of 1 mS tasks.
+00CF   1D22           00462         btfss   tFlags,T10MS    ; 10 ms tick?
+00D0   28DE           00463         goto    T10End          ; no
+                      00464 
+00D1   08AE           00465         movf    ledTmr,f        ; get ledTmr
+00D2   1903           00466         btfsc   STATUS,Z        ; is ledTmr zero?
+00D3   28DE           00467         goto    LtEnd           ; yes
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00D4   0BAE           00468         decfsz  ledTmr,f        ; decrement ledTmr
+00D5   28DE           00469         goto    LtEnd           ; not zero yet.
+                      00470 
+00D6   1A05           00471         btfsc   PORTA,S_COR     ; is COR set?
+00D7   1105           00472         bcf     PORTA,COR_LED   ; no. turn off COR led.
+                      00473 
+00D8   1E05           00474         btfss   PORTA,S_COR     ; is COR mode set?
+00D9   1505           00475         bsf     PORTA,COR_LED   ; yes. turn on COR led.
+                      00476 
+00DA   1985           00477         btfsc   PORTA,S_CTCSS   ; is CTCSS mode set?
+00DB   1085           00478         bcf     PORTA,PL_LED    ; no. turn off CTCSS led.
+                      00479 
+00DC   1D85           00480         btfss   PORTA,S_CTCSS   ; is CTCSS mode set?
+00DD   1485           00481         bsf     PORTA,PL_LED    ; yes. turn on CTCSS led.
+                      00482 
+00DE                  00483 LtEnd
+00DE                  00484 T10End                          ; end of 10 mS tasks.
+                      00485         
+00DE   2834           00486         goto    Loop            ; back to the top.
+                      00487         end                     ; "end of line".
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ADEN                              00000003
+BRGH                              00000002
+BUTTON                            00000007
+C                                 00000000
+C1INV                             00000004
+C1OUT                             00000006
+C2INV                             00000005
+C2OUT                             00000007
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCPR1H                            00000016
+CCPR1L                            00000015
+CDBBIT                            00000003
+CDBVAL                            00000008
+CIS                               00000003
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             0000001F
+CMIE                              00000006
+CMIF                              00000006
+COR_LED                           00000002
+CPtt1                             000000B1
+CREN                              00000004
+CRSHPRE                           00000096
+CSRC                              00000007
+ChkButn                           000000BC
+ChkCPtt                           000000A2
+ChkDone                           000000C1
+ChkMChn                           00000082
+ChkMPtt                           00000053
+ChkPlT                            000000C8
+DC                                00000001
+DEBUG                             00000000
+EEADR                             0000009B
+EECON1                            0000009C
+EECON2                            0000009D
+EEDATA                            0000009A
+EEIE                              00000007
+EEIF                              00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+F_CLEAR                           00000002
+F_COR                             00000000
+F_CTCSS                           00000001
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE 12
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+F_TXMUT                           00000003
+GIE                               00000007
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+IntExit                           0000000F
+LEDPRE                            00000064
+LedEnd                            00000051
+Loop                              00000034
+Loop1                             0000004A
+LtEnd                             000000DE
+MChn0                             0000008F
+MICCHAN                           00000005
+MICGATE                           00000000
+MIC_PTT                           00000004
+MPtt01                            0000007B
+MPtt11                            00000065
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NoButn                            000000C0
+NoCPtt                            000000B3
+NoMChn                            0000009A
+NoMPtt                            0000006B
+OERR                              00000001
+OPTION_REG                        00000081
+OSCF                              00000003
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PIE1                              0000008C
+PIR1                              0000000C
+PLPRE                             00000096
+PL_LED                            00000001
+PNKGATE                           00000001
+PNoCOR                            00000061
+PORTA                             00000005
+PORTB                             00000006
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PoNoCOR                           00000077
+RBIE                              00000003
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE 13
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RBIF                              00000000
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RP0                               00000005
+RP1                               00000006
+RPTGATE                           00000002
+RPT_PTT                           00000006
+RX9                               00000006
+RX9D                              00000000
+SPBRG                             00000099
+SPEN                              00000007
+SPSW                              00000001
+SREN                              00000005
+STATUS                            00000003
+SYNC                              00000004
+S_COR                             00000004
+S_CTCSS                           00000003
+Start                             00000013
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0PRE                             0000000D
+T0SE                              00000004
+T100MS                            00000003
+T10End                            000000DE
+T10MS                             00000002
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1End                             000000CF
+T1MS                              00000001
+T1OSCEN                           00000003
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TEN                               0000000A
+TICK                              00000000
+TMR0                              00000001
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE 14
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TP1                               00000000
+TP2                               00000003
+TRISA                             00000085
+TRISB                             00000086
+TRMT                              00000001
+TTDone                            000000CF
+TX9                               00000006
+TX9D                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+TimrInt                           0000000B
+VERSION                           0000000C
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             0000009F
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+W                                 00000000
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_CP_50                            00002BFF
+_CP_75                            000017FF
+_CP_ALL                           000003FF
+_CP_OFF                           00003FFF
+_ER_OSC_CLKOUT                    00003FFF
+_ER_OSC_NOCLKOUT                  00003FFE
+_EXTCLK_OSC                       00003FEF
+_HS_OSC                           00003FEE
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FEC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_XT_OSC                           00003FED
+__16F628                          00000001
+MPASM 03.20 Released         TESTR012.ASM   3-31-2004  21:25:00         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+crshTmr                           0000002C
+dbcButn                           00000027
+dbcCPtt                           0000002A
+dbcMChn                           00000029
+dbcMPtt                           00000028
+flags                             00000023
+hundms                            00000026
+l3off                             00000050
+ledTmr                            0000002E
+onems                             00000024
+plTmr                             0000002D
+pop                               
+push                              
+s_copy                            00000021
+tFlags                            00000022
+temp                              0000002B
+tenms                             00000025
+w_copy                            00000020
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XX--XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+00C0 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXX- ---------------- ----------------
+2000 : -------X-------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   221
+Program Memory Words Free:  1827
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     3 suppressed
+
+

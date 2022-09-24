@@ -1,0 +1,352 @@
+0        1         2         3         4         5         6         7         8
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+--------------------------------------------------------------------------------
+NHRC-u (micro) Repeater Controller                  Proprietary and Confidential
+Implemented Commands                                                    NHRC LLC
+Version 0.02
+12 February 2004
+
+*********************
+** LOCKED COMMANDS **
+*********************
+
+  Prefix  Default  Action
+  Number  Prefix
+
+    00      00     Control operator access 
+                   (prefix) <group-digit> <item-digit> [<optional-state-digit>]
+                   set group <g> item <i> to state <s>
+                   0 <= g <= 7   group to program
+                   0 <= i <= 7   item to program
+                   s = 0,1       state to set 1=on
+                   omit state to enquire value.
+                   controller will confirm with CW message "ON" or "OFF"
+
+    01      01     DTMF access
+                   (prefix) 1 enable repeater when in DTMF access mode.
+                     Repeater says "OK" in CW
+                     Repeater stays up until timer 6 (x 10) seconds 
+                     of idle time elapses, when it will ID and disable.
+                   (prefix) 0 disable repeater when in DTMF access mode.
+                     Immediatly "locks" repeater until (prefix) 1 is 
+                     received again.
+
+    02      02     load saved setup
+                     (prefix) <digit> : load selected saved control operator
+                     groups.  digit must be in the range of 0-4.
+
+    03      03     enable control access ("unlock" controller)
+                   (prefix) will unlock the controller.
+                   "#" to lock again.
+
+***********************
+** UNLOCKED COMMANDS **
+***********************
+
+  # lock controller.
+
+  *0
+  Control Operator Access
+    *0<g><i><s> set group <g> item <i> to state <s>
+      0 <= g <= 9   group to program
+      0 <= i <= 7   item to program
+      s = 0,1       state to set 1=on
+      leave s blank to inquire on/off state
+
+  *1
+  Save Setup
+    *1<s> save set of control operator groups #<s> 
+      0 <= s <= 4   state number to save.  set #0 is the power-up default.
+
+  *2 
+  Program Command Prefix
+    *2<pp><prefix>  program prefix <p> with prefix
+      00 <= pp <= 03   prefix index
+      <prefix>         code to use as prefix.  1-7 digits.
+      
+      Prefixes by index
+      00  control operator
+      01  dtmf access
+      02  load saved setup
+      03  unlock controller
+
+  *3  
+  Set Timers
+    *3<nn><time> set timer nn to time
+      00 <= nn <= 11  timer index
+      0 <= time <= 255 timer preset. 0=disable
+
+      Timer Indexes
+      00  hang timer long  (tenths)
+      01  hang timer short (tenths)
+      02  id timer (tens)
+      03  DTMF access timer (tens)
+      04  timeout timer long (seconds)
+      05  timeout timer short (seconds)
+      06  cw pitch (1-32, from table)
+      07  cw speed (5-30)
+
+  *7
+  Record/Play CW and Courtesy Tones
+   *70 play CW ID
+   *70 <dd..dd..dd..> program cw message n with CW data in dd.dd.dd
+                      see CW encoding table.
+
+   *71<n> play courtesy tone n, 0 <= n <= 7 (n is in range 0 to 7)
+   *71<n><ddtt,ddtt...> record courtesy tone n, 0 <= n <= 7 
+         dd is duration in 10 ms increments. 01 <= dd <=99
+            first duration can have magic value 00 or 99.
+            magic value 99 will play morse letter in tone field.
+         tt is tone.  See tone table.  00 <= tt <= 31
+
+  ** (*E)
+  Debug Reset via WDT Timeout
+    **  infinite loop into WDT reset.
+
+
+*****************************
+* Control Operator Switches *
+*****************************
+
+Group   Item    Description                     Default Comment
+
+0       *       Repeater Access Control                 controls access to the repeater
+-       -       -------- ------ -------                 -------- ------ -- --- --------
+0       0       Repeater enable                 1       
+0       1       COR AND CTCSS                   0
+0       2       COR OR CTCSS                    0
+0       3       COR AND CTCSS when idle         0       used for 1750 hz decoder on CTCSS input 
+0       4       DTMF access mode                0       see DTMF access code and timer 
+0       5       (reserved)                      0
+0       6       (reserved)                      0
+0       7       (reserved)                      0
+
+1       *       Repeater Timer Control                  what timers are in use
+-       -       -------- -----  ------                  ---- ------ --- -- ---
+1       0       Hang timer enable               1       see related timer values
+1       1       Hang timer short/long select    0       0=short, 1=long, see related timers
+1       2       Time out timer enable           1       see related timer values
+1       3       Time out timer long / short     1       0=short, 1=long, see related timers
+1       4       (reserved)
+1       5       (reserved)
+1       6       (reserved)
+1       7       Key up delay (kerchunk filter)  0       
+
+2       *       Courtesy Tones and Muting               controls courtesy tones and DTMF muting
+-       -       -------- ----- --- ------               -------- -------- ----- --- ---- ------
+2       0       Courtesy tone enabled           1       
+2       1       DTMF muting enabled             1       Repeater mutes touch tones
+2       2       Select Courtesy Tone 1          0
+2       3       Select Courtesy Tone 2          0
+2       4       Select Courtesy Tone 3          0
+2       5       Select Courtesy Tone 4          0
+2       6       Select Courtesy Tone 5          0
+2       7       Select Courtesy Tone 6          0
+
+
+3       *       IDer Control                            Controls when and why IDs are sent
+-       -       ---- -------                            -------- ---- --- --- --- --- ----
+3       0       Immediate ID mode               1       Immediately ID after COR when idle (initial ID)
+3       1       Beacon Mode                     0       Continuously ID regardless of COR state
+3       2       IDer mode                       0       no tail, timeout, or courtesy tones.
+3       3       CW Key on PTT                   0	Key CW waveform on PTT lead
+3       4       reserved                        0
+3       5       reserved                        0
+3       6       reserved                        0
+3       7       reserved                        0
+
+4       0       reserved                        0       
+4       1       reserved                        0       
+4       2       reserved                        0       
+4       3       reserved                        0       
+4       4       reserved                        0       
+4       5       reserved                        0       
+4       6       reserved                        0       
+4       7       reserved                        0
+
+5       0       reserved                        0       
+5       1       reserved                        0       
+5       2       reserved                        0       
+5       3       reserved                        0       
+5       4       reserved                        0       
+5       5       reserved                        0       
+5       6       reserved                        0       
+5       7       reserved                        0       
+
+6       0       reserved                        0
+6       1       reserved                        0
+6       2       reserved                        0
+6       3       reserved                        0
+6       4       reserved                        0       
+6       5       reserved                        0       
+6       6       reserved                        0       
+6       7       reserved                        0       
+
+7       0       reserved                        0       
+7       1       reserved                        0       
+7       2       reserved                        0       
+7       3       reserved                        0       
+7       4       reserved                        0       
+7       5       reserved                        0       
+7       6       reserved                        0
+7       7       reserved                        0
+
+8*      0       write protect control groups    0       
+8*      1       write protect prefixes          0
+8*      2       write protect timers            0       
+8*      3       (reserved)                      0
+8*      4       (reserved)                      0
+8*      5       (reserved)                      0
+8*      6       write protect CW & CT messages  0       
+8*      7       NHRC Test Mode                  0       0=disabled, 1=enabled.
+
+9*      0       enable access to group 0        1       
+9*      1       enable access to group 1        1       
+9*      2       enable access to group 2        1       
+9*      3       enable access to group 3        1       
+9*      4       enable access to group 4        1       
+9*      5       enable access to group 5        1       
+9*      6       enable access to group 6        1       
+9*      7       enable access to group 7        1       
+
+* controller must be unlocked to access groups 8 and 9
+
+**************
+** CW Table **
+**************
+
+letter  code
+0       00
+1       01
+2       02
+3       03
+4       04
+5       05
+6       06
+7       07
+8       08
+9       09
+a       21
+b       22
+c       23
+d       31
+e       32
+f       33
+g       41
+h       42
+i       43
+j       51
+k       52
+l       53
+m       61
+n       62
+o       63
+p       71
+q       70
+r       72
+s       73
+t       81
+u       82
+v       83
+w       91      
+x       92
+y       93
+z       90
+space   11
+/       12
+
+Courtesy Tone Pitch Table
+-------- ---- ----- -----
+
+Tone    Note   Pitch   Actual
+  #             Hz       Hz
+
+  0     none    0.00     0.00
+  1     f4    249.25   249.28
+  2     f#4   370.00   370.03
+  3     g4    392.00   392.00
+  4     g#4   415.30   415.37
+  5     a4    440.00   440.04
+  6     a#4   466.15   444.20
+  7     b4    493.90   493.95
+  8     c5    523.25   523.29
+  9     c#5   554.35   554.48
+ 10     d5    587.35   587.37
+ 11     d#5   622.30   622.47
+ 12     e5    659.30   659.41
+ 13     f5    698.50   698.57
+ 14     f#5   740.00   740.19
+ 15     g5    784.00   784.01
+ 16     g#5   830.60   830.91
+ 17     a5    880.00   880.29
+ 18     a#5   932.30   932.40
+ 19     b5    987.80   988.14
+ 20     c6   1046.50  1046.58
+ 21     c#6  1108.70  1109.26
+ 22     d6   1174.70  1175.09
+ 23     d#6  1244.50  1244.56
+ 24     e6   1318.50  1319.26
+ 25     f6   1397.00  1397.62
+ 26     f#6  1480.00  1480.38
+ 27     g6   1568.00  1568.63
+ 28     g#6  1661.20  1662.51
+ 29     a6   1760.00  1760.56
+ 30     a#6  1864.70  1865.67
+ 31     b6   1975.50  1976.28
+
+Program N1KDO as CW ID:
+
+  *70 62 01 52 31 63
+ 
+Program KA1OKQ as CW ID:
+
+  *70 52 21 01 63 52 70
+ 
+------------------------------------------------------
+
+Understanding ID Timer States
+------------- -- ----- ------
+
+"Idle State"     ID timer is not running.
+                 COR actitivity will start ID timer, then:
+                     Immediate ID Mode set: Send ID and change to Waiting State.
+                     Immediate ID Mode not set: change to Pending State.
+
+"Pending State"  ID timer is running and ID will be sent when ID timer runs out.
+                 After ID is sent, restart ID timer, then:
+                     Beacon mode not set: enter Waiting state.
+                     Beacon mode set: enter Pending state.
+
+"Waiting State"  ID timer is running.  
+                 Will enter Idle Mode when timer runs out.
+                 Will enter Pending mode on COR activity.
+
+
+------------------------------------------------------
+
+Serial programming protocol
+
+Write data command:
+
+  :W aa dd dd dd dd dd dd dd dd ss <cr>
+
+  :  attention character
+  W  write command
+  aa address
+  dd 8 data bytes, in hex
+  ss checksum
+
+  Controller should respond with K<cr> for ack or N<cr> for nak.
+
+Read Data Command
+
+  :R aa <cr>
+
+  :  attention character
+  R read command
+  aa address
+  ss checksum
+
+  Controller should respond with write data message for ACK or N<cr> for nak.
+
+

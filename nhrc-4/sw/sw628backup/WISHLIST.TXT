@@ -1,0 +1,8 @@
+Separate control code for link on/off
+Seperate control code for digital output
+
+1) Allow a mode setting where the main receiver will mute the link receiver.
+
+2) Make sure ID timer set to 00 will never ID.
+
+3) Make sure hang timer set to 00 will correctly not hang.

@@ -1,0 +1,312 @@
+NHRC-3.1 Repeater Controller                       Proprietary and Confidential
+Implemented Commands                                                   NHRC LLC
+Version 1.01
+14 August 2011
+
+*********************
+** LOCKED COMMANDS **
+*********************
+
+  Prefix  Default  Action
+  Number  Prefix
+
+    00      00     Control operator access 
+                   (prefix) <group-digit> <item-digit> [<optional-state-digit>]
+                   set group <g> item <i> to state <s>
+                   0 <= g <= 7   group to program
+                   0 <= i <= 7   item to program
+                   s = 0,1       state to set 1=on
+                   omit state to enquire value.
+		   controller will confirm with speech: 
+                   control x point y is enabled|disabled.
+
+    01      01     DTMF access
+                   (prefix) 1 enable repeater when in DTMF access mode.
+                    Repeater stays up until timer 3 (x 10) seconds 
+                     of idle time elapses, when it will quietly disable
+                   (prefix) 0 disable repeater when in DTMF access mode.
+                     Immediatly "locks" repeater until (prefix) 1 is 
+                     received again.
+
+    02      02     digital output control
+
+                     (prefix) <port-digit> [<state>]
+		     0 <= port digit <= 1, 0=OUT1, 1=OUT2
+                     <state> = 0 turn port off
+                     <state> = 1 turn port on
+                     <state> = blank inquire port status
+
+    03      03     load saved setup
+                     (prefix) <digit> : load selected saved control operator
+		     groups.  digit must be in the range of 0-4.
+
+    04      04     audio test (NHRC-3.1 only)
+
+    05      05     reset alarm (NHRC-3.1 only)
+
+    06      06     not implemented
+
+    07      07     enable control access ("unlock" controller)
+                   (prefix) will unlock the controller.
+                   "#" to lock again.
+
+***********************
+** UNLOCKED COMMANDS **
+***********************
+
+  # lock controller.
+
+  *0
+  Control Operator Access
+    *0<g><i><s> set group <g> item <i> to state <s>
+      0 <= g <= 9   group to program
+      0 <= i <= 7   item to program
+      s = 0,1       state to set 1=on
+      leave s blank to inquire on/off state
+
+  *1
+  Save Setup
+    *1<s> save set of control operator groups #<s> 
+      0 <= s <= 4   state number to save.  set #0 is the power-up default.
+
+  *2 
+  Program Command Prefix
+    *2<pp><prefix>  program prefix <p> with prefix
+      00 <= pp <= 15   prefix index
+      <prefix>         code to use as prefix.  1-7 digits.
+      
+      Prefixes by index
+      00  control operator
+      01  dtmf access
+      02  digital output control
+      03  load saved setup
+      04  audio test (NHRC-3.1 only)
+      05  reset alarm (NHRC-3.1 only)
+      07  unlock controller
+
+  *3  
+  Set Timers
+    *3<nn><time> set timer nn to time
+      00 <= nn <= 11  timer index
+      0 <= time <= 255 timer preset. 0=disable
+
+      Timer Indexes
+      00  hang timer long  (tenths)  (100 = 10.0 sec)
+      01  hang timer short (tenths)  (50 = 5.0 sec)
+      02  id timer (tens) (54 = 540 sec - 9 minutes)
+      03  DTMF access timer (tens) (60 = 600 sec)
+      04  timeout timer long (seconds) (180 sec)
+      05  timeout timer short (seconds) (30 sec)
+      06  fan timer (tens) (12 = 120 sec)
+      07  tail message tail counter (units) (0)
+      08  alarm announce timer (tens) (12 = 120 sec)
+      09  CW Pitch 1-31 (20 = C6 note) 
+      10  CW Speed 5-30 (20 WPM)
+
+  *7
+  Record/Play CW and Courtesy Tones
+   *70 play CW ID
+   *70 <dd..dd..dd..> program cw message n with CW data in dd.dd.dd
+                      see CW encoding table.
+
+   *71<n> play courtesy tone n, 0 <= n <= 7 (n is in range 0 to 7)
+   *71<n><ddtt,ddtt...> record courtesy tone n, 0 <= n <= 7 
+         dd is duration in 10 ms increments. 01 <= dd <=99
+         tt is tone.  See tone table.  00 <= tt <= 31
+
+  *8
+  Record/Play Audio Track
+    *8<x><t> x=0 for play, x=1 for record. t=track number.
+      x = 0,1       0=play, 1=record.
+      0 <= t <= 3   track number
+ 
+      NHRC-2.1
+      --------
+      Track   Purpose
+        0     Initial ID
+        1     Normal ID
+        2     Timeout Message
+        3     Tail Message
+
+      NHRC-3.1
+      --------
+      Track   Purpose
+        0     Initial ID
+        1     Normal ID 1
+        2     Normal ID 2
+        3     Timeout Message
+        4     Tail Message 1
+        5     Tail Message 2
+        6     Alarm Message
+        7     Test Track
+
+  ** (*E)
+  Debug Reset via WDT Timeout
+    **  infinite loop into WDT reset.
+
+
+*****************************
+* Control Operator Switches *
+*****************************
+
+Group	Item    Description		     Default	Comment
+
+0	0	Repeater Enable			0	
+0	1	Repeater CTCSS required		0	
+0	2	key up delay (kerchunk filter)	0	
+0	3	Hang Timer Enabled		1	
+0	4	Hang timer long select		0	0=short, 1=long
+0	5	DTMF access mode		0	
+0	6	courtesy tone enabled		1	
+0	7	Control op CTCSS required	0	
+
+1	0	repeater time out timer enable	1	
+1	1	time out timer long select	1	0=short, 1=long
+1	2	Enable "dual squelch"		0	CTCSS or CAS when 1
+1	3	Enable DTMF Muting		1	
+1	4	Tail Message 1 enable		0	
+1	5	Tail Message 2 enable		0	
+1	6	Simplex Repeater Mode		0	Simplex repeater mode
+1	7	Simplex Repeater Voice ID	0	plays message 0 for ID
+
+2	0	Enable Voice Initial ID	 	1	
+2	1	Enable Voice Normal ID          1       
+2	2	Enable Voice Normal ID 2        1       NHRC-3.1 only.
+2	3	Allow ID Stomp by key up	1	
+2	4	Enable voice time out message	1	
+2	5	Digital output/Fan Control	0	1=fan control
+2	6	Digital output control		0	1=closed to ground
+2	7	Audio Delay present		0	
+
+3	0	European ID Mode                0	1 = European ID mode.
+3	1       European End ID Mode            0       1 = use Normal Voice ID
+3	2	reserved                       	0	
+3	3	reserved                       	0	
+3	4	reserved                       	0	
+3	5	ID Beacon Mode                 	0	1 = Beacon ID Mode.
+3	6	NO CW ID mode                  	0	1 = always use speech ID
+3	7	NO ID mode                     	0	1 = never ID.
+
+4	0	Digital output 1 is pulsed	0	
+4	1	Digital output 2 is pulsed	0	
+4	2	reserved			0	
+4	3	reserved			0	
+4	4	reserved                  	0	
+4	5	reserved                  	0	
+4	6	Alarm Input enable           	0	1 = enable alarm feature
+4	7	Alarm Latch Mode               	0	1 = latch until reset
+
+5	0	Digital out 1 control		0	
+5	1	Digital out 2 control		0	
+5	2	reserved			0	
+5	3	reserved			0	
+5	4	reserved             		0	
+5	5	reserved             		0	
+5	6	reserved   
+5	7	reserved   
+
+6*	0	write protect control group setups	0	
+6*	1	write protect prefixes	0	
+6*	2	write protect timers	0	
+6*	3	(reserved)
+6*	4	(reserved)
+6*	5	(reserved)
+6*	6	write protect CW messages & courtesy tones	0	
+6*	7	write protect voice messages (except test track) 0
+
+7*	0	enable access to group		0	1	
+7*	1	enable access to group		1	1	
+7*	2	enable access to group		2	1	
+7*	3	enable access to group		3	1	
+7*	4	enable access to group		4	1	
+7*	5	enable access to group		5	1	
+7*	6	(reserved)
+7*	7	(reserved)
+
+* controller must be unlocked to access groups 6 and 7
+
+**************
+** CW Table **
+**************
+
+letter  code
+0	00
+1	01
+2	02
+3	03
+4	04
+5	05
+6	06
+7	07
+8	08
+9	09
+a	21
+b	22
+c	23
+d	31
+e	32
+f	33
+g	41
+h	42
+i	43
+j	51
+k	52
+l	53
+m	61
+n	62
+o	63
+p	71
+q	70
+r	72
+s	73
+t	81
+u	82
+v	83
+w	91	
+x	92
+y	93
+z	90
+space   11
+/       12
+
+Program N1KDO as CW ID:
+
+  *70 62 01 52 31 63
+ 
+
+Tone Codes
+
+Code  Tone
+
+ 00   No tone
+ 01   F4
+ 02   F#4
+ 03   G4
+ 04   G#4
+ 05   A4
+ 06   A#4
+ 07   B4
+ 08   C5
+ 09   C#5
+ 10   D5
+ 11   D#5
+ 12   E5
+ 13   F5
+ 14   F#5
+ 15   G5
+ 16   G#5
+ 17   A5
+ 18   A#5
+ 19   B5
+ 20   C6
+ 21   C#6
+ 22   D6
+ 23   D#6
+ 24   E6
+ 25   F6
+ 26   F#6
+ 27   G6
+ 28   G#6
+ 29   A6
+ 30   A#6
+ 31   B6

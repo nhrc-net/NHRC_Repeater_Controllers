@@ -1,0 +1,361 @@
+NHRC-17 Repeater Controller                        Proprietary and Confidential
+Implemented Commands                                                   NHRC LLC
+Version 0.02 02 January 2012
+Version 0.03 18 Jan 2014
+
+*********************
+** LOCKED COMMANDS **
+*********************
+
+  Prefix  Default  Action
+  Number  Prefix
+
+    00      00     Control operator access 
+                   (prefix) <group-digit> <item-digit> [<optional-state-digit>]
+                   set group <g> item <i> to state <s>
+                   0 <= g <= 7   group to program
+                   0 <= i <= 7   item to program
+                   s = 0,1       state to set 1=on
+                   omit state to enquire value.
+                   controller will confirm with speech: 
+                   control x point y is enabled|disabled.
+
+    01      01     DTMF access
+                   (prefix) 1 enable repeater when in DTMF access mode.
+                     Repeater plays "OK" in CW.
+                     Repeater stays up until timer 6 (x 10) seconds 
+                     of idle time elapses, when it will play "OFF" in CW.
+                   (prefix) 0 disable repeater when in DTMF access mode.
+                     Immediatly "locks" repeater until (prefix) 1 is 
+                     received again.
+
+    02      02     digital output control
+                     (prefix) [<state>]
+                     <state> = 0 turn port off
+                     <state> = 1 turn port on
+                     <state> = blank inquire port status
+
+    03      03     load saved setup
+                     (prefix) <digit> : load selected saved control operator
+                     groups.  digit must be in the range of 0-4.
+
+    04      04     link state control
+                     (prefix) <receiver-1-digit> <receiver-2-digit>
+                     <receiver-1-digit>, <receiver-2-digit> 0 (none), 1, 2, or 3(both)
+
+                     example: turn everything off
+                              (prefix)00
+                              turn on 2 duplex repeaters
+                              (prefix)12
+                              turn on 2-way half-duplex link
+                              (prefix)21
+                              turn on repeater 1 with link on repeater 2
+                              (prefix)31
+
+    05      05     digital output control
+
+                     (prefix) <port-digit> [<state>]
+                     1 <= port digit <= 4, 1=EXP3, 2=EXP4, 3=EXP5 4=EXP6
+                     <state> = 0 turn port off
+                     <state> = 1 turn port on
+                     <state> = blank inquire port status
+
+    06      06     reset alarm
+                   (prefix) will reset the alarm.
+
+    07      07     enable control access ("unlock" controller)
+                   (prefix) will unlock the controller.
+                   "#" to lock again.
+
+
+
+***********************
+** UNLOCKED COMMANDS **
+***********************
+
+  # lock controller.
+
+  *0
+  Control Operator Access
+    *0<g><i><s> set group <g> item <i> to state <s>
+      0 <= g <= 9   group to program
+      0 <= i <= 7   item to program
+      s = 0,1       state to set 1=on
+      leave s blank to inquire on/off state
+
+  *1
+  Save Setup
+    *1<s> save set of control operator groups #<s> 
+      0 <= s <= 4   state number to save.  set #0 is the power-up default.
+
+  *2 
+  Program Command Prefix
+    *2<pp><prefix>  program prefix <p> with prefix
+      00 <= pp <= 15   prefix index
+      <prefix>         code to use as prefix.  1-7 digits.
+      
+      Prefixes by index
+      00  control operator
+      01  dtmf access
+      02  digital output control
+      03  load saved setup
+      04  link state control
+      05  digital output control
+      06  reset alarm
+      07  unlock controller
+
+  *3  
+  Set Timers
+    *3<nn><time> set timer nn to time
+      00 <= nn <= 11  timer index
+      0 <= time <= 255 timer preset. 0=disable
+
+      Timer Indexes
+      00  hang timer long  (tenths)
+      01  hang timer short (tenths)
+      02  id timer, transmitter 0 (tens)
+      03  id timer, transmitter 1 (tens)
+      04  DTMF access timer (tens)
+      05  timeout timer long (seconds)
+      06  timeout timer short (seconds)
+      07  fan timer (tens)
+      08  alarm interval timer, (tens) 
+      09  tx1 courtesy tone front porch delay, 10 ms
+      10  tx2 courtesy tone front porch delay, 10 ms
+      11  tx1 cw pitch (1-31)
+      12  tx1 cw speed (5-30)
+      13  tx2 cw pitch (1-31)
+      14  tx2 cw speed (5-30)
+
+  *7
+  Record/Play CW and Courtesy Tones
+   *70<n> play CW ID n, n is 0 or 1
+   *70<n> <dd..dd..dd..> program cw message n with CW data in dd.dd.dd
+                      see CW encoding table.
+
+   *71<n> play courtesy tone n, 0 <= n <= 7 (n is in range 0 to 7)
+   *71<n><ddtt,ddtt...> record courtesy tone n, 0 <= n <= 7 
+         dd is duration in 10 ms increments. 01 <= dd <=99
+            first duration can have magic value 00 or 99.
+            magic value 00 will play tail message track (#4).
+            magic value 99 will play morse letter in tone field.
+         tt is tone.  See tone table.  00 <= tt <= 31
+
+` ** (*E)
+  Debug Reset via WDT Timeout
+    **  infinite loop into WDT reset.
+
+*****************************
+* Control Operator Switches *
+*****************************
+
+Group   Item    Description                     Default Comment
+
+0               Receiver 1 Access Control
+----------------------------------------------------------------
+0       0       Receiver 1 Enable               1       
+0       1       Receiver 1 CTCSS Required       0       
+0       2       Receiver 1 Dual Squelch         0
+0       3       Receiver 1 DTMF access mode     0
+0       4       Receiver 1 encode tone TX1      0
+0       5       Receiver 1 encode tone TX2      0
+0       6       Receiver 1 into Transmitter 1   1
+0       7       Receiver 1 into Transmitter 2   0
+
+1               Receiver 1 Configuration
+----------------------------------------------------------------
+1       0       Receiver 1 key up delay         0       
+1       1       Time Out Timer enable           1
+1       2       time out long / short           1       0=short, 1=long, see related timers
+1       3       load setup on CTSEL1/2/3 low    0       when 1, CTSEL1, CTSEL2, CTSEL3 load saved setups 1,2,3
+                                                        Applies to BOTH receivers!
+1       4       Audio Delay present             0       NHRC-DAD installed on this port.
+1       5       Receiver 1 has priority.        0       disables receiver 2 when receiver 1 is active. 
+                                                        CAUTION: regardless of link state!
+1       6       Mute DTMF into Transmitter 1    1       Touch Tones don't go to Transmitter 1
+1       7       Mute DTMF into Transmitter 2    1       Touch Tones don't go to Transmitter 2
+
+
+2               Receiver 2 Access Control
+----------------------------------------------------------------
+2       0       Receiver 2 Enable               1       
+2       1       Receiver 2 CTCSS Required       0       
+2       2       Receiver 2 Dual Squelch         0
+2       3       Receiver 2 DTMF access mode     0
+2       4       Receiver 2 encode tone TX1      0
+2       5       Receiver 2 encode tone TX2      0
+2       6       Receiver 2 into Transmitter 1   0
+2       7       Receiver 2 into Transmitter 2   1
+
+3               Receiver 2 Configuration
+----------------------------------------------------------------
+3       0       Receiver 2 key up delay         0       
+3       1       Time Out Timer enable           1
+3       2       time out long / short           1       0=short, 1=long, see related timers
+3       3       Saved setup # is courtesy tone  0       when set, CT0 plays for saved setup 0, CT1 for 1, etc.
+                                                        Applies to BOTH receivers!
+3       4       Audio Delay present             0       NHRC-DAD installed on this port.
+3       5       Receiver 2 has priority         0       disabled receiver 1 when receiver 2 is active.
+                                                        CAUTION: Regardless of link state.
+3       6       Mute DTMF into Transmitter 1    1       Touch Tones don't go to Transmitter 1
+3       7       Mute DTMF into Transmitter 2    1       Touch Tones don't go to Transmitter 2
+
+4               Transmitter 1 Control
+----------------------------------------------------------------
+4       0       Transmitter 1 Transmit Enable   1
+4       1       Transmitter 1 Hang Time Enable  1       1=enable
+4       2       Hang timer short/long select    0       0=short, 1=long, see related timers
+4       3       Transmitter 1 ID enable         1       
+4       4       Transmitter 1 ID select         0       0=ID 1, 1=ID 2
+4       5       Transmitter 1 duplex select     0       0=simplex, 1=duplex
+4       6       TX1 RX1 Courtesy Tone Enable    1       0=off, 1=on
+4       7       TX1 RX2 Courtesy Tone Enable    1       0=off, 1=on
+
+5               Transmitter 2 Control
+----------------------------------------------------------------
+5       0       Transmitter 2 Transmit Enable   1
+5       1       Transmitter 2 Hang Time Enable  1       1=enable
+5       2       Hang timer short/long select    0       0=short, 1=long, see related timers
+5       3       Transmitter 2 ID enable         1       
+5       4       Transmitter 2 ID select         0       0=ID 1, 1=ID 2
+5       5       Transmitter 2 duplex select     0       0=simplex, 1=duplex
+5       6       TX2 RX1 Courtesy Tone Enable    1       0=off, 1=on
+5       7       TX2 RX2 Courtesy Tone Enable    1       0=off, 1=on
+
+6               Misc. Settings.
+----------------------------------------------------------------
+6       0       Fan Control/Digital Output      0       0=fan control, 1=digital output
+6       1       Digital Output Control          0       0=off, 1=on
+6       2       Digital Output Pulsed Mode      0       0=on/off, 1=pulsed
+6       3       Alarm Input Enable              0       set to 1 to enable alarm.
+6       4       reserved                        0       
+6       5       reserved                        0       
+6       6       Chicken Burst control, TX1      0
+6       7       Chicken Burst control, TX2      0
+
+7               Digital Output Settings
+----------------------------------------------------------------
+7       0       Digital Output 1 Port Control   0
+7       1       Digital Output 2 Port Control   0
+7       2       Digital Output 3 Port Control   0
+7       3       Digital Output 4 Port Control   0
+7       4       Digital Output 1 Pulsed Mode    0
+7       5       Digital Output 2 Pulsed Mode    0
+7       6       Digital Output 3 Pulsed Mode    0
+7       7       Digital Output 4 Pulsed Mode    0
+
+8               Control Write Protects
+---------------------------------------------------------------
+8*      0       write protect control group setups      0       
+8*      1       write protect prefixes          0
+8*      2       write protect timers            0       
+8*      3       ignore DTMF from receiver 1     0
+8*      4       ignore DTMF from receiver 2     0
+8*      5       (reserved)                      0
+8*      6       write protect CW messages & courtesy tones      0       
+8*      7       NHRC TEST MODE                  0
+
+8               Control Operator Security Configuration
+---------------------------------------------------------------
+9*      0       enable access to group 0        1       
+9*      1       enable access to group 1        1       
+9*      2       enable access to group 2        1       
+9*      3       enable access to group 3        1       
+9*      4       enable access to group 4        1       
+9*      5       enable access to group 5        1       
+9*      6       enable access to group 6        1       
+9*      7       enable access to group 7        1       
+
+* controller must be unlocked to access groups 8 and 9
+
+**************
+** CW Table **
+**************
+
+letter  code
+0       00
+1       01
+2       02
+3       03
+4       04
+5       05
+6       06
+7       07
+8       08
+9       09
+a       21
+b       22
+c       23
+d       31
+e       32
+f       33
+g       41
+h       42
+i       43
+j       51
+k       52
+l       53
+m       61
+n       62
+o       63
+p       71
+q       70
+r       72
+s       73
+t       81
+u       82
+v       83
+w       91      
+x       92
+y       93
+z       90
+space   11
+/       12
+
+Program N1KDO as CW ID:
+
+  *70 62 01 52 31 63
+
+Program KA1OKQ as CW ID:
+
+  *70 52 21 01 63 52 70
+ 
+Courtesy Tones Programming Data:
+
+  *71 n [dddd [dddd [dddd [dddd]]]]
+
+0: rx1 --> tx1 : 05 8c 05 8f 05 93 05 16 :  5-E5  5-G5  5-B5  5-D6 : 0512 0515 0519 0522
+1: rx1 --> tx2 : 05 8c 05 8f 05 93 05 16 :  5-E5  5-G5  5-B5  5-D6 : 0512 0515 0519 0522
+2: rx2 --> tx1 : 05 96 05 93 05 8f 05 0d :  5-D6  5-B5  5-G5  5-E5 : 0522 0519 0515 0512
+3: rx2 --> tx2 : 05 96 05 93 05 8f 05 0d :  5-D6  5-B5  5-G5  5-E5 : 0522 0519 0515 0512
+4: ctsel ?     : 99 01 ff                : cw 1                    : 9901
+5: ctsel ?     : 99 02 ff                : cw 2                    : 9902
+6: ctsel ?     : 99 03 ff                : cw 3                    : 9903
+7: unlocked ct : 0a 9f 0a 93 0a 9f 0a 93 : 10-G5 10-B5 10-G5 10-B5 : 1031 1019 1031 1019 
+
+Digital I/O
+
+EXP1 digital input 1  ALARM when low
+EXP2 digital input 2  ct4 select when low (CW 1)
+EXP3 digital input 3  ct5 select when low (CW 2)
+EXP4 digital input 4  ct6 select when low (CW 3)
+EXP5 digital output 1 / TX1 encoder control
+EXP6 digital output 2 / TX2 encoder control
+EXP7 digital output 3
+EXP8 digital output 4
+
+
+Factory Configured Saved States (default select saved state command is "03"):
+
+0 A->B, B->A, simplex, no courtesy tone
+1 A->B, B->A, simplex, no courtesy tone
+2 repeater on port 1, half-duplex link on port 2
+3 two separate repeaters
+4 two separate repeaters, linked.
+
+----
+Serial commands:
+:Rnn -- read 8 bytes at address nn
+:Wnnddddddddddddddddcc -- write 8 bytes (dddddddddddddddd) at address nn with checksum cc
+:! reset
+

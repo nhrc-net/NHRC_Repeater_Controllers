@@ -1,0 +1,32 @@
+Power up with Init jumper installed/shorted.
+
+After the CW announcement plays, you can remove the jumper.
+
+Turn on controller:          00001
+
+Unlock controller:           04
+
+Set hang timer               *301150  (15.0 seconds)
+
+Set ID timer                 *30230 (300 seconds = 5 minutes)
+
+Record Initial ID            *810
+Record Normal ID             *811
+Record Timeout Message       *812
+Record Tail Message          *813
+
+Program CW ID                 *70 .......  (See manual)
+
+Lock controller               #
+
+Set "dual squelch" mode       00121 
+
+Set "repeater CTCSS required" 00011
+
+Set "European ID mode"        00301
+
+Unlock controller             04
+
+Set saved state 0             *10
+
+Lock controller               #

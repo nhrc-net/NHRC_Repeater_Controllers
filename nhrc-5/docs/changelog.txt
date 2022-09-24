@@ -1,0 +1,34 @@
+NHRC-5 Repeater Controller
+Software Revision History
+
+0.00  2000/10/13  Started hacking on Friday the 13th.
+0.01  2000/10/17  first beep.
+0.02  2000/10/20  2nd dtmf decoder now supported.
+		  aux input now supported.
+0.03  2000/10/25  aux input auto mode.
+		  control outputs.
+		  courtesy tone select inputs.
+                  alarm input and alarm tone.
+		  *** F I R S T   A L P H A   T E S T   R E L E A S E ***
+
+0.04  2000/11/19  fixed zero hang time tx lockon bug.
+		  fixed broken voice timeout message.
+		  simplex repeater mode fixes.
+
+0.09  2001/05/22  can play CW letter as courtesy tone.
+		  can now mute by dropping main TX.
+
+1.00  2001/05/22  initial release.
+
+1.01  2001/11/20  muting bug fix.
+                  left in audio test bug.
+
+1.02  2002/04/22  fan control switch interfered with remote base PTT
+		  RB not in OR squelch by default any more
+
+1.03  2003/02/08  CTCSS encoder control on digital outputs functionality
+                  added.
+
+1.04  2009/02/18  fix for control op must have ctcss
+
+1.05  2009/12/26  Change receiver cor debounce timing

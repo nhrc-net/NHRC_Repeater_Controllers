@@ -1,0 +1,15 @@
+ISD address calculator.
+At 8KHz sampling rate, each address increment is 0.125 seconds.
+Messages start at 2.0 seconds to preserve room for the "sound effects".
+
+Msg Len  Start   End  Start    End    Rev    Rev
+ #  Sec   Sec    Sec   Addr   Addr  Start    End
+
+ 0   30     2     32   0010   00ff   0800   ff00
+ 1   30    32     62   0100   01ef   0080   f780
+ 2   30    62     92   01f0   02df   0f80   fb40
+ 3   30    92    122   02e0   03cf   0740   f3c0
+ 4   30   122    152   03d0   04bf   0bc0   fd20
+ 5   30   152    182   04c0   05af   0320   f5a0
+ 6   30   182    212   05b0   069f   0da0   f960
+ 7   30   212    242   06a0   078f   0560   f1e0
