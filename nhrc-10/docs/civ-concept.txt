@@ -1,0 +1,66 @@
+NHRC-10 CI-V EEPROM Read/Write Protocol
+2003.12.16
+
+NHRC-10 CI-V address is E0
+PC Program CI-V address is E1
+
+Commands:
+
+77 NHRC private command
+
+Subcommands:
+
+00 Read EEPROM
+01 Write EEPROM
+
+Payload data is in nibbles, rather than bytes, to eliminate clashing with CI-V 
+command bytes, which are in the FA-FE range.
+
+Read Bytes from EEPROM command:
+
+  Computer sends to controller
+
+    FE FE E0 E1 77 00 a1 a2 a3 a4 ll c1 c2 FD
+
+  Where
+    FE FE is CI-V preamble
+    E0 is the destination CI-V address
+    E1 is the source CI-V address
+    77 is the NHRC private command
+    00 is the read EEPROM command
+    a1 a2 a3 a4 are the EEPROM address.  
+      a1 is the hi nibble of the hi byte
+      a2 is the lo nibble of the hi bite
+      a3 is the hi nibble of the lo byte
+      a4 is the lo nibble of the lo byte
+    ll is the number of bytes to transfer, 1 to 8.
+    c1 c2 are the checksum
+      c1 is the hi nibble of the checksum byte
+      c2 is the lo nibble of the checksum byte
+
+  Controller responds with 
+
+    FE FE E1 E0 77 01 a1 a2 a3 a4 ll dh dl dh dl dh dl dh dl dh dl dh dl dh dl dh dl c1 c2 FD
+
+  Where 
+    dh dl are the data bytes.
+      dh is the hi nibble of the data byte
+      dl is the lo nibble of the data byte
+
+  NO MORE THAN 8 BYTES MAY BE TRANSFERRED IN A SINGLE EXCHANGE.
+
+  Alternately, the controller may return the NAK message:
+
+  FE FE E1 E0 FA FD
+
+Write Bytes to EEPROM command:
+
+  Computer sends to controller
+
+    FE FE E0 E1 77 01 a1 a2 a3 a4 ll dh dl dh dl dh dl dh dl dh dl dh dl dh dl dh dl c1 c2 FD
+
+  Controller responds with
+
+    FE FE E1 E0 FB FD  -- acknowlege.  success.
+      or
+    FE FE E1 E0 FA FD  -- failure.  

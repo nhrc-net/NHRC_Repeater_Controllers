@@ -1,0 +1,229 @@
+NHRC-10                                            Proprietary and Confidential
+Software Change Log                                                    NHRC LLC
+
+x-050 last version for wirewrap prototype board.
+x-051 30 march 1999: first version for proto PC board.
+x-052 05 april 1999: added locked mode command prefix processing
+                       unlock prefix
+x-053 11 april 1999: locked mode support:
+                       dtmf test
+                       control operator commands (banks 0-7 only)
+                       patch hangup
+                       unrestricted patch
+                     immediate execution of cmds when disabled (no 2 sec wait)
+                     tail messages are now working.
+
+x-054 1 May 1999:    Audio check implemented.
+                     Ensure interrupts are successfully disabled.
+                     Remote base implemented.
+                     Speech message stomp.  Play CW ID when ID stomped.
+		     Fan Timer implemented.
+                     voice mailboxes implemented.
+                     load saved settings implemented.
+                     LiTZ & 911 (prefix #13) implemented. Plays msg 115.
+                     911 is new default prefix for LiTZ.
+                     # is new default patch hangup command.
+
+x-055 03 May 1999:   Unlocked mode timer
+                     unlocked mode courtesy tone
+                     remote base timeout fix
+                     remote base RX->TX transition ctsy tone suppressed.
+		     DTMF receiver for phone
+		     DTMF receiver for control receiver/remote base
+                     DTMF access mode.
+
+x-060 19 June 1999:  Bugfix for spurious message writes. (Hopefully!)
+		     Moved many subroutines into page 3.
+                     Program Patch Restrictions.
+		     Autopatch, with phone number restrictions.
+                     Autodial & Emergency Autodial programming.
+		     Emergency Autodial.
+                     Autodial.
+		     Ignore DTMF received over phone while dialing.
+		     Regenerate DTMF over air.
+		     Require init pressed to program unlock code.
+		     Speech buffer is now a ring buffer.
+                     moved "Link port repeater mode" to group 3 item 3.
+                     Group 6 item 7 is now "Link port timeout timer enable."
+		     Changed *3 unlocked command for consistency with others.
+
+x-061 27 June 1999:  bugfix for mailbox record playing test message.
+		     bugfix for link port courtesy tone playing into linked
+		         repeater...
+		     unlocked mode courtesy tone works correctly now.
+		     hang timer enabled (group 0 item 3) implemented.
+		     hang timer short/long select (group 0 item 4) implemented.
+		     courtesy tone enabled (group 0 item 6) implemented.
+		     ctcss required for control op (group 0 item 7) working.
+		     ctcss required for autopatch  (group 5 item 7) working.
+		     voice message for timeout (group 3 item 2) working.
+		     fixed bug that left link receiver unmuted when link 
+		         turned off while link receiver was still active.
+
+x-062 27 June 1999:  drop link to mute DTMF (group 1 item 4) implemented.
+		     link enabled during patch (group 6 item 3) implemented.
+		     kerchunker filter (group 0 item 2) implemented.
+		     delay on primary port (group 3 item 6) implemented.
+		     delay on secondary port (group 3 item 6) implemented.
+		     bugfix for DTMF send failure on autopatch.
+
+x-070 20 July 1999:  reverse patch (locked prefix #9) implemented.
+		     phone ring counter (timer #12) implemented.
+		     phone rings over air (group 4 item 6) implemented.
+		     phone auto-answer (group 4 item 7) implemented.
+		     digital outputs (group 7 items 0-7) implemented.
+		     swapped groups 5 & 6 (control-codes.doc updated)
+		     control output support (group 3 item 5) implemented.
+		     enough CI-V to test the CI-V interface.
+		     init now erases patch restrictions and autodials.
+		     re-implemented *7 command: hex values no longer required.
+		     fixed bug that would cause spurious voice ID after CW.
+		     digital output pulsed mode and "one-of" mode implemented.
+
+		     *** NHRC-10 code is Feature Complete ***
+
+x-071 17 August 1999:  hardware initialization code streamlined.
+                     CI-V mode select
+		     CI-V mode readback
+		     CI-V frequency readback.
+		     CI-V frequency select.
+		     Ring detect improved so transients don't appear as ring.
+		     
+x-072 17 August 1999: move unlocked command processor to ROM page 2.
+		      CI-V VFO select command.
+                      reverse patch answer problem fixed. (ring timeout preset)
+		      CI-V memory channel select.
+		      CI-V split select.
+		      CI-V fine-tune mode.
+
+x-073 29 August 1999: Phone number readback on patch.
+                      bugfix for normal courtesy tone when unlocked.
+		      changed default long timeout timer to 180.
+		      bugfix for CI-V frequency change command causing lockup.
+		      default long timeout changed to 180 seconds (was 240.)
+
+x-074 12 September 1999: Tune mode courtesy tone (#6) implemented.
+			 Patch timer extend implemented.
+			 "disappearing courtesy tone" bug fixed.
+			 Receiver COR debounce improvements.
+
+x-075 14 September 1999: Fix hang timer bug.
+
+x-076 15 September 1999: added power up delay to try to fix ISD word smash.
+			 Implemented tune mode 10 Hz bumps: digits 8 & 9.
+			 cleaned up initialization code.
+			 improved CI-V frequency readback.
+			 fixed bug that was evilly killing CW ID.
+			 fixed transmitter lock on after init.
+
+x-080 26 September 1999: ignore DTMF digits received on phone when phone off.
+
+x-081 01 October 1999: modified autodial & emergency autodial to dial quietly.
+		       fixed cw id bug that occurred when IDing and tx was off.
+		       mute remote base when main receiver is active.
+		       mute remote base during RB CI-V readout.
+
+x-082 13 October 1999: Fixed bug that would readback wrong # for emerg autodl.
+
+x-090 28 October 1999: Fixed bouncing COR tx lockup on audio test.
+
+x-091 31 October 1999: aggressive muting of remote base during responses.
+
+x-092 28 November 1999: write protect vocabulary tracks 0-95 by default.
+
+x-093 12 December 1999: power up with initial voice ID disabled will now play
+                          version announcement then initial voice ID.
+			freq control mode courtesy tone plays correctly after
+                          command.
+
+x-094 06 January 2000: scan command implemented.  7 digit in frequency control
+                       mode followed by a tune digit.  
+
+x-095 31 January 2000: disable link input when enable link during patch is 0.
+                       used to just disable link TX.
+
+x-096 19 February 2000: fix phone number rings to auto-answer on.
+
+x-097 29 March 2000: if courtesy tone first segment length is 00, play
+                     message 104 instead of courtesy tone.
+
+x-100 07 May 2000: changed tail messages to 32 second slots.
+
+x-101 09 July 2000: added support for dial prefixes for restricted patch.
+                    # tone now is 1 second pause in dialing.
+                    area code bank option #4 enables area code prefix. (*41)
+                    *44<b><pfx> now programs bank b's prefix with pfx.
+		    fixed initial ctl op defaults to match documentation.
+		    adjusted courtesy tone segment pitches.
+
+x-102 07 September 2000: fix slaved repeater mode not turning on for RB RX.
+                         fix CI-V scan so bad freq entered will self-heal.
+			 autodial extend code implemented.
+
+x-103 09 september 2000: init area code prefix bug fixed.
+			 area code prefix readback corrected for ABCD *(e) #(f)
+			 fixed beep cancel condition that could cause tx lock.
+			 
+
+x-104 25 september 2000: more slaved repeater fixes.
+
+x-105 12 November 2000: fixed zero hang time bug.
+
+x-106 16 April 2001: fixed bad table read for "FM" mode readback.
+
+x-107 08 May 2001: 25LC640 support.  16 area codes.  250 autodial numbers.
+      12 May 2001: made startup faster.  made initialize EE way faster.
+      20 May 2001: release to test..
+
+x-108 21 August 2001: added support for single CW character courtesy tone
+                        program length of 99, next 2 digits is CW code.
+		      added support to mute DTMF by dropping main PTT
+                        set group6, switch 6 to 1 to mute by dropping PTT
+		      added timer 13, remote base idle timer
+                        remote base will shut off if timer expires.
+                        timer is reset by *main* receiver channel activity.
+                      patch phone number readback can be permanently suppressed
+                        set group6, switch 7 to 1 to suppress readback
+
+x-109 28 October 2001: failed bugfix release
+
+x-110 10 November 2001: remote base is muted when controller is talking
+                        remote base muting fixed during DTMF access mode
+
+x-111 17 December 2001: When DTMF access mode is disabled (sw 0.5=0) don't
+                        play message when DTMF access mode timer expires
+			When in DTMF access mode, do not process any commands
+			until repeater is enabled.
+                        Bugfix for no ID if repeater asleep and HF remote
+                        base command entered.
+
+x-112 04 December 2002: Ignore DTMF digits on main and link receiver unless
+                        COR/CTCSS combination is valid
+                        LiTZ now works on remote base input.
+
+x-113 23 December 2002: Change command prefix #10 from audio test to
+                        digital output control.
+
+x-114 09 June 2003:	Fix for drop ptt to mute DTMF not starting PTT fast
+			enough. 
+			Enable both CTCSS Required and Dual-Squelch to 
+			allow CTCSS when repeater idle, and carrier squelch
+			the rest of the time. 
+			Automatically disable tune mode when either 
+			remote base auto-shutoff timer ends or DTMF access
+			mode timer times out.
+
+x-120 10 January 2004:	Support for NHRC-10 Programming Software.
+x-121 31 January 2006 eXperimental version
+x-122 03 February 2009 anti-kerchunker features
+x-123 01 January 2010 better COR debounce timers
+NHRC-10 V 1.24 06 October 2010 initial ID disable defers CW ID
+NHRC-10 V 1.25 21 October 2010 adjustable cw tone and speed
+NHRC-10 V 1.26 15 July 2015 don't change # into delay on
+                   regenerated DTMF.  removed CW ID defer change
+                   from 1.24
+NHRC-10 V 1.27 26 December 2015. updated anti-kerchunker logic to suppress tail if 
+                  keyup time is less than timer 14.  
+                  If hang timer is disabled and initial voice ID is disabled, don't
+                  send initial CW ID.
+                  bugfixes around IDing.

@@ -1,0 +1,616 @@
+NHRC-10 Repeater Controller                        Proprietary and Confidential
+Implemented Commands                                                   NHRC LLC
+Version 1.25
+26 October 2010
+
+*********************
+** LOCKED COMMANDS **
+*********************
+
+  Prefix  Default  Action
+  Number  Prefix
+
+*   00      00     Control operator access 
+                   (prefix) <group-digit> <item-digit> [<optional-state-digit>]
+                   set group <g> item <i> to state <s>
+                   0 <= g <= 7   group to program
+                   0 <= i <= 7   item to program
+                   s = 0,1       state to set 1=on
+                   omit state to enquire value.
+		   controller will confirm with speech: 
+                   control x point y is enabled|disabled.
+
+*   01      01     autopatch
+                   (prefix) <digits to dial>
+                   will make short beeps every second when 10 or less 
+                   seconds remain of call.
+                   must be 7 digits, 
+                           "1" + 7 digits, 
+			   10 digits, or 
+			   "1" + 10 digits.
+                   7 or 1+7 must have area code #3 set up for local area.
+                   10 or 1+10 must have area code set up in area code 0-3.
+                   NNX must be enabled.
+
+*   02      02     unrestricted autopatch
+                   (prefix) <digits to dial>
+                   will make short beeps every second when 10 or less 
+                   seconds remain of call.
+
+*   03      03     autodial
+		   (prefix) <n>
+                   0 <= n <= 249 Autodial slot to dial.
+
+*   04      04     emergency autodial
+		   (prefix) <n>
+                   0 <= n <= 9  Emergency autodial slot to dial.
+
+*   05      #      patch hang up code
+                   (prefix) will hang up the patch.
+
+*   06      06     DTMF access
+                   (prefix) 1 enable repeater when in DTMF access mode.
+                     Repeater says "Repeater Access Enabled"
+                     Repeater stays up until timer 6 (x 10) seconds 
+                     of idle time elapses, when it will say "Repeater
+                     Access Disabled."
+                   (prefix) 0 disable repeater when in DTMF access mode.
+                     Immediatly "locks" repeater until (prefix) 1 is 
+                     received again.
+
+*   07      07     Re-send DTMF prefix  (follow with up to 15 digits)
+                   (prefix) <up to 15 digits>
+                   will send digits over the air.
+
+*   08      08     DTMF test (follow with up to 15 digits)
+                   (prefix) <up to 15 digits>
+                   will name digits sent.
+
+*   09      09     reverse patch
+		   (prefix) pick up phone if it just rang.
+
+*   10      10     digital outout control
+                   (prefix) <output number> play on/off message
+                   (prefix) <output number> <state> set digital output state
+
+*   11      11     mailbox (mimics command set of ACC DVR.)
+                   (prefix) plays headers for mailboxes.
+                     enter (prefix) then unkey.  mailbox headers play.
+                   (prefix) <digit> play message <digit>. Valid: 1,2,3,4,5,6
+                     enter (prefix) then mailbox number. Unkey.  Message plays.
+                   (prefix) * record mailbox message
+                     enter (prefix) *. unkey.
+                     controller will say "no mailbox" if all 6 are in use.
+                     otherwise...
+                     controller prompts for header
+                     key up, record header, unkey.
+                     controller prompts for message
+                     key up, record message, unkey.
+                     controller says OK.
+                   (prefix) ** delete last played mailbox message
+                     enter (prefix) **, then unkey.
+                     controller says OK if message deleted.
+                     controller says "bad mailbox command" if not deleted.
+                   (prefix) *** audio check
+                     enter (prefix) *** , then unkey.  
+                     get prompted for test message.
+                     keyup and speak for up to 8 seconds.
+                     unkey and hear recorded message.
+
+*   12      12     remote base
+                     (prefix) 0 remote base off
+                     (prefix) 1 remote base alert mode
+                     (prefix) 2 remote base receive mode
+                     (prefix) 3 remote base transmit mode
+                     (prefix) 4 <mode-digit> CI-V mode select.
+			      mode-digit  mode
+                                  0       LSB
+				  1       USB
+				  2       AM
+				  3       FM
+                              leave mode-digit blank to poll radio.
+		     (prefix) 5 <gmmm*kkkh> CI-V frequency select.
+		               gmmm*kkkh is the frequency.  at least one m and one
+                               k must be specified:
+                              (prefix)51*9 will get you 1.900 MHz.
+                              (prefix)5147*105 will get you 147.105 MHz.
+                              omit gmmm*kkkh to poll radio.
+                     (prefix) 6 <vfo-digit> VFO select.
+                              vfo-digit   operation
+			         0        select memory mode
+				 1	  select VFO mode.
+                                 2        select VFO A
+				 3	  select VFO B
+                                 4        make other VFO equal this VFO (A=B)
+                                 5        swap with other VFO (A/B)
+		     (prefix) 7 <mem-channel> memory channel select
+                              0 <= mem-channel <= 99  memory channel to select
+
+		     (prefix) 8 <split-digit> select split mode
+                              split-digit  split mode
+                                   0       split off
+                                   1       split on
+
+                     (prefix) 9 select fine-tune mode.
+                              fine-tune mode ends when '#' is received.
+
+		              100  10    1   100
+                              KHz  KHz  KHz   Hz
+                           +   1    2    3    A
+                           -   4    5    6    B
+			  
+			   *gmmm*kkkhhh  direct frequency access
+			   0 <mode-digit> shortcut to mode command
+			   C link receive mode (default)
+			   D link transmit mode
+			   # end fine-tune mode
+
+*   13      911    play LITZ message.
+                     entering this prefix will cause the LiTZ message track 
+                     (#115) to play.  Also, sending the DTMF 0 tone for more
+                     than 3 seconds (the LiTZ signal) will cause the LiTZ
+                     message track to play.
+
+*   14      14     load saved setup
+                     (prefix) <digit> : load selected saved control operator
+		     groups.  digit must be in the range of 0-4.
+
+*   15      15     enable control access ("unlock" controller)
+                   (prefix) will unlock the controller.
+                   "#" to lock again.
+
+***********************
+** UNLOCKED COMMANDS **
+***********************
+
+  # lock controller.
+
+  *0
+  Control Operator Access
+    *0<g><i><s> set group <g> item <i> to state <s>
+      0 <= g <= 9   group to program
+      0 <= i <= 7   item to program
+      s = 0,1       state to set 1=on
+      leave s blank to inquire on/off state
+
+  *1
+  Save Setup
+    *1<s> save set of control operator groups #<s> 
+      0 <= s <= 4   state number to save.  set #0 is the power-up default.
+
+  *2 
+  Program Command Prefix
+    *2<pp><prefix>  program prefix <p> with prefix
+      00 <= pp <= 15   prefix index
+      <prefix>         code to use as prefix.  1-7 digits.
+      
+      Prefixes by index
+      00  control operator
+      01  autopatch
+      02  unrestricted autopatch
+      03  autodial
+      04  emergency autodial
+      05  patch hang up
+      06  dtmf access
+      07  pass dtmf
+      08  dtmf test
+      09  reverse patch
+      10  digital output control
+      11  mailbox
+      12  remote base
+      13  play litz message (default 911)
+      14  load saved setup
+      15  unlock controller
+
+  *3  
+  Set Timers
+    *3<nn> inquire timer nn value
+    *3<nn><time> set timer nn to time
+      00 <= nn <= 13  timer index
+      0 <= time <= 255 timer preset. 0=disable
+
+      Timer Indexes
+      00  hang timer long  (tenths)
+      01  hang timer short (tenths)
+      02  id timer (tens)
+      03  patch timer (tens)
+      04  autodial timer (tens)
+      05  emergency autodial timer (tens)
+      06  DTMF access timer (tens)
+      07  timeout timer long (seconds)
+      08  timeout timer short (seconds)
+      09  DTMF muting timer (tenths)
+      10  fan timer (tens)
+      11  tail message tail counter (units)
+      12  phone rings to answer on. (units)
+      13  remote base auto-shutoff timer (tens)
+      14  kerchunker no-tail timer (tenths)
+
+  *4
+  Program Autopatch Restrictions
+    *40<nn><zzz> program area code #nn with zzz.
+       00 >= nn >= 15
+       zzz blank to query.
+    *41<nn><a><b> program area code #nn options #a to b [0=disable, 1=enable].
+       00 >= nn >= 15
+       b=blank to query.
+
+	 options: 
+	     0 enable area code.
+	     1 a leading one is allowed.
+	     2 a leading one is required.
+	     3 local calling area (no area code required)
+
+    *42<nn><a> a=1 Enable all NNXs, a=0 Disable all NNXs, area code #nn
+        00 >= nn >= 15
+        a=blank--query not supported for all NNXs.
+    *43<nn><abc><d> Enable/disable particular NNX abc in area code #nn.
+        00 >= nn >= 15
+        d=0 disable, d=1 enable, d=blank=query.
+
+
+  *5
+  Program Autodial Slots
+    *50<n><number> program emergency autodial slot #n
+      0 <= n < = 9
+      number  phone number, 1-15 digits.
+      leave number blank to enquire.
+
+    *51<n> clear emergency autodial slot #n
+      0 <= n < = 9
+
+    *52<nnn><number> program autodial slot #nnn
+      000 <= nnn < = 249  (3 digits required)
+      number  phone number, 1-15 digits.
+      leave number blank to enquire.
+  
+    *53<nn> clear autodial slot #nnn
+      00 <= nnn < = 249 (3 digits required)
+
+
+  *6
+  Not Implemented (User Commands program)
+    *6  play CW "OK"
+
+  *7
+  Record/Play CW and Courtesy Tones
+   *70 play CW ID
+   *70 <dd..dd..dd..> program cw message n with CW data in dd.dd.dd
+                      see CW encoding table.
+
+   *71<n> play courtesy tone n, 0 <= n <= 7 (n is in range 0 to 7)
+   *71<n><ddtt,ddtt...> record courtesy tone n, 0 <= n <= 7 
+         dd is duration in 10 ms increments. 01 <= dd <=99
+         tt is tone.  See tone table.  00 <= tt <= 63
+
+  *8
+  Record/Play Audio Track
+    *8<x><t> x=0 for play, x=1 for record. t=track number.
+      x = 0,1       0=play, 1=record.
+      0 <= t <= ?   track number
+
+  *9 
+  Not Implemented
+    *9  play CW "NG"
+
+  *A
+  Debug Phone On/Off
+    *Ax x=1 pick up phone x=0 hang up phone
+      x = 0,1       phone control on=1 off=0
+
+  *B
+  Not Implemented
+    *B  play CW "NG"
+
+  *C
+  Not Implemented
+    *C  play CW "NG"
+
+  *D
+  Not Implemented
+    *D  play CW "NG"
+
+  ** (*E)
+  Debug Reset via WDT Timeout
+    **  infinite loop into WDT reset.
+
+  *# (*F)
+  Not Implemented
+    *#  play CW "NG"
+
+*******************************
+** Control Operator Switches **
+*******************************
+
+Group  Item     Description                      Default  Notes
+
+  0      0      Repeater Enable                     1
+  0      1      Repeater CTCSS required             0
+  0      2      key up delay (kerchunk filter)      0
+  0      3      Hang Timer Enabled                  1
+  0      4      Hang timer short/long select        0    1=long
+  0      5      DTMF access mode                    0
+  0      6      courtesy tone enabled               1
+  0      7      Control op CTCSS required           0
+  
+  1      0      repeater time out timer enable      1
+  1      1      time out long / short               1    1=long
+  1      2      Enable "dual squelch"               0
+  1      3      Enable DTMF Muting                  1
+  1      4      Drop link to mute DTMF              0
+  1      5      Patch requires CTCSS                0
+  1      6      DTMF pad test enable                1
+  1      7      Control Receiver is Link Port       0
+  
+  2      0      Enable Voice Initial ID             1
+  2      1      Enable Normal ID #1                 0
+  2      2      Enable Normal ID #2                 0
+  2      3      Enable Normal ID #3                 0
+  2      4      Enable Tail message #1              0
+  2      5      Enable Tail message #2              0
+  2      6      Enable Tail message #3              0
+  2      7      Enable Mailbox Tail Message         0
+  
+  3      0      CI-V tune auto-receive mode         0
+  3      1      Allow ID Stomp by key up            1
+  3      2      Enable voice time out message       1
+  3      3      Link port repeater mode             0
+  3      4      Digital output/Fan Control          0     1=fan control
+  3      5      Digital output control              0
+  3      6      Delay present main port             0
+  3      7      Delay present secondary port        0
+  
+  4      0      Autopatch enabled                   1
+  4      1      Unrestricted Autopatch enabled      1
+  4      2      Autodial Enabled                    1
+  4      3      Emergency Autodial Enabled          1
+  4      4      Emergency Autodial Timer Disable    1
+  4      5      Reverse Patch Enabled.              1
+  4      6      Reverse Patch Rings out over air.   1
+  4      7      Phone Answer Enabled.               1
+  
+  5      0      Link Port Alert Mode                0
+  5      1      Link Port Monitor Mode              0
+  5      2      Link Port TX Mode                   0
+  5      3      Link Port enabled during patch      0
+  5      4      Link Prefix Enable                  1
+  5      5      Link Port CTCSS required            0
+  5      6      Link Port "Dual Squelch"            0
+  5      7      Link Port time out timer enable     0
+  
+  6      0      Digital output 1 is pulsed          0
+  6      1      Digital output 2 is pulsed          0
+  6      2      Digital output 3 is pulsed          0
+  6      3      Digital output 4 is pulsed          0
+  6      4      Digital outputs 5,6,7,8 are pulsed  0
+  6      5      Digital outputs "one-of" mode       0
+  6      6      Drop main PTT to mute DTMF          0
+  6      7      Suppress autopatch number readback  0
+  
+  7      0      Digital out 1 control               0
+  7      1      Digital out 2 control               0
+  7      2      Digital out 3 control               0
+  7      3      Digital out 4 control               0
+  7      4      Digital out 5 control               0
+  7      5      Digital out 6 control               0
+  7      6      Digital out 7 control               0
+  7      7      Digital out 8 control               0
+  
+  8*     0      write protect control group setups  0
+  8*     1      write protect prefixes              0
+  8*     2      write protect timers                0
+  8*     3      write protect patch setup           0
+  8*     4      write protect autodials             0
+  8*     5      (reserved)                          0
+  8*     6      write protect CW & courtesy tones   0
+  8*     7      write protects pre-recorded tracks  1
+  
+  9*     0      enable access to group 0            1
+  9*     1      enable access to group 1            1
+  9*     2      enable access to group 2            1
+  9*     3      enable access to group 3            1
+  9*     4      enable access to group 4            1
+  9*     5      enable access to group 5            1
+  9*     6      enable access to group 6            1
+  9*     7      enable access to group 7            1
+
+* controller must be unlocked to access groups 8 and 9
+
+********************
+** Debugging LEDs **
+********************
+
+  debug LED output on A.0  watchdog timeout
+  debug LED output on A.1  alive blinker
+
+  debug LED output on digout.0  main receiver active
+  debug LED output on digout.1  link receiver active
+  debug LED output on digout.2  hang time
+  debug LED output on digout.3  patch on
+  debug LED output on digout.4  sending DTMF
+  debug LED output on digout.5  talking
+  debug LED output on digout.6  beeping
+  debug LED output on digout.7  playing CW
+
+***********
+** NOTES ** 
+***********
+
+Tone Table
+hex 	tone name	index
+code
+10	DTMF 0 tone	00   0
+11	DTMF 1 tone	01   1
+12	DTMF 2 tone	02   2
+13	DTMF 3 tone	03   3
+14	DTMF 4 tone	04   4
+15	DTMF 5 tone	05   5
+16	DTMF 6 tone	06   6
+17	DTMF 7 tone	07   7
+18	DTMF 8 tone	08   8
+19	DTMF 9 tone	09   9
+1a	DTMF A tone	0a  10 
+1b	DTMF B tone	0b  11
+1c	DTMF C tone	0c  12
+1d	DTMF D tone	0d  13
+1e	DTMF * tone	0e  14
+1f	DTMF # tone	0f  15
+30	note D#5	10  16
+31	note E5		11  17
+32	note F5		12  18
+33	note F#5	13  19
+34	note G5		14  20
+35	note G#5	15  21
+36	note A5		16  22
+37	note A#5	17  23
+38	note B5		18  24
+39	note C6		19  25
+3a	note C#6	1a  26
+29	note D6		1b  27
+3b	note D#6	1c  28
+3c	note E6		1d  29
+3d	note F6		1e  30
+0e	note F#6	1f  31
+3e	note G6		20  32
+2c	note G#6	21  33
+3f	note A6		22  34
+04	note A#6	23  35
+05	note B6		24  36
+25	note C7		25  37
+2f	note C#7	26  38
+06	note D7		27  39
+07	note D#7	28  40
+24	modem 1300	29  41
+25	modem 2100	2a  42
+26	modem 1200	2b  43
+27	modem 2200	2c  44
+28	modem  980	2d  45
+29	modem 1180	2e  46
+2a	modem 1070	2f  47
+2b	modem 1270	30  48
+2c	modem 1650	31  49
+2d	modem 1850	32  50
+2e	modem 2025	33  51
+2f	modem 2225	34  52
+08	dtmf row 1	35  53
+09	dtmf row 2	36  54
+0a	dtmf row 3	37  55
+0b	dtmf row 4	38  56
+0c	dtmf col 1	39  57
+0d	dtmf col 2	3a  58
+0e	dtmf col 3	3b  59
+0f	dtmf col 4	3c  60
+00	no tone		3d  61
+00	no tone		3e  62
+00	no tone		3f  63
+
+
+**************
+** CW Table **
+**************
+
+letter  code
+0	00
+1	01
+2	02
+3	03
+4	04
+5	05
+6	06
+7	07
+8	08
+9	09
+a	21
+b	22
+c	23
+d	31
+e	32
+f	33
+g	41
+h	42
+i	43
+j	51
+k	52
+l	53
+m	61
+n	62
+o	63
+p	71
+q	70
+r	72
+s	73
+t	81
+u	82
+v	83
+w	91	
+x	92
+y	93
+z	90
+space   11
+/       12
+
+CW Magic Values
+
+Speed  Code
+  5	58   
+  6	59
+  7	64
+  8	65
+  9	66
+ 10	67
+ 11	68
+ 12	69
+ 13	74
+ 14	75
+ 15	76
+ 16	77
+ 17	78
+ 18	79
+ 19	84
+ 20	85
+ 21	86
+ 22	87
+ 34	88
+ 24	89
+ 25	94
+ 26	95
+ 27	96
+ 28	97 
+ 29	98
+ 30	99
+
+Tone  Code   Hertz
+ D#5   16    622.25
+  E5   17    659.26
+  F5   18    698.46
+ F#5   19    739.99
+  G5   24    783.99
+ G#5   25    830.61
+  A5   26    880.00
+ A#5   27    932.33
+  B5   28    987.77
+  C6   29   1046.50
+ C#6   34   1108.73
+  D6   35   1174.66
+ D#6   36   1244.51
+  E6   37   1318.51
+  F6   38   1396.91
+ F#6   39   1479.98
+  G6   44   1567.98
+ G#6   45   1661.22
+  A6   46   1760.00
+ A#6   47   1864.66
+  B6   48   1975.53
+  C7   49   2093.00
+ C#7   54   2217.46
+  D7   55   2349.32
+ D#7   56   2489.02
+ 
+Program N1KDO as CW ID:
+
+  *70 62 01 52 31 63
+
+fast and low
+   *70 16 99 62 01 52 31 63
+
+

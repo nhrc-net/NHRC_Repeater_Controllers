@@ -1,0 +1,125 @@
+msg length start   end    word
+ #  (sec.) addr.  addr.       
+  0   1.0   0000   0003   zero
+  1   1.0   0004   0007   one
+  2   1.0   0008   000b   two
+  3   1.0   000c   000f   three
+  4   1.0   0010   0013   four
+  5   1.0   0014   0017   five
+  6   1.0   0018   001b   six
+  7   1.0   001c   001f   seven
+  8   1.0   0020   0023   eight
+  9   1.0   0024   0027   nine
+ 10   1.0   0028   002b   ten
+ 11   1.0   002c   002f   eleven
+ 12   1.0   0030   0033   twelve
+ 13   1.0   0034   0037   thirteen
+ 14   1.0   0038   003b   fourteen
+ 15   1.0   003c   003f   fifteen
+ 16   1.0   0040   0043   sixteen
+ 17   1.0   0044   0047   seventeen
+ 18   1.0   0048   004b   eighteen
+ 19   1.0   004c   004f   nineteen
+ 20   1.0   0050   0053   twenty
+ 21   1.0   0054   0057   thirty
+ 22   1.0   0058   005b   forty
+ 23   1.0   005c   005f   fifty
+ 24   1.0   0060   0063   sixty
+ 25   1.0   0064   0067   seventy
+ 26   1.0   0068   006b   eighty
+ 27   1.0   006c   006f   ninety
+ 28   1.0   0070   0073   hundred
+ 29   1.0   0074   0077   thousand
+ 30   1.0   0078   007b   access
+ 31   1.0   007c   007f   autopatch
+ 32   1.0   0080   0083   bad
+ 33   1.0   0084   0087   base
+ 34   1.0   0088   008b   call
+ 35   1.0   008c   008f   complete
+ 36   1.0   0090   0093   control
+ 37   1.0   0094   0097   command
+ 38   1.0   0098   009b   disabled
+ 39   1.0   009c   009f   denied
+ 40   1.0   00a0   00a3   enabled
+ 41   1.0   00a4   00a7   error
+ 42   1.0   00a8   00ab   frequency
+ 43   1.0   00ac   00af   is
+ 44   1.0   00b0   00b3   hertz
+ 45   1.0   00b4   00b7   kilo
+ 46   1.0   00b8   00bb   link
+ 47   1.0   00bc   00bf   mega
+ 48   1.0   00c0   00c3   message
+ 49   1.0   00c4   00c7   minus
+ 50   1.0   00c8   00cb   minutes
+ 51   1.0   00cc   00cf   off
+ 52   1.0   00d0   00d3   on
+ 53   1.0   00d4   00d7   operator
+ 54   1.0   00d8   00db   phone
+ 55   1.0   00dc   00df   PL
+ 56   1.0   00e0   00e3   point
+ 57   1.0   00e4   00e7   program
+ 58   1.0   00e8   00eb   receive
+ 59   1.0   00ec   00ef   record
+ 60   1.0   00f0   00f3   no
+ 61   1.0   00f4   00f7   remote
+ 62   1.0   00f8   00fb   repeater
+ 63   1.0   00fc   00ff   ring
+ 64   1.0   0100   0103   seconds
+ 65   1.0   0104   0107   squelch
+ 66   1.0   0108   010b   timer
+ 67   1.0   010c   010f   transmit
+ 68   1.0   0110   0113   test
+ 69   1.0   0114   0117   NHRC
+ 70   1.0   0118   011b   mailbox
+ 71   1.0   011c   011f   controller
+ 72   1.0   0120   0123   version
+ 73   1.0   0124   0127   emergency
+ 74   1.0   0128   012b   autodial
+ 75   1.0   012c   012f   OK
+ 76   1.0   0130   0133   sideband
+ 77   1.0   0134   0137   AM
+ 78   1.0   0138   013b   PM
+ 79   1.0   013c   013f   upper
+ 80   1.0   0140   0143   lower
+ 81   1.0   0144   0147   FM
+ 82   1.0   0148   014b   A
+ 83   1.0   014c   014f   B
+ 84   1.0   0150   0153   C
+ 85   1.0   0154   0157   D
+ 86   1.0   0158   015b   E
+ 87   1.0   015c   015f   F
+ 88   1.0   0160   0163   meters
+ 89   1.0   0164   0167   centi
+ 90   1.0   0168   016b   alert
+ 91   1.0   016c   016f   up
+ 92   1.0   0170   0173   down
+ 93   1.0   0174   0177   plus
+ 94   1.0   0178   017b   number
+ 95   1.0   017c   017f   header
+ 96   8.0   0180   019f   normal ID 1
+ 97   8.0   01a0   01bf   normal ID 2
+ 98   8.0   01c0   01df   normal ID 3
+ 99   8.0   01e0   01ff   timeout message
+100   8.0   0200   021f   tail message 1
+101   8.0   0220   023f   tail message 2
+102   8.0   0240   025f   tail message 3
+103   8.0   0260   027f   test track
+104   8.0   0280   029f   (not used)
+105   8.0   02a0   02bf   mbox 1 header
+106   8.0   02c0   02df   mbox 2 header
+107   8.0   02e0   02ff   mbox 3 header
+108   8.0   0300   031f   mbox 4 header
+109   8.0   0320   033f   mbox 5 header
+110   8.0   0340   035f   mbox 6 header
+111  32.0   0360   03df   initial ID message
+112  32.0   03e0   045f   announcement 1
+113  32.0   0460   04df   announcement 2
+114  32.0   04e0   055f   announcement 3
+115  32.0   0560   05df   litz message
+116  32.0   05e0   065f   special message
+117  32.0   0660   06df   mbox 1 contents
+118  32.0   06e0   075f   mbox 2 contents
+119  32.0   0760   07df   mbox 3 contents
+120  32.0   07e0   085f   mbox 4 contents
+121  32.0   0860   08df   mbox 5 contents
+122  32.0   08e0   095f   mbox 6 contents
