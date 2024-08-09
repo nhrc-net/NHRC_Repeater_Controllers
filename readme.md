@@ -19,3 +19,12 @@ We (Peter and Jeff) have released this source code and documentation for release
 NHRC products in order to support our customer base after we closed our business 
 in March 2021.  The code is here in order that our customers may correct defects
 or software bugs in their existing NHRC products.
+
+We did not release this code to allow people to clone our projects.  We made a 
+significant investment in hardware and software development.  If you want to build new
+devices with this code, please contact us to arrange (affordable) licensing.  You
+are NOT authorized to build new hardware using this source code.
+
+8th Commandment: Thou Shalt Not Steal.
+
+Any questions?  Email me.
